@@ -1,7 +1,7 @@
 'use strict'
 var GitHubStrategy = require('passport-github2').Strategy;
-var GITHUB_CLIENT_ID = "8c72efc160e0d1771104";
-var GITHUB_CLIENT_SECRET = "b2341d1231a1f33f2d1346c400a27c8ad97d8d12";
+var GITHUB_CLIENT_ID = "becb33a39e525721517c";
+var GITHUB_CLIENT_SECRET = "36338cdf7057d2086495a241fa3d053766da55c1";
 
 module.exports = function(passport) {
     passport.serializeUser(function(user, done) {
@@ -13,7 +13,7 @@ module.exports = function(passport) {
     passport.use(new GitHubStrategy({
             clientID: GITHUB_CLIENT_ID,
             clientSecret: GITHUB_CLIENT_SECRET,
-            callbackURL: "http://localhost:3000/auth/github/callback"
+            callbackURL: "http://localhost:3000/api/auth/github/callback"
         },
         function(accessToken, refreshToken, profile, done) {
             process.nextTick(function () {

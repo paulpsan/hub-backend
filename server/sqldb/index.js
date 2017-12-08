@@ -1,12 +1,17 @@
 'user strict'
 import Sequelize from 'sequelize';
+import config from '../config/environment'
 
 let db = {
     Sequelize,
-    sequelize: new Sequelize('postgres://postgres:@localhost:5432/clases')
+    sequelize: new Sequelize(config.sequelize.uri, config.sequelize.options)
 }
 db.User=db.sequelize.import('../models/user') ;
-
+db.Usuario=db.sequelize.import('../models/usuario');
+db.Organizacion = db.sequelize.import('../models/organizacion');
+db.Repositorio = db.sequelize.import('../models/repositorio');
+db.Proyecto = db.sequelize.import('../models/proyecto');
+db.UsuarioRepositorio = db.sequelize.import('../models/usuarioRepositorio');
 //aqui agregamos inclusiones
 /**
  * variable que ayuda con las inclusiones

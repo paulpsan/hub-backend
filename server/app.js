@@ -1,39 +1,33 @@
 'use strict'
 
 import express from 'express';
-import bodyParser from 'body-parser';
-import user_routes from './routes/user';
-import session from 'express-session';
-import cookieParser from 'cookie-parser';
-import passport from 'passport';
-// const express = require('express');
-// const bodyParser = require('body-parser');
+import config from './config/environment'
+import Sequelize from 'sequelize';
+import sqldb from './sqldb'
+import seedDatabaseIfNeeded from './config/seed';
+
+
+import { User } from './sqldb'
+
 
 const app = express();
 
-//cargar rutas// app.get('/', function(req, res) {
-//     res.send("estoy probando");
-// });
+console.log(process.env.NODE_ENV);
 
-//comvertir datos a Json
-app.use(bodyParser.urlencoded({extended:false}));
-app.use(bodyParser.json());
+require('./config/express').default(app);
+require('./routes').default(app);
 
-app.use(cookieParser());
-app.use(session({ 
-    secret: 'keyboard cat', 
-    resave: false, 
-    saveUninitialized: false //guarda informacion en la base de datos cuando nos conectamos
-}));
+sqldb.sequelize.sync({force:true})
+.then(seedDatabaseIfNeeded)
+.then(()=>{
+    app.listen(config.port, ()=>{
+        console.log('App listening on port '+config.port);
+    });
+})
+.catch((error)=>{
+    console.log('Server failed to start due to error: %s', error);
+});
 
-app.use(passport.initialize());
-app.use(passport.session());
-require('./config/github')(passport);
-// app.get('/', function(req, res) {
-//     res.send("estoy probando");
-// });
-// rutas base
-app.use('/',user_routes)
 
 
 module.exports=app;
