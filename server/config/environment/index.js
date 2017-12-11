@@ -26,7 +26,15 @@ const all = {
     secrets: {
       session: 'bolivia-hub-backend-secret'
     },
-  
+
+    oauthGithub:{
+      oauth_client_id: "becb33a39e525721517c",
+      oauth_client_secret: "36338cdf7057d2086495a241fa3d053766da55c1",
+      oauth_host: "github.com",
+      oauth_port: 443,
+      oauth_path: "/login/oauth/access_token",
+      oauth_method: "POST"
+    }
   };
   
   // Export the config object based on the NODE_ENV

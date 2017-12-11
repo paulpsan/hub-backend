@@ -1,6 +1,6 @@
 'use strict';
 
-export default function (sequelize, DataTypes) {
+export default (sequelize, DataTypes) => {
   return sequelize.define('Usuario', {
     _id: {
       type: DataTypes.INTEGER,
@@ -23,6 +23,24 @@ export default function (sequelize, DataTypes) {
       validate: {
         notEmpty: {
           msg: 'Ingrese su correo electrónico'
+        }
+      }
+    },
+    password: {
+      allowNull: false,
+      type: DataTypes.TEXT,
+      validate: {
+        notEmpty: {
+          msg: 'Ingrese su role'
+        }
+      }
+    },
+    role: {
+      allowNull: false,
+      type: DataTypes.TEXT,
+      validate: {
+        notEmpty: {
+          msg: 'Ingrese su role'
         }
       }
     },

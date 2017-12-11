@@ -11,9 +11,8 @@
 'use strict';
 
 import jsonpatch from 'fast-json-patch';
-import {
-  Usuario
-} from '../sqldb';
+import bcrypt from 'bcrypt-nodejs';
+import { Usuario } from '../sqldb';
 import SequelizeHelper from '../components/sequelize-helper';
 
 function respondWithResult(res, statusCode) {
@@ -91,9 +90,43 @@ export function show(req, res) {
 
 // Creates a new Usuario in the DB
 export function create(req, res) {
-  return Usuario.create(req.body)
-    .then(respondWithResult(res, 201))
-    .catch(handleError(res));
+  const obj = new Object();
+  const params =req.body;
+  obj.nombre = params.nombre;
+  obj.email = params.email;
+  obj.password = params.password;
+  obj.role = params.role;
+  
+  if(params.password){
+    bcrypt.hash(params.password,null,null,(err,hash)=>{
+      console.log(hash);
+      obj.password=hash;
+      if(obj.nombre!=null && obj.email!=null && obj.password!=null){
+        return Usuario.create(obj)
+        .then(respondWithResult(res, 201))
+        .catch(handleError(res));
+      }
+    })
+  }
+}
+// Login usuario en la DB
+export function login(req, res) {
+  const obj = new Object();
+  const params =req.body;
+  obj.email = params.email;
+  obj.password = params.password;
+  
+  if(params.password){
+    bcrypt.hash(params.password,null,null,(err,hash)=>{
+      console.log(hash);
+      obj.password=hash;
+      if(obj.nombre!=null && obj.email!=null && obj.password!=null){
+        return Usuario.create(obj)
+        .then(respondWithResult(res, 201))
+        .catch(handleError(res));
+      }
+    })
+  }
 }
 
 // Upserts the given Usuario in the DB at the specified ID
