@@ -31,13 +31,14 @@ export default (sequelize, DataTypes) => {
       type: DataTypes.TEXT,
       validate: {
         notEmpty: {
-          msg: 'Ingrese su role'
+          msg: 'Ingrese su password'
         }
       }
     },
     role: {
       allowNull: false,
       type: DataTypes.TEXT,
+      defaultValue:'usuario',
       validate: {
         notEmpty: {
           msg: 'Ingrese su role'

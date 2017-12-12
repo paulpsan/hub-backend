@@ -48,19 +48,29 @@ export default function seedDatabaseIfNeeded() {
       .then(() => {
         return Usuario.bulkCreate([{
           nombre: "D'jalmar Gutierrez",
-          email: 'dgutierrez@adsib.gob.bo'
+          email: 'dgutierrez@adsib.gob.bo',
+          password:"123",
+          role:"admin"
         }, {
           nombre: "Teodoro Nina",
-          email: 'tnina@adsib.gob.bo'
+          email: 'tnina@adsib.gob.bo',
+          password:"123",
+          role:"admin"
         }, {
           nombre: "Edwin Salcedo",
-          email: 'esalcedo@adsib.gob.bo'
+          email: 'esalcedo@adsib.gob.bo',
+          password:"123",
+          role:"admin"
         }, {
           nombre: "Jhonny Monrroy",
-          email: 'jmonrroy@adsib.gob.bo'
+          email: 'jmonrroy@adsib.gob.bo',
+          password:"123",
+          role:"admin"
         }, {
           nombre: "Andrea Soria",
-          email: 'asoria@adsib.gob.bo'
+          email: 'asoria@adsib.gob.bo',
+          password:"123",
+          role:"admin"
         }], {
           returning: true
         });

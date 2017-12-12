@@ -2,10 +2,8 @@
 
 var express = require('express');
 var controller = require('../controllers/usuario');
-import {
-  generarOpciones
-} from '../components/sequelize-middleware';
-
+import { generarOpciones } from '../components/sequelize-middleware';
+import { md_auth } from '../components/middleware/authenticated'
 var router = express.Router();
 
 /**
@@ -82,7 +80,7 @@ var router = express.Router();
   }
 }
  */
-router.get('/', generarOpciones, controller.index);
+router.get('/', generarOpciones , controller.index);
 /**
  * @api {get} /usuarios/:id Obtener un usuario por id
  * @apiName usuario
@@ -121,6 +119,7 @@ router.get('/:id', generarOpciones, controller.show);
     "fk_organizacion": null
   }
  */
+router.post('/login',controller.login)
 router.post('/', controller.create);
 router.put('/:id', controller.upsert);
 router.patch('/:id', controller.patch);
