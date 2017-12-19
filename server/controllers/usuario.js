@@ -15,6 +15,9 @@ import bcrypt from "bcrypt-nodejs";
 import { Usuario } from "../sqldb";
 import SequelizeHelper from "../components/sequelize-helper";
 import jwt from "../components/service/jwt";
+import config from "../config/environment";
+import qs from "querystring";
+import https from "https";
 
 function respondWithResult(res, statusCode) {
   statusCode = statusCode || 200;
@@ -64,6 +67,38 @@ function handleError(res, statusCode) {
   return function(err) {
     res.status(statusCode).send(err);
   };
+}
+function authenticate(code, cb) {
+  let data = qs.stringify({
+    client_id: config.Github.oauth_client_id,
+    client_secret: config.Github.oauth_client_secret,
+    code: code
+  });
+
+  let reqOptions = {
+    host: config.Github.oauth_host,
+    port: config.Github.oauth_port,
+    path: config.Github.oauth_path,
+    method: config.Github.oauth_method,
+    headers: { "content-length": data.length }
+  };
+
+  let body = "";
+  let req = https.request(reqOptions, function(res) {
+    res.setEncoding("utf8");
+    res.on("data", function(chunk) {
+      body += chunk;
+    });
+    res.on("end", function() {
+      cb(null, qs.parse(body).access_token);
+    });
+  });
+  req.write(data);
+  req.end();
+  req.on("error", function(e) {
+    cb(e.message);
+  });
+
 }
 
 // Gets a list of Usuarios
@@ -130,28 +165,27 @@ export function login(req, res) {
   })
     // .then(respondWithResult(res, 201))
     .then(user => {
- 
-      if (user!=null) {
-        console.log(user)
+      if (user != null) {
+        console.log(user);
         bcrypt.compare(password, user.password, (err, check) => {
           if (check) {
             res.status(200).send({
-              token: jwt.createToken(user)
+              token: jwt.createToken(user),
+              id: user._id
             });
           } else {
-            res
-              .status(404)
-              .send({ message: "Contraseña incorrecta" });
+            res.status(404).send({ message: "Contraseña incorrecta" });
           }
         });
-      }
-      else{
-        res.status(404).send({ message: "No existe el usuario o contraseña incorrecta " })
+      } else {
+        res
+          .status(404)
+          .send({ message: "No existe el usuario o contraseña incorrecta " });
       }
 
       // respondWithResult(res, 201)
-    })
-    // .catch(res.status(404).send({ message: "No existe el usuario o contraseña incorrecta " }));
+    });
+  // .catch(res.status(404).send({ message: "No existe el usuario o contraseña incorrecta " }));
 }
 
 // Upserts the given Usuario in the DB at the specified ID
@@ -195,4 +229,43 @@ export function destroy(req, res) {
     .then(handleEntityNotFound(res))
     .then(removeEntity(res))
     .catch(handleError(res));
+}
+export function authGithub(req, res) {
+  authenticate(req.params.code, function(err, token) {
+    var result;
+    if (err || !token) {
+      result = { error: err || "bad_code" };
+      console.log(result.error);
+    } else {
+      result = { token: token };
+      console.log("token", result.token, true);
+    }
+    if (result.token) {
+      console.log("aqui colocomos");
+      let options ={
+        host:'api.github.com',
+        path:'/user?access_token='+result.token,
+        method:'GET',
+        headers:{
+          'user-Agent':'hub-software',
+        },
+      }
+   
+      https.request(options, (res) => {
+        console.log('statusCode:', res.statusCode);
+        console.log('headers:', res.headers);
+        console.log(res.body);
+        res.on('data', (d) => {
+          process.stdout.write(d);
+        });
+      
+      }).on('error', (e) => {
+        console.error(e);
+      });
+
+      //obtenemos datos del usuario y lo almacenamos
+
+    }
+    res.json(result);
+  });
 }

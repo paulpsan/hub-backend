@@ -6,7 +6,6 @@ let db = {
     Sequelize,
     sequelize: new Sequelize(config.sequelize.uri, config.sequelize.options)
 }
-db.User=db.sequelize.import('../models/user') ;
 db.Usuario=db.sequelize.import('../models/usuario');
 db.Organizacion = db.sequelize.import('../models/organizacion');
 db.Repositorio = db.sequelize.import('../models/repositorio');

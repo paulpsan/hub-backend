@@ -50,27 +50,32 @@ export default function seedDatabaseIfNeeded() {
           nombre: "D'jalmar Gutierrez",
           email: 'dgutierrez@adsib.gob.bo',
           password:"123",
-          role:"admin"
+          role:"admin",
+          tipo:"local"
         }, {
           nombre: "Teodoro Nina",
           email: 'tnina@adsib.gob.bo',
           password:"123",
-          role:"admin"
+          role:"admin",
+          tipo:"local"
         }, {
           nombre: "Edwin Salcedo",
           email: 'esalcedo@adsib.gob.bo',
           password:"123",
-          role:"admin"
+          role:"admin",
+          tipo:"local"
         }, {
           nombre: "Jhonny Monrroy",
           email: 'jmonrroy@adsib.gob.bo',
           password:"123",
-          role:"admin"
+          role:"admin",
+          tipo:"local"
         }, {
           nombre: "Andrea Soria",
           email: 'asoria@adsib.gob.bo',
           password:"123",
-          role:"admin"
+          role:"admin",
+          tipo:"local"
         }], {
           returning: true
         });
@@ -113,13 +118,13 @@ export default function seedDatabaseIfNeeded() {
       })
       .then(() => {
         return Organizacion.bulkCreate([{
-          nombre: 'ADISB',
+          nombre: 'ADSIB',
           descripcion: 'Agencia para el Desarrollo de la Sociedad de la Informacion'
         }, {
           nombre: 'AGETIC',
           descripcion: 'Agencia de Gobierno Electronico y Tecnologias de Informacion y Comunicacion'
         }, {
-          nombre: 'ADISB',
+          nombre: 'ADSIB',
           descripcion: 'Agencia para el Desarrollo de la Sociedad de la Informacion'
         }], {
           returning: true

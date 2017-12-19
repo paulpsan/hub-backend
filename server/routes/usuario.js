@@ -119,8 +119,10 @@ router.get('/:id', generarOpciones, controller.show);
     "fk_organizacion": null
   }
  */
-router.post('/login',controller.login)
 router.post('/', controller.create);
+
+router.post('/login',controller.login)
+
 router.put('/:id', controller.upsert);
 router.patch('/:id', controller.patch);
 /**
