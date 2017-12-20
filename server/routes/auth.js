@@ -1,6 +1,6 @@
 "use strict";
 import express from "express";
-var controller = require('../controllers/usuario');
+var controller = require('../controllers/github');
 // import { controller } from "../controllers/usuario";
 
 var router = express.Router();

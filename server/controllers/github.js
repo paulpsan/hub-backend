@@ -1,0 +1,172 @@
+"use strict";
+
+import { Usuario } from "../sqldb";
+import SequelizeHelper from "../components/sequelize-helper";
+import config from "../config/environment";
+import qs from "querystring";
+import https from "https";
+import request from "request";
+// var request = require('request');
+
+function authenticate(code, cb) {
+  let result = new Object();
+  let data = qs.stringify({
+    client_id: config.Github.oauth_client_id,
+    client_secret: config.Github.oauth_client_secret,
+    code: code
+  });
+
+  let reqOptions = {
+    host: config.Github.oauth_host,
+    port: config.Github.oauth_port,
+    path: config.Github.oauth_path,
+    method: config.Github.oauth_method,
+    headers: { "content-length": data.length }
+  };
+
+  let body = "";
+  let req = https.request(reqOptions, function(res) {
+    res.setEncoding("utf8");
+    res.on("data", function(chunk) {
+      body += chunk;
+    });
+    res.on("end", () => {
+      console.log("token datos", qs.parse(body).access_token);
+
+      result.token = qs.parse(body).access_token;
+      let options = {
+        host: "api.github.com",
+        path: "/user?access_token=" + qs.parse(body).access_token,
+        method: "GET",
+        headers: {
+          "user-Agent": "hub-software"
+        }
+      };
+      //cambiar por callbacks
+      https
+        .request(options, response => {
+          let bodyUsuario = "";
+          response.on("data", out => {
+            bodyUsuario += out;
+          });
+          response.on("end", out => {
+            let json = JSON.parse(bodyUsuario);
+            // console.log(json);
+            result.usuario = {
+              nombre: json.name,
+              email: json.email,
+              tipo: "github",
+              login: json.login,
+              avatar: json.avatar_url
+            };
+
+            if (result.token != null && result.usuario.nombre != null) {
+              console.log("envio datos", json);
+              create(json);
+            }
+
+            // Guardar en la base de datos
+            // console.log(result);
+            cb(null, result);
+          });
+        })
+        .on("error", e => {
+          console.error(e);
+        })
+        .end();
+    });
+  });
+  req.write(data);
+  req.end();
+  req.on("error", function(e) {
+    cb(e.message);
+  });
+}
+
+function create(objeto) {
+  let objetoUsuario = new Object();
+  objetoUsuario.nombre = objeto.name;
+  objetoUsuario.email = objeto.email;
+  objetoUsuario.password = "github";
+  objetoUsuario.tipo = "github";
+  objetoUsuario.role = "usuario";
+  objetoUsuario.login = objeto.login;
+  objetoUsuario.datos = {
+    commits: [
+      {
+        total: 10,
+        reciente: 2,
+        porProyecto: 0,
+        porLenguaje: 0
+      }
+    ],
+    lenguaje: [
+      {
+        javascript: 0,
+        php: 0
+      }
+    ]
+  };
+  //cargamos la clasificacion y commits
+  getComits(objeto, resp => {});
+
+  return Usuario.create(objetoUsuario)
+    .then(res => {
+      console.log("usuario creado", res);
+      return res;
+    })
+    .catch(err => {
+      console.log("error", err);
+      return err;
+    });
+}
+
+function getComits(obj, callback) {
+  // console.log("rep:", obj.repos_url);
+  if (obj.repos_url) {
+    let options = {
+      url: obj.repos_url,
+      headers: {
+        "user-Agent": "hub-software"
+      }
+    };
+    request(options, (error, response, body) => {
+      let repo = JSON.parse(body);
+      for (let value of repo) {
+
+        if (value.languages_url) {
+          let options = {
+            url: value.languages_url,
+            headers: {
+              "user-Agent": "hub-software"
+            }
+          };
+          request(options,(error,response,body)=>{
+            let lenguajes = JSON.parse(body);
+            console.log("lenguajes ", lenguajes);
+          })
+
+          options.url="https://api.github.com/repos/"+value.full_name+"/commits";
+          request(options,(error,response,body)=>{
+            let commits = JSON.parse(body);
+            console.log("lenguajes ", commits.length());
+          })
+
+        //   console.log("repo ", value.languages_url);
+        }
+      }
+      //   console.log("reppositorio:", repo);
+    });
+  }
+}
+
+export function authGithub(req, res) {
+  authenticate(req.params.code, function(err, result) {
+    if (err || !result.token) {
+      result.error = err || "bad_code";
+      console.log(result.error);
+    }
+    console.log("datos enviados", result);
+    res.json(result);
+  });
+}

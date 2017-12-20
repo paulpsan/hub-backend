@@ -47,6 +47,10 @@ export default (sequelize, DataTypes) => {
           }
         }
       },
+      login: {
+        type: DataTypes.TEXT,
+        defaultValue: "local",
+      },
       //tipo puede ser Local, Github, Gitlab.
       tipo: {
         type: DataTypes.TEXT,

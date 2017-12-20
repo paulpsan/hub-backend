@@ -68,38 +68,6 @@ function handleError(res, statusCode) {
     res.status(statusCode).send(err);
   };
 }
-function authenticate(code, cb) {
-  let data = qs.stringify({
-    client_id: config.Github.oauth_client_id,
-    client_secret: config.Github.oauth_client_secret,
-    code: code
-  });
-
-  let reqOptions = {
-    host: config.Github.oauth_host,
-    port: config.Github.oauth_port,
-    path: config.Github.oauth_path,
-    method: config.Github.oauth_method,
-    headers: { "content-length": data.length }
-  };
-
-  let body = "";
-  let req = https.request(reqOptions, function(res) {
-    res.setEncoding("utf8");
-    res.on("data", function(chunk) {
-      body += chunk;
-    });
-    res.on("end", function() {
-      cb(null, qs.parse(body).access_token);
-    });
-  });
-  req.write(data);
-  req.end();
-  req.on("error", function(e) {
-    cb(e.message);
-  });
-
-}
 
 // Gets a list of Usuarios
 export function index(req, res) {
@@ -230,42 +198,4 @@ export function destroy(req, res) {
     .then(removeEntity(res))
     .catch(handleError(res));
 }
-export function authGithub(req, res) {
-  authenticate(req.params.code, function(err, token) {
-    var result;
-    if (err || !token) {
-      result = { error: err || "bad_code" };
-      console.log(result.error);
-    } else {
-      result = { token: token };
-      console.log("token", result.token, true);
-    }
-    if (result.token) {
-      console.log("aqui colocomos");
-      let options ={
-        host:'api.github.com',
-        path:'/user?access_token='+result.token,
-        method:'GET',
-        headers:{
-          'user-Agent':'hub-software',
-        },
-      }
-   
-      https.request(options, (res) => {
-        console.log('statusCode:', res.statusCode);
-        console.log('headers:', res.headers);
-        console.log(res.body);
-        res.on('data', (d) => {
-          process.stdout.write(d);
-        });
-      
-      }).on('error', (e) => {
-        console.error(e);
-      });
 
-      //obtenemos datos del usuario y lo almacenamos
-
-    }
-    res.json(result);
-  });
-}
