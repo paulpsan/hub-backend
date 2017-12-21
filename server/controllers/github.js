@@ -3,10 +3,11 @@
 import { Usuario } from "../sqldb";
 import SequelizeHelper from "../components/sequelize-helper";
 import config from "../config/environment";
-import qs from "querystring";
+import qs from "querystringify";
 import https from "https";
 import request from "request";
-// var request = require('request');
+// import { fetch } from "node-fetch";
+var fetch = require('node-fetch');
 
 function authenticate(code, cb) {
   let result = new Object();
@@ -62,12 +63,14 @@ function authenticate(code, cb) {
 
             if (result.token != null && result.usuario.nombre != null) {
               console.log("envio datos", json);
-              create(json);
+              create(json, resp => {
+                result.usuario.datos = resp;
+                cb(null, result);
+              });
             }
 
             // Guardar en la base de datos
             // console.log(result);
-            cb(null, result);
           });
         })
         .on("error", e => {
@@ -83,7 +86,7 @@ function authenticate(code, cb) {
   });
 }
 
-function create(objeto) {
+function create(objeto, callback) {
   let objetoUsuario = new Object();
   objetoUsuario.nombre = objeto.name;
   objetoUsuario.email = objeto.email;
@@ -91,34 +94,25 @@ function create(objeto) {
   objetoUsuario.tipo = "github";
   objetoUsuario.role = "usuario";
   objetoUsuario.login = objeto.login;
-  objetoUsuario.datos = {
-    commits: [
-      {
-        total: 10,
-        reciente: 2,
-        porProyecto: 0,
-        porLenguaje: 0
-      }
-    ],
-    lenguaje: [
-      {
-        javascript: 0,
-        php: 0
-      }
-    ]
-  };
+ 
   //cargamos la clasificacion y commits
-  getComits(objeto, resp => {});
-
-  return Usuario.create(objetoUsuario)
+  getComits(objeto, resp => {
+    callback(resp);
+    console.log("rspuesta:", resp);
+    objetoUsuario.datos=resp;
+    return Usuario.create(objetoUsuario)
     .then(res => {
-      console.log("usuario creado", res);
+      // console.log("usuario creado", res);
       return res;
     })
     .catch(err => {
       console.log("error", err);
       return err;
     });
+  });
+
+
+  
 }
 
 function getComits(obj, callback) {
@@ -132,30 +126,60 @@ function getComits(obj, callback) {
     };
     request(options, (error, response, body) => {
       let repo = JSON.parse(body);
-      for (let value of repo) {
+      let objetoRes = [];
+      let i = 1;
+      if (repo.length > 0) {
+        for (let value of repo) {
+          let objLenguajes = {};
+          let objCommits = {};
+          if (value.languages_url) {
+            let options = {
+              url: value.languages_url,
+              headers: {
+                "user-Agent": "hub-software"
+              }
+            };
+            request(options, (error, response, body) => {
+              let lenguajes = JSON.parse(body);
+              objLenguajes = lenguajes;
 
-        if (value.languages_url) {
-          let options = {
-            url: value.languages_url,
-            headers: {
-              "user-Agent": "hub-software"
-            }
-          };
-          request(options,(error,response,body)=>{
-            let lenguajes = JSON.parse(body);
-            console.log("lenguajes ", lenguajes);
-          })
+              // if (Object.keys(lenguajes).length != 0) {
 
-          options.url="https://api.github.com/repos/"+value.full_name+"/commits";
-          request(options,(error,response,body)=>{
-            let commits = JSON.parse(body);
-            console.log("lenguajes ", commits.length());
-          })
+              //   if (Object.keys(lenguajes).length === 1) {
+              //     objLenguajes=lenguajes;
+              //   }
+              //   totalLenguajes = totalLenguajes.concat(Object.keys(lenguajes));
+              //   console.log("lenguajes ", totalLenguajes);
+              // } else {
+              //   objLenguajes = {};
+              // }
+            });
 
-        //   console.log("repo ", value.languages_url);
+            options.url =
+              "https://api.github.com/repos/" + value.full_name + "/commits";
+            let totalCommits = 0;
+            request(options, (error, response, body) => {
+              let commits = JSON.parse(body);
+              totalCommits += commits.length;
+
+              objetoRes.push({
+                lenguajes: objLenguajes,
+                repo: value.name,
+                commits: totalCommits
+              });
+              if (i == repo.length) {
+                callback(objetoRes);
+              }
+              i++;
+            });
+
+            //   console.log("repo ", value.languages_url);
+          }
+          //aqui adicionamos
         }
       }
-      //   console.log("reppositorio:", repo);
+
+      console.log("rspuesta:", objetoRes);
     });
   }
 }
@@ -166,7 +190,78 @@ export function authGithub(req, res) {
       result.error = err || "bad_code";
       console.log(result.error);
     }
-    console.log("datos enviados", result);
     res.json(result);
   });
 }
+
+
+// let authenticateGitgub = code => {
+//   return new Promise((res, rej) => {
+//     let data = qs.stringify({
+//       client_id: config.Github.oauth_client_id,
+//       client_secret: config.Github.oauth_client_secret,
+//       code: code
+//     });
+//     let objRes ={};
+//     let promesa= fetch("https://github.com/login/oauth/access_token", {
+//       method: "POST",
+//       body: data
+//     });
+//     promesa.then(response => {
+//         return response.text();
+//       })
+//       .then(token => {
+//         objRes.token = qs.parse(token).access_token;
+
+//         fetch("https://api.github.com/user?access_token="+objRes.token)
+//         .then(res=>{
+//           return res.json();
+//         })
+//         .then(json=>{
+
+//           let objetoUsuario = {};
+//           objetoUsuario.nombre = json.name;
+//           objetoUsuario.email = json.email;
+//           objetoUsuario.password = "github";
+//           objetoUsuario.tipo = "github";
+//           objetoUsuario.role = "usuario";
+//           objetoUsuario.login = json.login;
+
+//           fetch(json.repos_url)
+//           .then(res=>{
+//             return res.json();
+//           })
+//           .then(json=>{
+            
+//             console.log(json);
+
+
+//           })
+
+//           res(objRes);
+//         })
+
+
+
+        
+//       })
+//       .catch(err => {
+//         rej(err);
+//       });
+//   });
+// };
+
+// export function authGithub(req, res) {
+//   authenticateGitgub(req.params.code)
+//     .then(
+//       result => {
+//         res.json(result);
+//       },
+//       error => {
+//         res.send(error);
+//       }
+//     )
+//     .catch(err => {
+//       console.log(err);
+//     });
+// }
