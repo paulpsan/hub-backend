@@ -39,6 +39,11 @@ const all = {
       url_proyectos:"",
 
       
+    },
+    Gitlab:{
+      aplication_id:"68b23d8cc8bdf2e9414f2b486456596bbd23e9d44e1c56c16e91298747b94485",
+      client_secret:"99cca0cab45bf79a844763ec81db38e34915cbb8e8a5f6006a097707c4278d5b",
+      callback_url:"http://localhost:4200/auth/gitlab/callback",
     }
   };
   

@@ -1,14 +1,14 @@
 "use strict";
 import express from "express";
-var controller = require('../controllers/github');
-// import { controller } from "../controllers/usuario";
+var controllerGithub = require('../controllers/github');
+var controllerGitLab = require('../controllers/gitlab');
+
 
 var router = express.Router();
 
+router.get("/github/:code",controllerGithub.authGithub);
 
-
-router.get("/github/:code",controller.authGithub);
-// router.get("/gitlab/:code",controller.authGitlab);
+router.get("/gitlab/:code",controllerGitLab.authGitlab);
 // router.get("/bitbucker/:code",controller.authBitbucker);
 
 
