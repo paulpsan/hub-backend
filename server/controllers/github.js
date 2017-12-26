@@ -191,8 +191,6 @@ function getComits(obj, callback) {
 //   });
 // }
 
-
-
 let authenticateGithub = code => {
   return new Promise((res, rej) => {
     //configuramos los headers
@@ -224,89 +222,96 @@ let authenticateGithub = code => {
       .then(token => {
         objRes.token = qs.parse(token).access_token;
         console.log(objRes.token);
-        fetch("https://api.github.com/user?access_token=" + objRes.token)
-          .then(res => {
-            return res.json();
-          })
-          .then(json => {
-            // console.log("user",json)
-            let objetoUsuario = {};
-            objetoUsuario.nombre = json.name;
-            objetoUsuario.email = json.email;
-            objetoUsuario.password = "github";
-            objetoUsuario.tipo = "github";
-            objetoUsuario.role = "usuario";
-            objetoUsuario.login = json.login;
-            if (json.repos_url) {
-              fetch(json.repos_url + headersClient)
-                .then(res => {
-                  return res.json();
-                })
-                .then(repositorios => {
-                  // console.log("repos", repositorios);
-                  let i = 1;
-                  let objDatos = [];
-                  if (repositorios.length > 0) {
-                    for (let value of repositorios) {
-                      let objLenguajes = {};
-                      let objCommits = {};
-                      if (value.languages_url) {
-                        fetch(value.languages_url + headersClient)
-                          .then(res => {
-                            return res.json();
-                          })
-                          .then(lenguajes => {
-                            objLenguajes = lenguajes;
-                            // console.log("lenguaje",lenguajes);
-                            fetch(
-                              "https://api.github.com/repos/" +
-                                value.full_name +
-                                "/commits" +
-                                headersClient
-                            )
-                              .then(res => {
-                                return res.json();
-                              })
-                              .then(commits => {
-                                objDatos.push({
-                                  lenguajes: objLenguajes,
-                                  repo: value.name,
-                                  commits: commits.length
+        if (objRes.token) {
+          fetch("https://api.github.com/user?access_token=" + objRes.token)
+            .then(res => {
+              return res.json();
+            })
+            .then(json => {
+              // console.log("user",json)
+              let objetoUsuario = {};
+              objetoUsuario.nombre = json.name;
+              objetoUsuario.email = json.email;
+              objetoUsuario.password = "github";
+              objetoUsuario.tipo = "github";
+              objetoUsuario.role = "usuario";
+              objetoUsuario.login = json.login;
+              objRes.usuario = objetoUsuario;
+              res(objRes);
+              if (json.repos_url) {
+                fetch(json.repos_url + headersClient)
+                  .then(res => {
+                    return res.json();
+                  })
+                  .then(repositorios => {
+                    // console.log("repos", repositorios);
+                    let i = 1;
+                    let objDatos = [];
+                    if (repositorios.length > 0) {
+                      for (let value of repositorios) {
+                        let objLenguajes = {};
+                        let objCommits = {};
+                        if (value.languages_url) {
+                          fetch(value.languages_url + headersClient)
+                            .then(res => {
+                              return res.json();
+                            })
+                            .then(lenguajes => {
+                              objLenguajes = lenguajes;
+                              // console.log("lenguaje",lenguajes);
+                              fetch(
+                                "https://api.github.com/repos/" +
+                                  value.full_name +
+                                  "/commits" +
+                                  headersClient
+                              )
+                                .then(res => {
+                                  return res.json();
+                                })
+                                .then(commits => {
+                                  objDatos.push({
+                                    lenguajes: objLenguajes,
+                                    repo: value,
+                                    commits: commits
+                                  });
+                                  console.log("obj", objDatos);
+                                  if (i == repositorios.length) {
+                                    objetoUsuario.datos = objDatos;
+                                    objRes.usuario = objetoUsuario;
+                                    //creamos el objeto si existe
+                                    return Usuario.findOrCreate({
+                                      where: { email: objRes.usuario.email },
+                                      defaults: objRes.usuario
+                                    }).spread((user, created) => {
+                                      console.log(
+                                        user.get({
+                                          plain: true
+                                        })
+                                      );
+                                      console.log(created);
+                                    });
+                                    // res(objRes);
+                                  }
+                                  i++;
+                                  //creamnos usuario si no existe
                                 });
-                                console.log("obj", objDatos);
-                                if (i == repositorios.length) {
-                                  objetoUsuario.datos = objDatos;
-                                  objRes.usuario = objetoUsuario;
-                                  //creamos el objeto si existe
-                                  res(objRes);
-                                }
-                                i++;
-                                //creamnos usuario si no existe
-                                return Usuario.findOrCreate({where: {email: objRes.usuario.email }, defaults: objRes.usuario})
-                                  .spread((user, created) => {
-                                    console.log(user.get({
-                                      plain: true
-                                    }))
-                                    console.log(created)
-                                  })
-
-                              });
-                          })
-                          .catch(err => {
-                            console.log(err);
-                          });
+                            })
+                            .catch(err => {
+                              console.log(err);
+                            });
+                        }
                       }
                     }
-                  }
-                })
-                .catch(err => {
-                  console.log(err);
-                });
-            }
-          })
-          .catch(err => {
-            console.log(err);
-          });
+                  })
+                  .catch(err => {
+                    console.log(err);
+                  });
+              }
+            })
+            .catch(err => {
+              console.log(err);
+            });
+        }
       })
       .catch(err => {
         console.log(err);
