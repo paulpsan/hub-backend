@@ -38,7 +38,8 @@ let authenticateGitlab = code => {
       client_secret: config.Gitlab.client_secret,
       code: code,
       grant_type: "authorization_code",
-      redirect_uri: "http://localhost:4200/inicio"
+      redirect_uri: "https://test.adsib.gob.bo/softwarelibre/inicio"
+      // redirect_uri: "http://localhost:4200/inicio"
     });
 
     console.log(data);
