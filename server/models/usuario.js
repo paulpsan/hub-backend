@@ -49,7 +49,7 @@ export default (sequelize, DataTypes) => {
       },
       login: {
         type: DataTypes.TEXT,
-        defaultValue: "local",
+        defaultValue: "",
       },
       //tipo puede ser Local, Github, Gitlab.
       tipo: {
@@ -66,8 +66,8 @@ export default (sequelize, DataTypes) => {
         defaultValue: {
           commits: [
             {
-              total: 10,
-              reciente:2,
+              total: 0,
+              reciente:0,
               porProyecto:0,
               porLenguaje:0
             }

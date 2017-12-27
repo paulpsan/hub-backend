@@ -5,24 +5,14 @@ import bodyParser from "body-parser";
 import session from "express-session";
 import cookieParser from "cookie-parser";
 import passport from "passport";
-import shrinkRay from "shrink-ray";
 import cors from "cors";
 import morgan from "morgan";
 import methodOverride from "method-override";
-// import { multer } from 'multer';
 import errorHandler from "errorhandler";
 
-// const express = require('express');
-// const bodyParser = require('body-parser');
 
 export default app => {
   const env = app.get("env");
-
-  //cargar rutas// app.get('/', function(req, res) {
-  //     res.send("estoy probando");
-  // });
-
-  //comvertir datos a Json
 
   app.use(morgan("dev"));
 
@@ -54,9 +44,4 @@ export default app => {
 
   app.use(passport.session());
   require("../config/github")(passport);
-  // app.get('/', function(req, res) {
-  //     res.send("estoy probando");
-  // });
-  // rutas base
-
 };

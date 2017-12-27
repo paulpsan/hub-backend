@@ -49,33 +49,43 @@ export default function seedDatabaseIfNeeded() {
         return Usuario.bulkCreate([{
           nombre: "D'jalmar Gutierrez",
           email: 'dgutierrez@adsib.gob.bo',
-          password:"123",
+          //con password 123
+          password:"$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri", 
           role:"admin",
-          tipo:"local"
+          tipo:"local",
+          login:""
         }, {
           nombre: "Teodoro Nina",
           email: 'tnina@adsib.gob.bo',
-          password:"123",
+          //con password 123
+          password:"$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
           role:"admin",
-          tipo:"local"
+          tipo:"local",
+          login:""
         }, {
           nombre: "Edwin Salcedo",
           email: 'esalcedo@adsib.gob.bo',
-          password:"123",
+          //con password 123
+          password:"$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
           role:"admin",
-          tipo:"local"
+          tipo:"local",
+          login:""
         }, {
           nombre: "Jhonny Monrroy",
           email: 'jmonrroy@adsib.gob.bo',
-          password:"123",
+          //con password 123
+          password:"$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
           role:"admin",
-          tipo:"local"
+          tipo:"local",
+          login:""
         }, {
           nombre: "Andrea Soria",
           email: 'asoria@adsib.gob.bo',
-          password:"123",
+          //con password 123
+          password:"$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
           role:"admin",
-          tipo:"local"
+          tipo:"local",
+          login:""
         }], {
           returning: true
         });
