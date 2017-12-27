@@ -113,7 +113,10 @@ let authenticateGitlab = code => {
                           objetoUsuario.datos = objDatos;
                           objRes.usuario = objetoUsuario;
                           return Usuario.findOrCreate({
-                            where: { email: objRes.usuario.email },
+                            where: { 
+                              email: objRes.usuario.email,
+                              tipo:'gitlab'
+                            },
                             defaults: objRes.usuario
                           }).spread((user, created) => {
                             console.log(

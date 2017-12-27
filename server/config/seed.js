@@ -12,6 +12,8 @@ export default function seedDatabaseIfNeeded() {
     //let Thing = sqldb.Thing;
     let Repositorio = sqldb.Repositorio;
     let repositorios;
+    let Proyecto = sqldb.Proyecto;
+    let proyectos;
     let Usuario = sqldb.Usuario;
     let usuarios;
     let UsuarioRepositorio = sqldb.UsuarioRepositorio;
@@ -42,6 +44,30 @@ export default function seedDatabaseIfNeeded() {
         repositorios = resultado;
         console.log('Se crearon repositorios de prueba');
         return Usuario.destroy({
+          where: {}
+        });
+      })
+      .then(() => {
+        return Proyecto.bulkCreate([{
+          nombre: 'Gitlab GeoBolivia',
+          urlRepositorio: 'https://gitlab.geo.gob.bo',
+          descripcion: 'gitlab'
+        }, {
+          nombre: 'Gitlab',
+          urlRepositorio: 'https://about.gitlab.com',
+          descripcion: 'gitlab'
+        }, {
+          nombre: 'GitHub',
+          urlRepositorio: 'https://github.com',
+          descripcion: 'github'
+        }], {
+          returning: true
+        });
+      })
+      .then(resultado => {
+        proyectos = resultado;
+        console.log('Se crearon proyectos de prueba');
+        return Proyecto.destroy({
           where: {}
         });
       })

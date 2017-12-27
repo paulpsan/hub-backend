@@ -29,56 +29,48 @@ export default (sequelize, DataTypes) => {
         }
       },
       password: {
-        allowNull: false,
         type: DataTypes.TEXT,
-        validate: {
-          notEmpty: {
-            msg: "Ingrese su password"
-          }
-        }
+        // validate: {
+        //   notEmpty: {
+        //     msg: "Ingrese su password"
+        //   }
+        // }
       },
       role: {
-        allowNull: false,
         type: DataTypes.TEXT,
         defaultValue: "usuario",
-        validate: {
-          notEmpty: {
-            msg: "Ingrese su role"
-          }
-        }
+        
       },
       login: {
         type: DataTypes.TEXT,
-        defaultValue: "",
+        defaultValue: ""
       },
       //tipo puede ser Local, Github, Gitlab.
       tipo: {
         type: DataTypes.TEXT,
-        validate: {
-          notEmpty: {
-            msg: "Ingrese su role"
-          }
-        }
+        defaultValue: "local",
+        // validate: {
+        //   notEmpty: {
+        //     msg: "Ingrese su role"
+        //   }
+        // }
       },
-      
+
       datos: {
         type: DataTypes.JSONB,
-        defaultValue: {
-          commits: [
-            {
-              total: 0,
-              reciente:0,
-              porProyecto:0,
-              porLenguaje:0
-            }
-          ],
-          lenguaje: [
-            {
+        defaultValue: [
+          {
+            commits: [],
+            lenguajes: {
               javascript: 0,
               php: 0
+            },
+            repo: {
+              id: "",
+              name: ""
             }
-          ]
-        }
+          }
+        ]
       }
     },
     {

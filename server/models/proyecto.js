@@ -8,6 +8,15 @@ export default function (sequelize, DataTypes) {
       primaryKey: true,
       autoIncrement: true
     },
+    nombre: {
+      allowNull: false,
+      type: DataTypes.TEXT,
+      validate: {
+        notEmpty: {
+          msg: 'Ingrese el nombre del proyecto'
+        }
+      }
+    },
     urlRepositorio: {
       allowNull: false,
       type: DataTypes.TEXT,

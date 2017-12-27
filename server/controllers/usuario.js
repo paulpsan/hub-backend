@@ -126,9 +126,11 @@ export function login(req, res) {
   const params = req.body;
   let email = params.email;
   let password = params.password;
+  let tipo = params.tipo
   Usuario.findOne({
     where: {
-      email: email.toLowerCase()
+      email: email.toLowerCase(),
+      tipo: tipo
     }
   })
     // .then(respondWithResult(res, 201))
@@ -139,7 +141,7 @@ export function login(req, res) {
           if (check) {
             res.status(200).send({
               token: jwt.createToken(user),
-              id: user._id
+              usuario: user
             });
           } else {
             res.status(404).send({ message: "Contraseña incorrecta" });
@@ -178,7 +180,7 @@ export function patch(req, res) {
   }
   return Usuario.find({
     where: {
-      _id: req.params.id
+      _id: req.params.id,
     }
   })
     .then(handleEntityNotFound(res))
