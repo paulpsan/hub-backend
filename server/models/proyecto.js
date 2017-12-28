@@ -27,13 +27,7 @@ export default function (sequelize, DataTypes) {
       }
     },
     descripcion: {
-      allowNull: false,
       type: DataTypes.TEXT,
-      validate: {
-        notEmpty: {
-          msg: 'Ingrese una breve descripción del proyecto'
-        }
-      }
     },
     datos: {
       type: DataTypes.JSONB

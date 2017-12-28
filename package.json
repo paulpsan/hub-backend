@@ -33,7 +33,7 @@
     "node-fetch": "^1.7.3",
     "passport": "^0.4.0",
     "passport-github2": "^0.1.11",
-    "pg": "^7.4.0",
+    "pg": "^6.4.2",
     "pg-hstore": "^2.3.2",
     "querystringify": "^1.0.0",
     "sequelize": "^4.26.0",

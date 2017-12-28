@@ -43,7 +43,7 @@ export default function seedDatabaseIfNeeded() {
       .then(resultado => {
         repositorios = resultado;
         console.log('Se crearon repositorios de prueba');
-        return Usuario.destroy({
+        return Proyecto.destroy({
           where: {}
         });
       })
@@ -67,7 +67,7 @@ export default function seedDatabaseIfNeeded() {
       .then(resultado => {
         proyectos = resultado;
         console.log('Se crearon proyectos de prueba');
-        return Proyecto.destroy({
+        return Usuario.destroy({
           where: {}
         });
       })
