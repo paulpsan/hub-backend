@@ -20,7 +20,7 @@ import { createSecureContext } from "tls";
 function respondWithResult(res, statusCode) {
   statusCode = statusCode || 200;
   return function(entity) {
-    console.log("response",entity);
+    console.log("response", entity);
     if (entity) {
       return res.status(statusCode).json(entity);
     }
@@ -50,34 +50,35 @@ function removeEntity(res) {
   };
 }
 
-function createEntity(req,res) {
+function createEntity(req, res) {
   return function(entity) {
     if (!entity) {
       return Proyecto.create(req)
-      .then((response) => {
-        res.status(201).send(response);
-      })
-      .catch(err=>{
-        res.send(err);
-      });
+        .then(response => {
+          res.status(201).send(response);
+        })
+        .catch(err => {
+          res.send(err);
+        });
     }
-    res.send({message: req.urlRepositorio+" ya existe"})
+    res.send({ message: req.urlRepositorio + " ya existe" });
     return entity;
   };
 }
 
-function updateEntity(req,res) {
+function updateEntity(req, res) {
   return function(entity) {
     if (entity) {
-      return entity.update(req)
-      .then((response) => {
-        res.status(200).send(response);
-      })
-      .catch(err=>{
-        res.send(err);
-      });
+      return entity
+        .update(req)
+        .then(response => {
+          res.status(200).send(response);
+        })
+        .catch(err => {
+          res.send(err);
+        });
     }
-    res.send({message: req.urlRepositorio+" No existe"})
+    res.send({ message: req.urlRepositorio + " No existe" });
     return entity;
   };
 }
@@ -85,7 +86,7 @@ function updateEntity(req,res) {
 function handleEntityNotFound(res) {
   return function(entity) {
     if (!entity) {
-      res.status(404).send({message:"no se encuentra lo requerido"});
+      res.status(404).send({ message: "no se encuentra lo requerido" });
       return null;
     }
     return entity;
@@ -211,41 +212,40 @@ export function index(req, res) {
 
 // Gets a single Proyecto from the DB
 export function show(req, res) {
-  //  return Proyecto.find({
-  //      where: {
-  //        _id: req.params.id
-  //      }
-  //    })
-  //    .then(proyecto => {
-  //      asignarCommits(proyecto);
-  //      return proyecto;
-  //    })
-  //return Proyecto.findAll()
-  let gitlab = new GitLab("https://gitlab.geo.gob.bo", "7-VmBEpTd33s28N5dHvy");
-  //obtener datos a partir de la url del proyecto. En primera instancia mandaremos el id del proyecto
-  console.log(req.params);
-  return gitlab
-    .proyectoId(req.params.id)
-    .then(proyecto => {
-      //console.log(proyecto);
-      //asignarCommits(proyecto);
-      return proyecto;
-    })
+  return Proyecto.find({
+    where: {
+      _id: req.params.id
+    }
+  })
     .then(handleEntityNotFound(res))
     .then(respondWithResult(res))
     .catch(handleError(res));
+
+  // let gitlab = new GitLab("https://gitlab.geo.gob.bo", "7-VmBEpTd33s28N5dHvy");
+  // //obtener datos a partir de la url del proyecto. En primera instancia mandaremos el id del proyecto
+  // console.log(req.params);
+  // return gitlab
+  //   .proyectoId(req.params.id)
+  //   .then(proyecto => {
+  //     //console.log(proyecto);
+  //     //asignarCommits(proyecto);
+  //     return proyecto;
+  //   })
+  //   .then(handleEntityNotFound(res))
+  //   .then(respondWithResult(res))
+  //   .catch(handleError(res));
 }
 
 // Creates a new Proyecto in the DB
 
 export function create(req, res) {
-  console.log("body:",req.body,"params:",req.params)
+  console.log("body:", req.body, "params:", req.params);
   return Proyecto.find({
     where: {
       urlRepositorio: req.body.urlRepositorio
     }
   })
-    .then(createEntity(req.body,res))
+    .then(createEntity(req.body, res))
     .catch(handleError(res));
 }
 
@@ -283,7 +283,7 @@ export function upsert(req, res) {
     }
   })
     .then(handleEntityNotFound(res))
-    .then(updateEntity(req.body,res))
+    .then(updateEntity(req.body, res))
     .catch(handleError(res));
 }
 

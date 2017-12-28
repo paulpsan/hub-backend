@@ -16,10 +16,6 @@ const agent = new https.Agent({
 let authenticateGitlab = code => {
   return new Promise((res, rej) => {
     require("ssl-root-cas").inject();
-    //configuramos los headers
-    // var myHeaders = new Headers();
-    // myHeaders.append("client_id","becb33a39e525721517c");
-    // myHeaders.append("client_secret","36338cdf7057d2086495a241fa3d053766da55c1");
     let headersClient = qs.stringify(
       {
         client_id:
@@ -38,8 +34,8 @@ let authenticateGitlab = code => {
       client_secret: config.Gitlab.client_secret,
       code: code,
       grant_type: "authorization_code",
-      redirect_uri: "https://test.adsib.gob.bo/softwarelibre/inicio"
-      // redirect_uri: "http://localhost:4200/inicio"
+      // redirect_uri: "https://test.adsib.gob.bo/softwarelibre/inicio"
+      redirect_uri: "http://localhost:4200/inicio"
     });
 
     console.log(data);
@@ -78,10 +74,12 @@ let authenticateGitlab = code => {
             objetoUsuario.login = usuarioGitlab.username;
             objRes.usuario = objetoUsuario;
             res(objRes);
+
             fetch(
               "https://gitlab.geo.gob.bo/api/v4/users/" +
                 usuarioGitlab.id +
-                "/projects",
+                "/projects?access_token=" +
+                token.access_token,
               { agent, strictSSL: false }
             )
               .then(res => {
@@ -114,9 +112,9 @@ let authenticateGitlab = code => {
                           objetoUsuario.datos = objDatos;
                           objRes.usuario = objetoUsuario;
                           return Usuario.findOrCreate({
-                            where: { 
+                            where: {
                               email: objRes.usuario.email,
-                              tipo:'gitlab'
+                              tipo: "gitlab"
                             },
                             defaults: objRes.usuario
                           }).spread((user, created) => {
@@ -136,82 +134,11 @@ let authenticateGitlab = code => {
               .catch(err => {
                 rej(err);
               });
-            // if (json.repos_url) {
-            //   fetch(json.repos_url + headersClient)
-            //     .then(res => {
-            //       return res.json();
-            //     })
-            //     .then(repositorios => {
-            //       // console.log("repos", repositorios);
-            //       let i = 1;
-            //       let objDatos = [];
-            //       if (repositorios.length > 0) {
-            //         for (let value of repositorios) {
-            //           let objLenguajes = {};
-            //           let objCommits = {};
-            //           if (value.languages_url) {
-            //             fetch(value.languages_url + headersClient)
-            //               .then(res => {
-            //                 return res.json();
-            //               })
-            //               .then(lenguajes => {
-            //                 objLenguajes = lenguajes;
-            //                 // console.log("lenguaje",lenguajes);
-            //                 fetch(
-            //                   "https://api.github.com/repos/" +
-            //                     value.full_name +
-            //                     "/commits" +
-            //                     headersClient
-            //                 )
-            //                   .then(res => {
-            //                     return res.json();
-            //                   })
-            //                   .then(commits => {
-            //                     objDatos.push({
-            //                       lenguajes: objLenguajes,
-            //                       repo: value.name,
-            //                       commits: commits.length
-            //                     });
-            //                     console.log("obj", objDatos);
-            //                     if (i == repositorios.length) {
-            //                       objetoUsuario.datos = objDatos;
-            //                       objRes.usuario = objetoUsuario;
-            //                       //creamos el objeto si existe
-            //                       res(objRes);
-            //                     }
-            //                     i++;
-            //                     //creamnos usuario si no existe
-            //                     return Usuario.findOrCreate({
-            //                       where: { email: objRes.usuario.email },
-            //                       defaults: objRes.usuario
-            //                     }).spread((user, created) => {
-            //                       console.log(
-            //                         user.get({
-            //                           plain: true
-            //                         })
-            //                       );
-            //                       console.log(created);
-            //                     });
-            //                   });
-            //               })
-            //               .catch(err => {
-            //                 console.log(err);
-            //               });
-            //           }
-            //         }
-            //       }
-            //     })
-            //     .catch(err => {
-            //       console.log(err);
-            //     });
-            // }
           })
           .catch(err => {
             rej(err);
             console.log(err);
           });
-
-        //hasta aqui
       })
       .catch(err => {
         console.log(err);
@@ -232,5 +159,27 @@ export function authGitlab(req, res) {
     )
     .catch(err => {
       console.log(err);
+    });
+}
+export function getMembers(req, res) {
+  const agent = new https.Agent({
+    rejectUnauthorized: false
+  });
+
+  let token = req.body.token;
+  let idProyecto = req.params.id_proyecto;
+  fetch(
+    "https://gitlab.geo.gob.bo/api/v4/projects/" +
+      idProyecto +
+      "/members?access_token=" +
+      token,
+    { agent, strictSSL: false }
+  )
+    .then(response => {
+      return response.json();
+    })
+    .then(response => {
+      console.log("res", response);
+      res.send(response);
     });
 }
