@@ -41,6 +41,7 @@ export default (sequelize, DataTypes) => {
         defaultValue: "usuario",
         
       },
+      
       login: {
         type: DataTypes.TEXT,
         defaultValue: ""
@@ -55,7 +56,10 @@ export default (sequelize, DataTypes) => {
         //   }
         // }
       },
-
+      avatar: {
+        type: DataTypes.TEXT,
+        defaultValue: ""
+      },
       datos: {
         type: DataTypes.JSONB,
         defaultValue: [

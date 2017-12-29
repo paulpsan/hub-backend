@@ -72,8 +72,8 @@ let authenticateGitlab = code => {
             objetoUsuario.tipo = "gitlab";
             objetoUsuario.role = "usuario";
             objetoUsuario.login = usuarioGitlab.username;
+            objetoUsuario.avatar = usuarioGitlab.avatar_url;
             objRes.usuario = objetoUsuario;
-            res(objRes);
 
             fetch(
               "https://gitlab.geo.gob.bo/api/v4/users/" +
@@ -111,20 +111,25 @@ let authenticateGitlab = code => {
                         if (i == repositorios.length) {
                           objetoUsuario.datos = objDatos;
                           objRes.usuario = objetoUsuario;
-                          return Usuario.findOrCreate({
+                          console.log("resultado", objRes);
+                          Usuario.findOne({
                             where: {
-                              email: objRes.usuario.email,
-                              tipo: "gitlab"
-                            },
-                            defaults: objRes.usuario
-                          }).spread((user, created) => {
-                            console.log(
-                              user.get({
-                                plain: true
-                              })
-                            );
-                            console.log(created);
-                          });
+                              email: objRes.usuario.email.toLowerCase(),
+                              tipo: objRes.usuario.tipo
+                            }
+                          })
+                            .then(user => {
+                              console.log("entity", user);
+                              if (user != null) {
+                                return user.destroy();
+                              }
+                              return Usuario.create(objRes.usuario).then(response => {
+                                res({token:objRes.token,usuario:response});
+                              });
+                            })
+                            .catch(err => {
+                              console.log(err);
+                            });
                         }
                         i++;
                       });
