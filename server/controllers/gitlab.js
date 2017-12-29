@@ -92,6 +92,8 @@ let authenticateGitlab = code => {
                 if (repositorios.length > 0) {
                   for (let value of repositorios) {
                     let objCommits = {};
+                    let members;
+
                     fetch(
                       "https://gitlab.geo.gob.bo/api/v4/projects/" +
                         value.id +
@@ -103,35 +105,56 @@ let authenticateGitlab = code => {
                         return res.json();
                       })
                       .then(commits => {
-                        console.log("commits", commits.length);
-                        objDatos.push({
-                          repo: value,
-                          commits: commits
-                        });
-                        if (i == repositorios.length) {
-                          objetoUsuario.datos = objDatos;
-                          objRes.usuario = objetoUsuario;
-                          console.log("resultado", objRes);
-                          Usuario.findOne({
-                            where: {
-                              email: objRes.usuario.email.toLowerCase(),
-                              tipo: objRes.usuario.tipo
-                            }
+                        fetch(
+                          "https://gitlab.geo.gob.bo/api/v4/projects/" +
+                            value.id +
+                            "/members?access_token=" +
+                            token.access_token,
+                          { agent, strictSSL: false }
+                        )
+                          .then(response => {
+                            return response.json();
                           })
-                            .then(user => {
-                              console.log("entity", user);
-                              if (user != null) {
-                                return user.destroy();
-                              }
-                              return Usuario.create(objRes.usuario).then(response => {
-                                res({token:objRes.token,usuario:response});
-                              });
-                            })
-                            .catch(err => {
-                              console.log(err);
+                          .then(response => {
+                            members = response;
+                            console.log("commits", commits.length);
+                            objDatos.push({
+                              repo: value,
+                              commits: commits,
+                              members: members
                             });
-                        }
-                        i++;
+                            if (i == repositorios.length) {
+                              objetoUsuario.datos = objDatos;
+                              objRes.usuario = objetoUsuario;
+                              console.log("resultado", objRes);
+                              Usuario.findOne({
+                                where: {
+                                  email: objRes.usuario.email.toLowerCase(),
+                                  tipo: objRes.usuario.tipo
+                                }
+                              })
+                                .then(user => {
+                                  // console.log("entity", user);
+                                  if (user != null) {
+                                    return user.destroy().then();
+                                  }
+                                })
+                                .then(() => {
+                                  return Usuario.create(objRes.usuario).then(
+                                    response => {
+                                      res({
+                                        token: objRes.token,
+                                        usuario: response
+                                      });
+                                    }
+                                  );
+                                })
+                                .catch(err => {
+                                  console.log(err);
+                                });
+                            }
+                            i++;
+                          });
                       });
                   }
                 }

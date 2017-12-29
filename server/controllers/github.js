@@ -103,10 +103,12 @@ let authenticateGithub = code => {
                                       }
                                     })
                                       .then(user => {
-                                        console.log("entity", user);
+                                        // console.log("entity", user);
                                         if (user != null) {
-                                          return user.destroy();
-                                        }
+                                          return user.destroy().then();
+                                        }                                       
+                                      })
+                                      .then(()=>{
                                         return Usuario.create(objRes.usuario).then(response => {
                                           res({token:objRes.token,usuario:response});
                                         });
