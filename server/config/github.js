@@ -17,7 +17,7 @@ module.exports = function(passport) {
         },
         function(accessToken, refreshToken, profile, done) {
             process.nextTick(function () {
-                console.log("esto es su profile"+profile);
+                // console.log("esto es su profile"+profile);
                 return done(null, profile);
             });
         }

@@ -43,5 +43,5 @@ export default app => {
   app.use(passport.initialize());
 
   app.use(passport.session());
-  require("../config/github")(passport);
+  // require("../config/github")(passport);
 };

@@ -15,17 +15,18 @@ let authenticateGithub = code => {
     // var myHeaders = new Headers();
     // myHeaders.append("client_id","becb33a39e525721517c");
     // myHeaders.append("client_secret","36338cdf7057d2086495a241fa3d053766da55c1");
+
     let headersClient = qs.stringify(
       {
-        client_id: "becb33a39e525721517c",
-        client_secret: "36338cdf7057d2086495a241fa3d053766da55c1"
+        client_id: config.github.client_id,
+        client_secret: config.github.client_secret
       },
       true
     );
-    console.log(headersClient);
+    // console.log(headersClient);
     let data = qs.stringify({
-      client_id: config.Github.oauth_client_id,
-      client_secret: config.Github.oauth_client_secret,
+      client_id: config.github.client_id,
+      client_secret: config.github.client_secret,
       code: code
     });
     let objRes = {};
@@ -39,7 +40,7 @@ let authenticateGithub = code => {
       })
       .then(token => {
         objRes.token = qs.parse(token).access_token;
-        console.log(objRes.token);
+        // console.log(objRes.token);
         if (objRes.token) {
           fetch("https://api.github.com/user?access_token=" + objRes.token)
             .then(res => {
@@ -91,7 +92,7 @@ let authenticateGithub = code => {
                                     repo: value,
                                     commits: commits
                                   });
-                                  console.log("obj", objDatos);
+                                  // console.log("obj", objDatos);
                                   if (i == repositorios.length) {
                                     objetoUsuario.datos = objDatos;
                                     objRes.usuario = objetoUsuario;
@@ -106,11 +107,16 @@ let authenticateGithub = code => {
                                         // console.log("entity", user);
                                         if (user != null) {
                                           return user.destroy().then();
-                                        }                                       
+                                        }
                                       })
-                                      .then(()=>{
-                                        return Usuario.create(objRes.usuario).then(response => {
-                                          res({token:objRes.token,usuario:response});
+                                      .then(() => {
+                                        return Usuario.create(
+                                          objRes.usuario
+                                        ).then(response => {
+                                          res({
+                                            token: objRes.token,
+                                            usuario: response
+                                          });
                                         });
                                       })
                                       .catch(err => {
