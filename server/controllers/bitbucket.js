@@ -4,43 +4,37 @@ import { Usuario } from "../sqldb";
 import SequelizeHelper from "../components/sequelize-helper";
 import config from "../config/environment";
 import qs from "querystringify";
-import https from "https";
 import request from "request";
 // import { fetch } from "node-fetch";
+
+var base64 = require("base-64");
 var fetch = require("node-fetch");
 
-let authenticateGithub = code => {
+function authenticateBitbucket(code) {
   return new Promise((res, rej) => {
-    //configuramos los headers
-    // var myHeaders = new Headers();
-    // myHeaders.append("client_id","becb33a39e525721517c");
-    // myHeaders.append("client_secret","36338cdf7057d2086495a241fa3d053766da55c1");
-
-    let headersClient = qs.stringify(
+    request.post(
+      `https://bitbucket.org/site/oauth2/access_token`,
       {
-        client_id: config.github.clientId,
-        client_secret: config.github.clientSecret
+        auth: {
+          username: config.bitbucket.clientId,
+          password: config.bitbucket.clientSecret
+        },
+        form: {
+          grant_type: "authorization_code",
+          code: code,
+          redirect_uri: "http://localhost:4200/inicio"
+        }
       },
-      true
-    );
-    // console.log(headersClient);
-    let data = qs.stringify({
-      client_id: config.github.clientId,
-      client_secret: config.github.clientSecret,
-      code: code
-    });
-    let objRes = {};
-    let promesa = fetch("https://github.com/login/oauth/access_token", {
-      method: "POST",
-      body: data
-    });
-    promesa
-      .then(response => {
-        return response.text();
-      })
-      .then(token => {
-        objRes.token = qs.parse(token).access_token;
-        // console.log(objRes.token);
+      (err, response, body) => {
+        const data = JSON.parse(body);
+        console.log("oauth.auth.response", data);
+        const {
+          access_token,
+          refresh_token,
+          token_type,
+          scopes,
+          expires_in
+        } = data;
         if (objRes.token) {
           fetch("https://api.github.com/user?access_token=" + objRes.token)
             .then(res => {
@@ -109,16 +103,17 @@ let authenticateGithub = code => {
                                           return user.destroy().then();
                                         }
                                       })
-                                      .then(() => {
-                                        return Usuario.create(
-                                          objRes.usuario
-                                        ).then(response => {
-                                          res({
-                                            token: objRes.token,
-                                            usuario: response
-                                          });
-                                        });
-                                      })
+                                      // .then(() => {
+                                      //   return Usuario.create(
+                                      //     objRes.usuario
+                                      //   ).then(response => {
+                                      //     res({
+                                      //       token: objRes.token,
+                                      //       usuario: response
+                                      //     });
+                                      //   });
+                                      // })
+                                      .then(crearUsuario(objRes, res))
                                       .catch(err => {
                                         console.log(err);
                                       });
@@ -144,16 +139,14 @@ let authenticateGithub = code => {
               console.log(err);
             });
         }
-      })
-      .catch(err => {
-        console.log(err);
-        rej(err);
-      });
+      }
+    );
   });
-};
+}
 
-export function authGithub(req, res) {
-  authenticateGithub(req.params.code)
+export function authBitbucket(req, res) {
+  console.log(req.params.code);
+  authenticateBitbucket(req.params.code)
     .then(
       result => {
         res.json(result);

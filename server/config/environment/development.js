@@ -12,14 +12,18 @@ module.exports = {
   },
 
   github: {
-    client_id: "deafb08eb71ea00e531c",
-    client_secret: "10fe3d839e76615964b8d52ebfe7219169825f57"
+    clientId: "deafb08eb71ea00e531c",
+    clientSecret: "10fe3d839e76615964b8d52ebfe7219169825f57"
   },
   gitlab_geo: {
-    client_id:
+    clientId:
       "800b8fdad978c3f6bdd3e6e4ad535748cb38d24863e65218b2b2256e40ef9139",
-    client_secret:
+    clientSecret:
       "272f3ddd82f15bb561c9cc34e44bfda2183100d4eb127a63dcc3529c181c1ac9"
+  },
+  bitbucket: {
+    clientId: "UEp5BUWsGZH9jAE962",
+    clientSecret: "EPQf3yDRYtY5dGFS3BRndWHwTG6M9uMx"
   }
   // Seed database on startup
   //seedDB: true
