@@ -5,10 +5,49 @@ import SequelizeHelper from "../components/sequelize-helper";
 import config from "../config/environment";
 import qs from "querystringify";
 import request from "request";
+import UsuarioBitbucket from "../models/usuarioBitbucket";
+import UsuarioResponse from "../models/usuarioResponse";
 // import { fetch } from "node-fetch";
 
-var base64 = require("base-64");
 var fetch = require("node-fetch");
+let usuarioBitbucket = new UsuarioBitbucket();
+let usuarioResponse = new UsuarioResponse();
+
+function CrearActualizar() {
+  return function(usuarioBitbucket) {
+    let objetoUsuario = {};
+    //cargar datos
+    objetoUsuario._id = "";
+    objetoUsuario.nombre = "paul";
+    objetoUsuario.email = "paulpsan@pruevb";
+    objetoUsuario.password = "bitbucket";
+    objetoUsuario.tipo = "bitbucket";
+    objetoUsuario.role = "usuario";
+    objetoUsuario.login = "paul";
+
+    Usuario.findOne({
+      where: {
+        login: usuarioBitbucket.username,
+        tipo: "bitbucket"
+      }
+    }).then(user => {
+      if (user !== null) {
+        //colocar modelo de usuario
+        Usuario.update(objetoUsuario).then(result => {
+          UsuarioCreadoActualizado = result;
+        });
+      } else {
+        Usuario.create(objetoUsuario).then(result => {
+          UsuarioCreadoActualizado = result;
+        });
+      }
+      console.log(UsuarioCreadoActualizado);
+      // return UsuarioCreadoActualizado;
+
+      console.log("encontrado", user);
+    });
+  };
+}
 
 function authenticateBitbucket(code) {
   return new Promise((res, rej) => {
@@ -35,105 +74,43 @@ function authenticateBitbucket(code) {
           scopes,
           expires_in
         } = data;
-        if (objRes.token) {
-          fetch("https://api.github.com/user?access_token=" + objRes.token)
+        //obtenemos al Usuario con el access_token
+        // TODO implementar  try catch
+        if (access_token) {
+          fetch(
+            "https://api.bitbucket.org/2.0/user?access_token=" + access_token
+          )
             .then(res => {
               return res.json();
             })
             .then(json => {
-              // console.log("user",json)
-              let objetoUsuario = {};
-              objetoUsuario.nombre = json.name;
-              objetoUsuario.email = json.email;
-              objetoUsuario.password = "github";
-              objetoUsuario.tipo = "github";
-              objetoUsuario.role = "usuario";
-              objetoUsuario.login = json.login;
-              objRes.usuario = objetoUsuario;
-              if (json.repos_url) {
-                fetch(json.repos_url + headersClient)
-                  .then(res => {
-                    return res.json();
-                  })
-                  .then(repositorios => {
-                    // console.log("repos", repositorios);
-                    let i = 1;
-                    let objDatos = [];
-                    if (repositorios.length > 0) {
-                      for (let value of repositorios) {
-                        let objLenguajes = {};
-                        let objCommits = {};
-                        if (value.languages_url) {
-                          fetch(value.languages_url + headersClient)
-                            .then(res => {
-                              return res.json();
-                            })
-                            .then(lenguajes => {
-                              objLenguajes = lenguajes;
-                              // console.log("lenguaje",lenguajes);
-                              fetch(
-                                "https://api.github.com/repos/" +
-                                  value.full_name +
-                                  "/commits" +
-                                  headersClient
-                              )
-                                .then(res => {
-                                  return res.json();
-                                })
-                                .then(commits => {
-                                  objDatos.push({
-                                    lenguajes: objLenguajes,
-                                    repo: value,
-                                    commits: commits
-                                  });
-                                  // console.log("obj", objDatos);
-                                  if (i == repositorios.length) {
-                                    objetoUsuario.datos = objDatos;
-                                    objRes.usuario = objetoUsuario;
+              // console.log("user", json);
 
-                                    Usuario.findOne({
-                                      where: {
-                                        email: objRes.usuario.email.toLowerCase(),
-                                        tipo: objRes.usuario.tipo
-                                      }
-                                    })
-                                      .then(user => {
-                                        // console.log("entity", user);
-                                        if (user != null) {
-                                          return user.destroy().then();
-                                        }
-                                      })
-                                      // .then(() => {
-                                      //   return Usuario.create(
-                                      //     objRes.usuario
-                                      //   ).then(response => {
-                                      //     res({
-                                      //       token: objRes.token,
-                                      //       usuario: response
-                                      //     });
-                                      //   });
-                                      // })
-                                      .then(crearUsuario(objRes, res))
-                                      .catch(err => {
-                                        console.log(err);
-                                      });
-                                    // res(objRes);
-                                  }
-                                  i++;
-                                  //creamnos usuario si no existe
-                                });
-                            })
-                            .catch(err => {
-                              console.log(err);
-                            });
-                        }
-                      }
-                    }
-                  })
-                  .catch(err => {
-                    console.log(err);
-                  });
-              }
+              usuarioBitbucket.website = json.website;
+              usuarioBitbucket.display_name = json.display_name;
+              usuarioBitbucket.account_id = json.account_id;
+              usuarioBitbucket.hooks = json.links.hooks;
+              usuarioBitbucket.self = json.links.self;
+              usuarioBitbucket.repositories = json.links.repositories;
+              usuarioBitbucket.html = json.links.html;
+              usuarioBitbucket.followers = json.links.followers;
+              usuarioBitbucket.avatar = json.links.avatar;
+              usuarioBitbucket.following = json.links.following;
+              usuarioBitbucket.snippets = json.links.snippets;
+              usuarioBitbucket.created_on = json.created_on;
+              usuarioBitbucket.is_staff = json.is_staff;
+              usuarioBitbucket.location = json.location;
+              usuarioBitbucket.type = json.type;
+              usuarioBitbucket.uuid = json.uuid;
+              usuarioBitbucket.access_token = access_token;
+              return usuarioBitbucket;
+              // res(usuarioBitbucket);
+              //
+            })
+            .then(CrearActualizar())
+            .then(usuario => {
+              console.log("usuario res:", usuario);
+              res(usuario);
             })
             .catch(err => {
               console.log(err);
@@ -149,6 +126,7 @@ export function authBitbucket(req, res) {
   authenticateBitbucket(req.params.code)
     .then(
       result => {
+        console.log("enviando :", result);
         res.json(result);
       },
       error => {
