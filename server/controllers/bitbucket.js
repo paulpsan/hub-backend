@@ -13,19 +13,36 @@ var fetch = require("node-fetch");
 let usuarioBitbucket = new UsuarioBitbucket();
 let usuarioResponse = new UsuarioResponse();
 
-function CrearActualizar() {
-  return function(usuarioBitbucket) {
-    let objetoUsuario = {};
-    //cargar datos
-    objetoUsuario._id = "";
-    objetoUsuario.nombre = "paul";
-    objetoUsuario.email = "paulpsan@pruevb";
-    objetoUsuario.password = "bitbucket";
-    objetoUsuario.tipo = "bitbucket";
-    objetoUsuario.role = "usuario";
-    objetoUsuario.login = "paul";
+let objetoUsuario = {};
+objetoUsuario._id = "";
+objetoUsuario.nombre = "";
+objetoUsuario.email = "paulpsan@pruevb";
+objetoUsuario.password = "bitbucket";
+objetoUsuario.tipo = "bitbucket";
+objetoUsuario.role = "usuario";
+objetoUsuario.login = "";
 
-    Usuario.findOne({
+function getEmail() {
+  return function(usuarioBitbucket) {
+    return fetch(
+      "https://api.bitbucket.org/2.0/user/emails?access_token=" +
+        usuarioBitbucket.access_token
+    )
+      .then(res => {
+        return res.json();
+      })
+      .then(result => {
+        objetoUsuario.email = result.values[0].email;
+        return usuarioBitbucket;
+      });
+  };
+}
+
+function crearActualizar() {
+  return function(usuarioBitbucket) {
+    objetoUsuario.nombre = usuarioBitbucket.display_name;
+    objetoUsuario.login = usuarioBitbucket.username;
+    return Usuario.findOne({
       where: {
         login: usuarioBitbucket.username,
         tipo: "bitbucket"
@@ -33,24 +50,24 @@ function CrearActualizar() {
     }).then(user => {
       if (user !== null) {
         //colocar modelo de usuario
-        Usuario.update(objetoUsuario).then(result => {
-          UsuarioCreadoActualizado = result;
+        return Usuario.upsert(objetoUsuario, {
+          where: {
+            _id: user._id
+          }
+        }).then(resp => {
+          return usuarioBitbucket;
         });
       } else {
-        Usuario.create(objetoUsuario).then(result => {
-          UsuarioCreadoActualizado = result;
+        return Usuario.create(objetoUsuario).then(resp => {
+          return usuarioBitbucket;
         });
       }
-      console.log(UsuarioCreadoActualizado);
-      // return UsuarioCreadoActualizado;
-
-      console.log("encontrado", user);
     });
   };
 }
 
 function authenticateBitbucket(code) {
-  return new Promise((res, rej) => {
+  return new Promise((resolver, rechazar) => {
     request.post(
       `https://bitbucket.org/site/oauth2/access_token`,
       {
@@ -86,6 +103,7 @@ function authenticateBitbucket(code) {
             .then(json => {
               // console.log("user", json);
 
+              usuarioBitbucket.username = json.username;
               usuarioBitbucket.website = json.website;
               usuarioBitbucket.display_name = json.display_name;
               usuarioBitbucket.account_id = json.account_id;
@@ -103,17 +121,16 @@ function authenticateBitbucket(code) {
               usuarioBitbucket.type = json.type;
               usuarioBitbucket.uuid = json.uuid;
               usuarioBitbucket.access_token = access_token;
+
               return usuarioBitbucket;
-              // res(usuarioBitbucket);
-              //
             })
-            .then(CrearActualizar())
+            .then(getEmail())
+            .then(crearActualizar())
             .then(usuario => {
-              console.log("usuario res:", usuario);
-              res(usuario);
+              resolver(usuario);
             })
             .catch(err => {
-              console.log(err);
+              rechazar(err);
             });
         }
       }
@@ -126,8 +143,16 @@ export function authBitbucket(req, res) {
   authenticateBitbucket(req.params.code)
     .then(
       result => {
-        console.log("enviando :", result);
-        res.json(result);
+        // console.log("enviando :", result);
+        Usuario.findOne({
+          where: {
+            login: result.username,
+            tipo: "bitbucket"
+          }
+        }).then(resultado => {
+          console.log("enviando :", resultado);
+          res.json(resultado);
+        });
       },
       error => {
         res.send(error);
