@@ -24,6 +24,7 @@ objetoUsuario.login = "";
 
 function getEmail() {
   return function(usuarioBitbucket) {
+    // console.log("getEmail", usuarioBitbucket);
     return fetch(
       "https://api.bitbucket.org/2.0/user/emails?access_token=" +
         usuarioBitbucket.access_token
@@ -40,6 +41,7 @@ function getEmail() {
 
 function crearActualizar() {
   return function(usuarioBitbucket) {
+    // console.log("crearActualiza", usuarioBitbucket);
     objetoUsuario.nombre = usuarioBitbucket.display_name;
     objetoUsuario.login = usuarioBitbucket.username;
     return Usuario.findOne({
@@ -101,35 +103,18 @@ function authenticateBitbucket(code) {
               return res.json();
             })
             .then(json => {
-              // console.log("user", json);
-
-              usuarioBitbucket.username = json.username;
-              usuarioBitbucket.website = json.website;
-              usuarioBitbucket.display_name = json.display_name;
-              usuarioBitbucket.account_id = json.account_id;
-              usuarioBitbucket.hooks = json.links.hooks;
-              usuarioBitbucket.self = json.links.self;
-              usuarioBitbucket.repositories = json.links.repositories;
-              usuarioBitbucket.html = json.links.html;
-              usuarioBitbucket.followers = json.links.followers;
-              usuarioBitbucket.avatar = json.links.avatar;
-              usuarioBitbucket.following = json.links.following;
-              usuarioBitbucket.snippets = json.links.snippets;
-              usuarioBitbucket.created_on = json.created_on;
-              usuarioBitbucket.is_staff = json.is_staff;
-              usuarioBitbucket.location = json.location;
-              usuarioBitbucket.type = json.type;
-              usuarioBitbucket.uuid = json.uuid;
+              usuarioBitbucket = json;
               usuarioBitbucket.access_token = access_token;
-
               return usuarioBitbucket;
             })
             .then(getEmail())
+            // cargar datos del repositorios
             .then(crearActualizar())
             .then(usuario => {
               resolver(usuario);
             })
             .catch(err => {
+              console.log("err", err);
               rechazar(err);
             });
         }
@@ -151,7 +136,7 @@ export function authBitbucket(req, res) {
           }
         }).then(resultado => {
           console.log("enviando :", resultado);
-          res.json(resultado);
+          res.json({ token: result.access_token, usuario: resultado });
         });
       },
       error => {
