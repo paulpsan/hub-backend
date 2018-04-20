@@ -60,11 +60,18 @@ export default (sequelize, DataTypes) => {
         type: DataTypes.TEXT,
         defaultValue: ""
       },
+      descripcion: {
+        type: DataTypes.STRING,
+      },
+      clasificacion: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0
+      },
       datos: {
         type: DataTypes.JSONB,
         defaultValue: [
           {
-            commits: [],
+            commits: "",
             lenguajes: {
               javascript: 0,
               php: 0

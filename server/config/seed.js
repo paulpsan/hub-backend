@@ -79,7 +79,8 @@ export default function seedDatabaseIfNeeded() {
           password:"$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri", 
           role:"admin",
           tipo:"local",
-          login:""
+          login:"",
+          clasificacion:4
         }, {
           nombre: "Teodoro Nina",
           email: 'tnina@adsib.gob.bo',
@@ -95,7 +96,8 @@ export default function seedDatabaseIfNeeded() {
           password:"$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
           role:"admin",
           tipo:"local",
-          login:""
+          login:"",
+          clasificacion:3
         }, {
           nombre: "Jhonny Monrroy",
           email: 'jmonrroy@adsib.gob.bo',
@@ -111,7 +113,8 @@ export default function seedDatabaseIfNeeded() {
           password:"$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
           role:"admin",
           tipo:"local",
-          login:""
+          login:"",
+          clasificacion:2
         }], {
           returning: true
         });

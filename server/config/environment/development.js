@@ -8,7 +8,9 @@ module.exports = {
   sequelize: {
     uri: "postgresql://postgres:postgres@localhost/hub",
     // uri: 'postgresql://postgres:admin@localhost/hub',
-    options: {}
+    options: {
+      timezone: "-04:00" //for writing to database
+    }
   },
 
   github: {

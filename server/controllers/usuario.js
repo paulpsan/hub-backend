@@ -71,8 +71,14 @@ function handleError(res, statusCode) {
 
 // Gets a list of Usuarios
 export function index(req, res) {
-  return Usuario.findAndCountAll(req.opciones)
+  return Usuario.findAndCountAll({
+    include: [{ all: true }],
+    order: [["clasificacion", "desc"]],
+    offset: req.opciones.offset,
+    limit: req.opciones.limit
+  })
     .then(datos => {
+      console.log("datos:", datos);
       return SequelizeHelper.generarRespuesta(datos, req.opciones);
     })
     .then(respondWithResult(res))
@@ -126,7 +132,7 @@ export function login(req, res) {
   const params = req.body;
   let email = params.email;
   let password = params.password;
-  let tipo = params.tipo
+  let tipo = params.tipo;
   Usuario.findOne({
     where: {
       email: email.toLowerCase(),
@@ -180,7 +186,7 @@ export function patch(req, res) {
   }
   return Usuario.find({
     where: {
-      _id: req.params.id,
+      _id: req.params.id
     }
   })
     .then(handleEntityNotFound(res))
@@ -200,4 +206,3 @@ export function destroy(req, res) {
     .then(removeEntity(res))
     .catch(handleError(res));
 }
-

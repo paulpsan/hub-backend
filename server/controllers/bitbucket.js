@@ -13,37 +13,74 @@ var fetch = require("node-fetch");
 let usuarioBitbucket = new UsuarioBitbucket();
 let usuarioResponse = new UsuarioResponse();
 
-let objetoUsuario = {};
-objetoUsuario._id = "";
-objetoUsuario.nombre = "";
-objetoUsuario.email = "paulpsan@pruevb";
-objetoUsuario.password = "bitbucket";
-objetoUsuario.tipo = "bitbucket";
-objetoUsuario.role = "usuario";
-objetoUsuario.login = "";
+let usuario = {};
+usuario.email = "paulpsan@pruevb";
+usuario.password = "bitbucket";
+usuario.tipo = "bitbucket";
+usuario.role = "usuario";
 
-function getEmail() {
+function getJson() {
+  return function(resultado) {
+    return resultado.json();
+  };
+}
+
+async function getCommit(repositorios, usuarioBitbucket) {
+  let commits = 0;
+  for (const repositorio of repositorios.values) {
+    await fetch(
+      repositorio.links.commits.href +
+        "?access_token=" +
+        usuarioBitbucket.access_token
+    )
+      .then(getJson())
+      //optenemos datos del commit de un respectivo repositorio
+      .then(resultado => {
+        commits = commits + resultado.values.length;
+        return commits;
+      });
+  }
+  return commits;
+  console.log("object", commits);
+}
+
+function setRepositorios() {
+  return function(usuarioBitbucket) {
+    return fetch(
+      usuarioBitbucket.links.repositories.href +
+        "?access_token=" +
+        usuarioBitbucket.access_token
+    )
+      .then(getJson())
+      .then(repositorios => {
+        getCommit(repositorios, usuarioBitbucket);
+        // console.log("commits", commits);
+        return usuarioBitbucket;
+      });
+  };
+}
+
+function setEmail() {
   return function(usuarioBitbucket) {
     // console.log("getEmail", usuarioBitbucket);
     return fetch(
       "https://api.bitbucket.org/2.0/user/emails?access_token=" +
         usuarioBitbucket.access_token
     )
-      .then(res => {
-        return res.json();
-      })
+      .then(getJson())
       .then(result => {
-        objetoUsuario.email = result.values[0].email;
+        console.log(result);
+        usuario.email = result.values[0].email;
         return usuarioBitbucket;
       });
   };
 }
 
-function crearActualizar() {
+function crearActualizar(usuario) {
   return function(usuarioBitbucket) {
     // console.log("crearActualiza", usuarioBitbucket);
-    objetoUsuario.nombre = usuarioBitbucket.display_name;
-    objetoUsuario.login = usuarioBitbucket.username;
+    usuario.nombre = usuarioBitbucket.display_name;
+    usuario.login = usuarioBitbucket.username;
     return Usuario.findOne({
       where: {
         login: usuarioBitbucket.username,
@@ -52,7 +89,7 @@ function crearActualizar() {
     }).then(user => {
       if (user !== null) {
         //colocar modelo de usuario
-        return Usuario.upsert(objetoUsuario, {
+        return Usuario.update(usuario, {
           where: {
             _id: user._id
           }
@@ -60,7 +97,7 @@ function crearActualizar() {
           return usuarioBitbucket;
         });
       } else {
-        return Usuario.create(objetoUsuario).then(resp => {
+        return Usuario.create(usuario).then(resp => {
           return usuarioBitbucket;
         });
       }
@@ -99,16 +136,15 @@ function authenticateBitbucket(code) {
           fetch(
             "https://api.bitbucket.org/2.0/user?access_token=" + access_token
           )
-            .then(res => {
-              return res.json();
-            })
+            .then(getJson())
             .then(json => {
               usuarioBitbucket = json;
               usuarioBitbucket.access_token = access_token;
               return usuarioBitbucket;
             })
-            .then(getEmail())
+            .then(setEmail())
             // cargar datos del repositorios
+            .then(setRepositorios())
             .then(crearActualizar())
             .then(usuario => {
               resolver(usuario);
@@ -128,7 +164,7 @@ export function authBitbucket(req, res) {
   authenticateBitbucket(req.params.code)
     .then(
       result => {
-        // console.log("enviando :", result);
+        console.log("enviando :", result);
         Usuario.findOne({
           where: {
             login: result.username,
