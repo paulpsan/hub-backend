@@ -12,7 +12,9 @@ import UsuarioResponse from "../models/usuarioResponse";
 var fetch = require("node-fetch");
 let usuarioBitbucket = new UsuarioBitbucket();
 let usuarioResponse = new UsuarioResponse();
-
+let repositoriosBb = {};
+let commitsBb = 0;
+let datos = [];
 let usuario = {};
 usuario.email = "paulpsan@pruevb";
 usuario.password = "bitbucket";
@@ -25,26 +27,40 @@ function getJson() {
   };
 }
 
-async function getCommit(repositorios, usuarioBitbucket) {
-  let commits = 0;
-  for (const repositorio of repositorios.values) {
-    await fetch(
-      repositorio.links.commits.href +
-        "?access_token=" +
-        usuarioBitbucket.access_token
-    )
-      .then(getJson())
-      //optenemos datos del commit de un respectivo repositorio
-      .then(resultado => {
-        commits = commits + resultado.values.length;
-        return commits;
-      });
-  }
-  return commits;
-  console.log("object", commits);
+function getCommit() {
+  return function(repositoriosBb) {
+    let index = 1;
+    for (const repositorio of repositoriosBb.values) {
+      fetch(
+        repositorio.links.commits.href +
+          "?access_token=" +
+          usuarioBitbucket.access_token
+      )
+        .then(getJson())
+        //optenemos datos del commit de un respectivo repositorio
+        .then(resultado => {
+          datos.push({
+            lenguajes: repositorio.language,
+            repo: repositorio,
+            commits: resultado.values.length
+          });
+          if (index == repositoriosBb.values.length) {
+            console.log(index);
+            console.log(datos);
+            usuario.datos = datos;
+            datos = [];
+            crearActualizar();
+          }
+          index++;
+          return usuarioBitbucket;
+        });
+    }
+
+    return usuarioBitbucket;
+  };
 }
 
-function setRepositorios() {
+function getRepositorios() {
   return function(usuarioBitbucket) {
     return fetch(
       usuarioBitbucket.links.repositories.href +
@@ -52,15 +68,11 @@ function setRepositorios() {
         usuarioBitbucket.access_token
     )
       .then(getJson())
-      .then(repositorios => {
-        getCommit(repositorios, usuarioBitbucket);
-        // console.log("commits", commits);
-        return usuarioBitbucket;
-      });
+      .then(getCommit());
   };
 }
 
-function setEmail() {
+function getEmail() {
   return function(usuarioBitbucket) {
     // console.log("getEmail", usuarioBitbucket);
     return fetch(
@@ -76,11 +88,10 @@ function setEmail() {
   };
 }
 
-function crearActualizar(usuario) {
+function crearActualizar() {
   return function(usuarioBitbucket) {
     // console.log("crearActualiza", usuarioBitbucket);
-    usuario.nombre = usuarioBitbucket.display_name;
-    usuario.login = usuarioBitbucket.username;
+
     return Usuario.findOne({
       where: {
         login: usuarioBitbucket.username,
@@ -140,11 +151,14 @@ function authenticateBitbucket(code) {
             .then(json => {
               usuarioBitbucket = json;
               usuarioBitbucket.access_token = access_token;
+              usuario.nombre = usuarioBitbucket.display_name;
+              usuario.login = usuarioBitbucket.username;
               return usuarioBitbucket;
             })
-            .then(setEmail())
+            .then(getEmail())
             // cargar datos del repositorios
-            .then(setRepositorios())
+            .then(getRepositorios())
+            // .then(getCommit())
             .then(crearActualizar())
             .then(usuario => {
               resolver(usuario);
