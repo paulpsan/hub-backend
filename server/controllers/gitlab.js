@@ -16,26 +16,14 @@ const agent = new https.Agent({
 let authenticateGitlab = code => {
   return new Promise((res, rej) => {
     require("ssl-root-cas").inject();
-    let headersClient = qs.stringify(
-      {
-        client_id:
-          "5fd3c547dbc17e2d3f77a0c81a4fae588d3f31007f626a64489814d3900a315d",
-        client_secret:
-          "f08b68a537601fa7e0aab9d013c4f312d64adfc8d2967a1445cac741229c0a2f"
-      },
-      // {
-      //   client_id: "5fd3c547dbc17e2d3f77a0c81a4fae588d3f31007f626a64489814d3900a315d",
-      //   client_secret: "f08b68a537601fa7e0aab9d013c4f312d64adfc8d2967a1445cac741229c0a2f"
-      // },
-      true
-    );
+
     let data = qs.stringify({
-      client_id: config.Gitlab.aplication_id,
-      client_secret: config.Gitlab.client_secret,
+      client_id: config.gitlabGeo.clientId,
+      client_secret: config.gitlabGeo.clientSecret,
       code: code,
       grant_type: "authorization_code",
       // redirect_uri: "https://test.adsib.gob.bo/softwarelibre/inicio"
-      redirect_uri: "http://localhost:4200/inicio"
+      redirect_uri: config.gitlabGeo.callback
     });
 
     console.log(data);

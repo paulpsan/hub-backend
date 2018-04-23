@@ -42,20 +42,31 @@ function getCommit() {
           datos.push({
             lenguajes: repositorio.language,
             repo: repositorio,
-            commits: resultado.values.length
+            commits: resultado.values
           });
           if (index == repositoriosBb.values.length) {
-            console.log(index);
-            console.log(datos);
+            console.log("resultado", resultado);
             usuario.datos = datos;
             datos = [];
-            crearActualizar();
+            Usuario.findOne({
+              where: {
+                login: usuarioBitbucket.username,
+                tipo: "bitbucket"
+              }
+            }).then(user => {
+              Usuario.update(usuario, {
+                where: {
+                  _id: user._id
+                }
+              }).then(resp => {
+                console.log(resp);
+              });
+            });
           }
           index++;
           return usuarioBitbucket;
         });
     }
-
     return usuarioBitbucket;
   };
 }
@@ -81,7 +92,6 @@ function getEmail() {
     )
       .then(getJson())
       .then(result => {
-        console.log(result);
         usuario.email = result.values[0].email;
         return usuarioBitbucket;
       });
@@ -90,7 +100,7 @@ function getEmail() {
 
 function crearActualizar() {
   return function(usuarioBitbucket) {
-    // console.log("crearActualiza", usuarioBitbucket);
+    console.log("crearActualiza", usuario);
 
     return Usuario.findOne({
       where: {
@@ -133,7 +143,6 @@ function authenticateBitbucket(code) {
       },
       (err, response, body) => {
         const data = JSON.parse(body);
-        console.log("oauth.auth.response", data);
         const {
           access_token,
           refresh_token,
@@ -153,6 +162,7 @@ function authenticateBitbucket(code) {
               usuarioBitbucket.access_token = access_token;
               usuario.nombre = usuarioBitbucket.display_name;
               usuario.login = usuarioBitbucket.username;
+              usuario.avatar = usuarioBitbucket.links.avatar.href;
               return usuarioBitbucket;
             })
             .then(getEmail())
@@ -164,7 +174,6 @@ function authenticateBitbucket(code) {
               resolver(usuario);
             })
             .catch(err => {
-              console.log("err", err);
               rechazar(err);
             });
         }
@@ -174,11 +183,10 @@ function authenticateBitbucket(code) {
 }
 
 export function authBitbucket(req, res) {
-  console.log(req.params.code);
   authenticateBitbucket(req.params.code)
     .then(
       result => {
-        console.log("enviando :", result);
+        console.log("result :", result);
         Usuario.findOne({
           where: {
             login: result.username,
