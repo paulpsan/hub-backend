@@ -29,7 +29,7 @@ export default (sequelize, DataTypes) => {
         }
       },
       password: {
-        type: DataTypes.TEXT,
+        type: DataTypes.TEXT
         // validate: {
         //   notEmpty: {
         //     msg: "Ingrese su password"
@@ -38,10 +38,9 @@ export default (sequelize, DataTypes) => {
       },
       role: {
         type: DataTypes.TEXT,
-        defaultValue: "usuario",
-        
+        defaultValue: "usuario"
       },
-      
+
       login: {
         type: DataTypes.TEXT,
         defaultValue: ""
@@ -49,7 +48,7 @@ export default (sequelize, DataTypes) => {
       //tipo puede ser Local, Github, Gitlab.
       tipo: {
         type: DataTypes.TEXT,
-        defaultValue: "local",
+        defaultValue: "local"
         // validate: {
         //   notEmpty: {
         //     msg: "Ingrese su role"
@@ -61,11 +60,14 @@ export default (sequelize, DataTypes) => {
         defaultValue: ""
       },
       descripcion: {
-        type: DataTypes.STRING,
+        type: DataTypes.STRING
       },
       clasificacion: {
-        type: DataTypes.INTEGER,
-        defaultValue: 0
+        type: DataTypes.JSONB,
+        defaultValue: {
+          valor: 0,
+          datos: []
+        }
       },
       datos: {
         type: DataTypes.JSONB,
