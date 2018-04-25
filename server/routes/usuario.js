@@ -119,6 +119,8 @@ router.get('/:id', generarOpciones, controller.show);
     "fk_organizacion": null
   }
  */
+router.get('/graficos/:id',controller.graficos);
+
 router.post('/', controller.create);
 
 router.post('/login',controller.login)

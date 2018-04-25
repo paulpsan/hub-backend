@@ -18,6 +18,87 @@ import jwt from "../components/service/jwt";
 import config from "../config/environment";
 import qs from "querystring";
 import https from "https";
+import _ from "lodash";
+
+function generaDatos(res) {
+  return function(entity) {
+    // console.log("dd:", entity);
+    let nombreRepo = [];
+    let barChartData = [];
+    let commitsArray = [];
+    let años = [];
+    let datosArray = [];
+    for (const repositorio of entity.datos) {
+      nombreRepo.push(repositorio.repo.name);
+      let añoCommit = [];
+
+      let año = 0;
+      let commitTotal = 0;
+      let sw = true;
+
+      for (const commits of repositorio.commits) {
+        let fecha = new Date(commits.commit.author.date);
+        if (año != fecha.getFullYear() && sw) {
+          año = fecha.getFullYear();
+          sw = false;
+          // console.log("entro", año);
+        }
+        if (año == fecha.getFullYear()) {
+          commitTotal++;
+        } else {
+          añoCommit.push({
+            año: año,
+            commit: commitTotal,
+            nombre: repositorio.repo.name
+          });
+          datosArray.push(añoCommit);
+          año = fecha.getFullYear();
+          commitTotal = 0;
+        }
+      }
+      if (commitTotal != 0) {
+        añoCommit.push({
+          año: año,
+          commit: commitTotal,
+          nombre: repositorio.repo.name
+        });
+        datosArray.push(añoCommit);
+      }
+    }
+    for (const iterator of datosArray) {
+      for (const repo of iterator) {
+        años.push(repo.año);
+      }
+    }
+    años = _.uniq(años);
+    años = _.orderBy(años);
+    datosArray = _.uniqWith(datosArray, _.isEqual);
+    
+    console.log("datosArray", datosArray);
+    for (const datos of datosArray) {
+      let dataCommit = [];
+      let i = 0;
+      for (let index = 0; index < años.length; index++) {
+        if (años[index] != datos[i].año) {
+          dataCommit.push(0);
+        } else {
+          dataCommit.push(datos[i].commit);
+          if (i < datos.length - 1) {
+            i++;
+          }
+        }
+      }
+      barChartData.push({
+        data: dataCommit,
+        label: datos[0].nombre
+      });
+    }
+    console.log("años", años);
+    console.log("object", barChartData);
+
+    return res.status(200).json(entity);
+  };
+}
 
 function respondWithResult(res, statusCode) {
   statusCode = statusCode || 200;
@@ -204,5 +285,17 @@ export function destroy(req, res) {
   })
     .then(handleEntityNotFound(res))
     .then(removeEntity(res))
+    .catch(handleError(res));
+}
+
+// Genera Json para graficos de usuarios - commits - proyecto
+export function graficos(req, res) {
+  console.log("object", req.params.id);
+  return Usuario.find({
+    where: {
+      _id: req.params.id
+    }
+  })
+    .then(generaDatos(res))
     .catch(handleError(res));
 }
