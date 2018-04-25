@@ -20,7 +20,6 @@ import { createSecureContext } from "tls";
 function respondWithResult(res, statusCode) {
   statusCode = statusCode || 200;
   return function(entity) {
-    console.log("response", entity);
     if (entity) {
       return res.status(statusCode).json(entity);
     }
@@ -49,19 +48,101 @@ function removeEntity(res) {
     }
   };
 }
-
-function createEntity(req, res) {
+function setDatos(proyectoData, res) {
   return function(entity) {
     if (!entity) {
-      return Proyecto.create(req)
+      let proyectoObj = proyectoData;
+      let usuarios = [];
+      switch (proyectoData.tipo) {
+        case "github":
+          proyectoObj.avatar = "";
+          proyectoObj.commits = proyectoData.datos.commits.length;
+          for (const commit of proyectoData.datos.commits) {
+            usuarios.push({
+              nombre: commit.commit.author.name,
+              avatar_url: commit.committer.avatar_url,
+              web_url: commit.committer.url
+            });
+          }
+          //elimina repetidos
+          var newArray = [];
+          var lookupObject = {};
+          for (var i in usuarios) {
+            lookupObject[usuarios[i]["nombre"]] = usuarios[i];
+          }
+          for (i in lookupObject) {
+            newArray.push(lookupObject[i]);
+          }
+          proyectoObj.usuarios = newArray;
+          proyectoObj.fechaCreacion =
+            proyectoData.datos.commits[
+              proyectoObj.commits - 1
+            ].commit.author.date;
+          proyectoObj.ultimaActividad =
+            proyectoData.datos.commits[0].commit.author.date;
+
+          break;
+        case "gitlab":
+          proyectoObj.avatar = proyectoData.avatar;
+          for (const commit of proyectoData.datos.menbers) {
+            usuarios.push({
+              nombre: commit.name,
+              avatar_url: commit.avatar_url,
+              web_url: commit.web_url
+            });
+          }
+          proyectoObj.usuarios = usuarios;
+          proyectoObj.commits = proyectoData.datos.commits.length;
+          proyectoObj.fechaCreacion =
+            proyectoData.datos.commits[
+              proyectoData.datos.commits.length - 1
+            ].committed_date;
+          proyectoObj.ultimaActividad =
+            proyectoData.datos.commits[0].committed_date;
+          break;
+        case "bitbucket":
+          proyectoObj.avatar = "";
+
+          proyectoObj.usuarios;
+          proyectoObj.commits;
+          proyectoObj.fechaCreacion;
+          proyectoObj.ultimaActividad;
+          proyectoObj.fechaActualizacion;
+
+          break;
+
+        default:
+          break;
+      }
+      proyectoObj.avatar = "";
+
+      proyectoObj.usuarios;
+      proyectoObj.commits;
+      proyectoObj.fechaCreacion;
+      proyectoObj.ultimaActividad;
+      proyectoObj.fechaActualizacion;
+      console.log(proyectoData);
+
+      return proyectoObj;
+    }
+    return entity;
+  };
+}
+
+function createEntity(res) {
+  return function(entity) {
+    console.log("entidad:", entity);
+    if (entity) {
+      return Proyecto.create(entity)
         .then(response => {
           res.status(201).send(response);
         })
         .catch(err => {
           res.send(err);
         });
+    } else {
+      res.send({ message: entity.urlRepositorio + " ya existe" });
     }
-    res.send({ message: req.urlRepositorio + " ya existe" });
     return entity;
   };
 }
@@ -237,16 +318,20 @@ export function show(req, res) {
 }
 
 // Creates a new Proyecto in the DB
-
+//parsear datos
 export function create(req, res) {
-  console.log("body:", req.body, "params:", req.params);
-  return Proyecto.find({
-    where: {
-      urlRepositorio: req.body.urlRepositorio
-    }
-  })
-    .then(createEntity(req.body, res))
-    .catch(handleError(res));
+  // console.log("body:", req.body, "params:", req.params);
+  return (
+    Proyecto.find({
+      where: {
+        urlRepositorio: req.body.urlRepositorio
+      }
+    })
+      .then(setDatos(req.body))
+      //actualizar
+      .then(createEntity(res))
+      .catch(handleError(res))
+  );
 }
 
 // export function create(req, res) {

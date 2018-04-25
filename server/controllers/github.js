@@ -55,6 +55,7 @@ let authenticateGithub = code => {
               objetoUsuario.tipo = "github";
               objetoUsuario.role = "usuario";
               objetoUsuario.login = json.login;
+              objetoUsuario.avatar = json.avatar_url;
               objRes.usuario = objetoUsuario;
               if (json.repos_url) {
                 fetch(json.repos_url + headersClient)
@@ -75,8 +76,8 @@ let authenticateGithub = code => {
                               return res.json();
                             })
                             .then(lenguajes => {
-                              objLenguajes = lenguajes;
                               // console.log("lenguaje",lenguajes);
+                              objLenguajes = lenguajes;
                               fetch(
                                 "https://api.github.com/repos/" +
                                   value.full_name +

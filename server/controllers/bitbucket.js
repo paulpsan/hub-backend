@@ -152,6 +152,7 @@ function authenticateBitbucket(code) {
         } = data;
         //obtenemos al Usuario con el access_token
         // TODO implementar  try catch
+        console.log("token", data);
         if (access_token) {
           fetch(
             "https://api.bitbucket.org/2.0/user?access_token=" + access_token
@@ -174,6 +175,7 @@ function authenticateBitbucket(code) {
               resolver(usuario);
             })
             .catch(err => {
+              console.log(err);
               rechazar(err);
             });
         }
