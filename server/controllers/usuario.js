@@ -313,10 +313,13 @@ export function datosGithub(req, res) {
   let objetoUsuario = req.body.usuario;
   let repos_url = req.body.usuario.repos_url;
   let token = req.body.usuario.token;
+  console.log("tokenl:", token);
+
   if (repos_url) {
     fetch(repos_url + "?access_token=" + token)
       .then(getJson())
       .then(repositorios => {
+        // console.log("repos", repositorios);
         let i = 1;
         let objDatos = [];
         if (repositorios.length > 0) {

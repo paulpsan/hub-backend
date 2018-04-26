@@ -53,8 +53,7 @@ function getCommit() {
                 login: usuarioBitbucket.username,
                 tipo: "bitbucket"
               }
-            })
-            .then(user => {
+            }).then(user => {
               Usuario.update(usuario, {
                 where: {
                   _id: user._id
@@ -195,10 +194,14 @@ export function authBitbucket(req, res) {
             login: result.username,
             tipo: "bitbucket"
           }
-        }).then(resultado => {
-          console.log("enviando :", resultado);
-          res.json({ token: result.access_token, usuario: resultado });
-        });
+        })
+          .then(resultado => {
+            console.log("enviando :", resultado);
+            res.json({ token: result.access_token, usuario: resultado });
+          })
+          .catch(err => {
+            console.log(err);
+          });
       },
       error => {
         res.send(error);
