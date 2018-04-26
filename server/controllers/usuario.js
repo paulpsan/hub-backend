@@ -55,6 +55,7 @@ function generaDatos(res) {
           año = fecha.getFullYear();
           commitTotal = 0;
         }
+        años.push(fecha.getFullYear());
       }
       if (commitTotal != 0) {
         añoCommit.push({
@@ -65,20 +66,17 @@ function generaDatos(res) {
         datosArray.push(añoCommit);
       }
     }
-    for (const iterator of datosArray) {
-      for (const repo of iterator) {
-        años.push(repo.año);
-      }
-    }
     años = _.uniq(años);
-    años = _.orderBy(años);
+    //ordena ascendentemente
+    años = _.orderBy(años, o => {
+      return o * -1;
+    });
     datosArray = _.uniqWith(datosArray, _.isEqual);
-    
-    console.log("datosArray", datosArray);
     for (const datos of datosArray) {
       let dataCommit = [];
       let i = 0;
       for (let index = 0; index < años.length; index++) {
+        console.log(años[index], datos[i].año);
         if (años[index] != datos[i].año) {
           dataCommit.push(0);
         } else {
@@ -93,10 +91,7 @@ function generaDatos(res) {
         label: datos[0].nombre
       });
     }
-    console.log("años", años);
-    console.log("object", barChartData);
-
-    return res.status(200).json(entity);
+    return res.status(200).json(barChartData);
   };
 }
 
