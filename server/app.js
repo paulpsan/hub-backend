@@ -10,8 +10,6 @@ import { User } from "./sqldb";
 
 const app = express();
 
-console.log("process,", process.env.TZ);
-
 require("./config/express").default(app);
 require("./routes").default(app);
 
