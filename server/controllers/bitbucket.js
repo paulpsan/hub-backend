@@ -53,7 +53,8 @@ function getCommit() {
                 login: usuarioBitbucket.username,
                 tipo: "bitbucket"
               }
-            }).then(user => {
+            })
+            .then(user => {
               Usuario.update(usuario, {
                 where: {
                   _id: user._id

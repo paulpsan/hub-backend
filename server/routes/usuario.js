@@ -1,9 +1,9 @@
-'use strict';
+"use strict";
 
-var express = require('express');
-var controller = require('../controllers/usuario');
-import { generarOpciones } from '../components/sequelize-middleware';
-import { md_auth } from '../components/middleware/authenticated'
+var express = require("express");
+var controller = require("../controllers/usuario");
+import { generarOpciones } from "../components/sequelize-middleware";
+import { md_auth } from "../components/middleware/authenticated";
 var router = express.Router();
 
 /**
@@ -80,7 +80,7 @@ var router = express.Router();
   }
 }
  */
-router.get('/', generarOpciones , controller.index);
+router.get("/", generarOpciones, controller.index);
 /**
  * @api {get} /usuarios/:id Obtener un usuario por id
  * @apiName usuario
@@ -100,7 +100,7 @@ router.get('/', generarOpciones , controller.index);
     "fk_organizacion": null
   }
  */
-router.get('/:id', generarOpciones, controller.show);
+router.get("/:id", generarOpciones, controller.show);
 /**
  * @api {post} /usuarios Crear un usuario
  * @apiName Crear usuario
@@ -119,14 +119,16 @@ router.get('/:id', generarOpciones, controller.show);
     "fk_organizacion": null
   }
  */
-router.get('/graficos/:id',controller.graficos);
+router.get("/graficos/:id", controller.graficos);
 
-router.post('/', controller.create);
+router.post("/", controller.create);
 
-router.post('/login',controller.login)
+router.post("/login", controller.login);
 
-router.put('/:id', controller.upsert);
-router.patch('/:id', controller.patch);
+router.post("/datosgithub", controller.datosGithub);
+
+router.put("/:id", controller.upsert);
+router.patch("/:id", controller.patch);
 /**
  * @api {delete} /usuarios Eliminar un usuario
  * @apiName Eliminar usuario
@@ -136,6 +138,6 @@ router.patch('/:id', controller.patch);
  * @apiSuccessExample {json} Success-Response:
  * HTTP/1.1 204 OK
  */
-router.delete('/:id', controller.destroy);
+router.delete("/:id", controller.destroy);
 
 module.exports = router;

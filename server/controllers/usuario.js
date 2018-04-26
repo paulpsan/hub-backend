@@ -19,6 +19,13 @@ import config from "../config/environment";
 import qs from "querystring";
 import https from "https";
 import _ from "lodash";
+var fetch = require("node-fetch");
+
+function getJson() {
+  return function(resultado) {
+    return resultado.json();
+  };
+}
 
 function generaDatos(res) {
   return function(entity) {
@@ -293,4 +300,83 @@ export function graficos(req, res) {
   })
     .then(generaDatos(res))
     .catch(handleError(res));
+}
+
+export function datosGithub(req, res) {
+  let headersClient = qs.stringify(
+    {
+      client_id: config.github.clientId,
+      client_secret: config.github.clientSecret
+    },
+    true
+  );
+  let objetoUsuario = req.body.usuario;
+  let repos_url = req.body.usuario.repos_url;
+  let token = req.body.usuario.token;
+  if (repos_url) {
+    fetch(repos_url + "?access_token=" + token)
+      .then(getJson())
+      .then(repositorios => {
+        let i = 1;
+        let objDatos = [];
+        if (repositorios.length > 0) {
+          for (let value of repositorios) {
+            let objLenguajes = {};
+            let objCommits = {};
+            if (value.languages_url) {
+              fetch(value.languages_url + "?access_token=" + token)
+                .then(getJson())
+                .then(lenguajes => {
+                  objLenguajes = lenguajes;
+                  fetch(
+                    "https://api.github.com/repos/" +
+                      value.full_name +
+                      "/commits" +
+                      "?access_token=" +
+                      token
+                  )
+                    .then(getJson())
+                    .then(commits => {
+                      objDatos.push({
+                        lenguajes: objLenguajes,
+                        repo: value,
+                        commits: commits
+                      });
+                      Usuario.findOne({
+                        where: {
+                          email: req.body.usuario.email.toLowerCase(),
+                          tipo: "github"
+                        }
+                      })
+                        .then(user => {
+                          objetoUsuario.datos = objDatos;
+                          // console.log(objetoUsuario);
+                          Usuario.update(objetoUsuario, {
+                            where: {
+                              _id: user._id
+                            }
+                          }).then(resp => {
+                            // console.log(resp);
+                          });
+                        })
+                        .catch(err => {
+                          console.log(err);
+                        });
+                      //   // res(objRes);
+                      // }
+                      i++;
+                      //creamnos usuario si no existe
+                    });
+                })
+                .catch(err => {
+                  console.log(err);
+                });
+            }
+          }
+        }
+      })
+      .catch(err => {
+        console.log(err);
+      });
+  }
 }
