@@ -142,7 +142,13 @@ let authenticateGitlab = code => {
                                 });
                             }
                             i++;
+                          })
+                          .catch(err => {
+                            console.log(err);
                           });
+                      })
+                      .catch(err => {
+                        console.log(err);
                       });
                   }
                 }
@@ -197,5 +203,8 @@ export function getMembers(req, res) {
     .then(response => {
       console.log("res", response);
       res.send(response);
+    })
+    .catch(err => {
+      console.log(err);
     });
 }

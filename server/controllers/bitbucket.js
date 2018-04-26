@@ -58,9 +58,13 @@ function getCommit() {
                 where: {
                   _id: user._id
                 }
-              }).then(resp => {
-                console.log(resp);
-              });
+              })
+                .then(resp => {
+                  console.log(resp);
+                })
+                .catch(err => {
+                  console.log(err);
+                });
             });
           }
           index++;
@@ -79,7 +83,10 @@ function getRepositorios() {
         usuarioBitbucket.access_token
     )
       .then(getJson())
-      .then(getCommit());
+      .then(getCommit())
+      .catch(err => {
+        console.log(err);
+      });
   };
 }
 
@@ -94,14 +101,15 @@ function getEmail() {
       .then(result => {
         usuario.email = result.values[0].email;
         return usuarioBitbucket;
+      })
+      .catch(err => {
+        console.log(err);
       });
   };
 }
 
 function crearActualizar() {
   return function(usuarioBitbucket) {
-    console.log("crearActualiza", usuario);
-
     return Usuario.findOne({
       where: {
         login: usuarioBitbucket.username,
@@ -114,13 +122,21 @@ function crearActualizar() {
           where: {
             _id: user._id
           }
-        }).then(resp => {
-          return usuarioBitbucket;
-        });
+        })
+          .then(resp => {
+            return usuarioBitbucket;
+          })
+          .catch(err => {
+            console.log(err);
+          });
       } else {
-        return Usuario.create(usuario).then(resp => {
-          return usuarioBitbucket;
-        });
+        return Usuario.create(usuario)
+          .then(resp => {
+            return usuarioBitbucket;
+          })
+          .catch(err => {
+            console.log(err);
+          });
       }
     });
   };

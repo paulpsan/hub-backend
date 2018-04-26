@@ -107,7 +107,10 @@ function respondWithResult(res, statusCode) {
   // console.log("esto es un",entity);
   return function(entity) {
     if (entity) {
-      return res.status(statusCode).json(entity);
+      return res
+        .status(statusCode)
+        .json(entity)
+        .end();
     }
     return null;
   };
@@ -358,9 +361,11 @@ export function datosGithub(req, res) {
                             where: {
                               _id: user._id
                             }
-                          }).then(resp => {
-                            // console.log(resp);
-                          });
+                          })
+                            .then(result => {
+                              res.end();
+                            })
+                            .catch(handleError(res));
                         })
                         .catch(err => {
                           console.log(err);
