@@ -26,7 +26,81 @@ function getJson() {
     return resultado.json();
   };
 }
+function generaCommits(res) {
+  return function(entity) {
+    console.log("dd:", entity);
+    let nombreRepo = [];
+    let barChartData = [];
+    let commitsArray = [];
+    let años = [];
+    let datosArray = [];
+    for (const repositorio of entity.datos) {
+      nombreRepo.push(repositorio.repo.name);
+      let añoCommit = [];
 
+      let año = 0;
+      let commitTotal = 1;
+      let sw = true;
+
+      for (const commits of repositorio.commits) {
+        let fecha = new Date(commits.commit.author.date);
+        if (año != fecha.getFullYear() && sw) {
+          año = fecha.getFullYear();
+          sw = false;
+          // console.log("entro", año);
+        } else {
+          if (año == fecha.getFullYear()) {
+            commitTotal++;
+          } else {
+            añoCommit.push({
+              año: año,
+              commit: commitTotal,
+              nombre: repositorio.repo.name
+            });
+            datosArray.push(añoCommit);
+            año = fecha.getFullYear();
+            commitTotal = 1;
+          }
+        }
+        años.push(fecha.getFullYear());
+      }
+      if (commitTotal != 0) {
+        añoCommit.push({
+          año: año,
+          commit: commitTotal,
+          nombre: repositorio.repo.name
+        });
+        datosArray.push(añoCommit);
+      }
+    }
+    años = _.uniq(años);
+    //ordena ascendentemente
+    años = _.orderBy(años, o => {
+      return o * -1;
+    });
+    datosArray = _.uniqWith(datosArray, _.isEqual);
+    for (const datos of datosArray) {
+      let dataCommit = [];
+      let i = 0;
+      for (let index = 0; index < años.length; index++) {
+        if (años[index] != datos[i].año) {
+          dataCommit.push(0);
+        } else {
+          dataCommit.push(datos[i].commit);
+          if (i < datos.length - 1) {
+            i++;
+          }
+        }
+      }
+      barChartData.push({
+        data: dataCommit,
+        label: datos[0].nombre
+      });
+    }
+    console.log("barChartData :", barChartData);
+    return res.status(200).json({ barChartData, años });
+  };
+}
 function generaDatos(res) {
   return function(entity) {
     // console.log("dd:", entity);
@@ -359,7 +433,7 @@ export function datosGithub(req, res) {
                               _id: user._id
                             }
                           }).then(resp => {
-                            // console.log(resp);
+                            res.json(resp); // console.log(resp);
                           });
                         })
                         .catch(err => {
@@ -382,4 +456,16 @@ export function datosGithub(req, res) {
         console.log(err);
       });
   }
+}
+
+export function commitsGithub(req, res) {
+  console.log("object", req.params.id);
+  console.log("body", req.body);
+  return Usuario.find({
+    where: {
+      _id: req.params.id
+    }
+  })
+    .then(generaCommits(res))
+    .catch(handleError(res));
 }
