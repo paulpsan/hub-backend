@@ -6,8 +6,8 @@
 module.exports = {
   // Server IP
   sequelize: {
-    uri: "postgresql://postgres:postgres@localhost/hub",
-    // uri: 'postgresql://postgres:admin@localhost/hub',
+    // uri: "postgresql://postgres:postgres@localhost/hub",
+    uri: 'postgresql://postgres:admin@localhost/hub',
     options: {
       timezone: "-04:00" //for writing to database
     }
