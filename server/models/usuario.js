@@ -71,19 +71,6 @@ export default (sequelize, DataTypes) => {
       },
       datos: {
         type: DataTypes.JSONB,
-        defaultValue: [
-          {
-            commits: "",
-            lenguajes: {
-              javascript: 0,
-              php: 0
-            },
-            repo: {
-              id: "",
-              name: ""
-            }
-          }
-        ]
       }
     },
     {

@@ -129,6 +129,8 @@ router.post("/datosgithub", controller.datosGithub);
 
 router.post("/commits/:id/github", controller.commitsGithub);
 
+router.post("/commits/:id/gitlab", controller.commitsGitlab);
+
 router.put("/:id", controller.upsert);
 router.patch("/:id", controller.patch);
 /**
