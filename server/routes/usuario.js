@@ -3,7 +3,7 @@
 var express = require("express");
 var controller = require("../controllers/usuario");
 import { generarOpciones } from "../components/sequelize-middleware";
-import { md_auth } from "../components/middleware/authenticated";
+import * as autenticacion from '../auth/auth.service';
 var router = express.Router();
 
 /**
@@ -80,7 +80,12 @@ var router = express.Router();
   }
 }
  */
-router.get("/", generarOpciones, controller.index);
+router.get(
+  "/",
+  autenticacion.isAuthenticated(),
+  generarOpciones,
+  controller.index
+);
 /**
  * @api {get} /usuarios/:id Obtener un usuario por id
  * @apiName usuario
@@ -100,7 +105,12 @@ router.get("/", generarOpciones, controller.index);
     "fk_organizacion": null
   }
  */
-router.get("/:id", generarOpciones, controller.show);
+router.get(
+  "/:id",
+  autenticacion.isAuthenticated(),
+  generarOpciones,
+  controller.show
+);
 /**
  * @api {post} /usuarios Crear un usuario
  * @apiName Crear usuario
@@ -119,20 +129,36 @@ router.get("/:id", generarOpciones, controller.show);
     "fk_organizacion": null
   }
  */
-router.get("/graficos/:id", controller.graficos);
+router.get(
+  "/graficos/:id",
+  autenticacion.isAuthenticated(),
+  controller.graficos
+);
 
-router.post("/", controller.create);
+router.post("/", autenticacion.isAuthenticated(), controller.create);
 
-router.post("/login", controller.login);
+router.post("/login", autenticacion.isAuthenticated(), controller.login);
 
-router.post("/datosgithub", controller.datosGithub);
+router.post(
+  "/datosgithub",
+  autenticacion.isAuthenticated(),
+  controller.datosGithub
+);
 
-router.post("/commits/:id/github", controller.commitsGithub);
+router.post(
+  "/commits/:id/github",
+  autenticacion.isAuthenticated(),
+  controller.commitsGithub
+);
 
-router.post("/commits/:id/gitlab", controller.commitsGitlab);
+router.post(
+  "/commits/:id/gitlab",
+  autenticacion.isAuthenticated(),
+  controller.commitsGitlab
+);
 
-router.put("/:id", controller.upsert);
-router.patch("/:id", controller.patch);
+router.put("/:id", autenticacion.isAuthenticated(), controller.upsert);
+router.patch("/:id", autenticacion.isAuthenticated(), controller.patch);
 /**
  * @api {delete} /usuarios Eliminar un usuario
  * @apiName Eliminar usuario
@@ -142,6 +168,6 @@ router.patch("/:id", controller.patch);
  * @apiSuccessExample {json} Success-Response:
  * HTTP/1.1 204 OK
  */
-router.delete("/:id", controller.destroy);
+router.delete("/:id", autenticacion.isAuthenticated(), controller.destroy);
 
 module.exports = router;

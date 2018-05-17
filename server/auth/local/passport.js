@@ -1,35 +1,45 @@
-import passport from 'passport';
-import {Strategy as LocalStrategy} from 'passport-local';
+import passport from "passport";
+import bcrypt from "bcrypt-nodejs";
+import { Strategy as LocalStrategy } from "passport-local";
 
 function localAuthenticate(User, email, password, done) {
+  console.log("logg..", email);
   User.findOne({
-    email: email.toLowerCase()
-  }).exec()
+    where: {
+      email: email.toLowerCase(),
+      tipo: "local"
+    }
+  })
     .then(user => {
-      if(!user) {
+      if (user != null) {
+        console.log(user);
+        bcrypt.compare(password, user.password, (err, check) => {
+          if (check) {
+            return done(null, user);
+          } else {
+            return done(null, false, { message: "Contraseña incorrecta" });
+          }
+        });
+      } else {
         return done(null, false, {
-          message: 'This email is not registered.'
+          message: "No existe el usuario o contraseña incorrecta"
         });
       }
-      user.authenticate(password, function(authError, authenticated) {
-        if(authError) {
-          return done(authError);
-        }
-        if(!authenticated) {
-          return done(null, false, { message: 'This password is not correct.' });
-        } else {
-          return done(null, user);
-        }
-      });
     })
     .catch(err => done(err));
 }
 
-export function setup(User/*, config*/) {
-  passport.use(new LocalStrategy({
-    usernameField: 'email',
-    passwordField: 'password' // this is the virtual field on the model
-  }, function(email, password, done) {
-    return localAuthenticate(User, email, password, done);
-  }));
+export function setup(User) {
+  console.log("log.",User);
+  passport.use(
+    new LocalStrategy(
+      {
+        usernameField: "email",
+        passwordField: "password" // this is the virtual field on the model
+      },
+      function(email, password, done) {
+        return localAuthenticate(User, email, password, done);
+      }
+    )
+  );
 }

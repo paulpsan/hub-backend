@@ -6,6 +6,6 @@ export default app => {
   app.use("/api/usuarioRepositorios", require("./routes/usuarioRepositorio"));
   app.use("/api/repositorios", require("./routes/repositorio"));
   app.use("/api/proyectos", require("./routes/proyecto"));
-  app.use("/api/auth", require("./routes/auth"));
   app.use("/api/gitlab", require("./routes/gitlab"));
+  app.use("/api/auth", require("./routes/auth"));
 };

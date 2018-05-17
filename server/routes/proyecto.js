@@ -5,7 +5,7 @@ var controller = require('../controllers/proyecto');
 import {
   generarOpciones
 } from '../components/sequelize-middleware';
-
+import * as autenticacion from '../auth/auth.service';
 var router = express.Router();
 /**
  * @api {get} /proyectos Obtener una lista paginada de proyectos
@@ -68,7 +68,7 @@ var router = express.Router();
   }
 }
  */
-router.get('/', generarOpciones, controller.index);
+router.get('/', autenticacion.isAuthenticated(), generarOpciones, controller.index);
 
 /**
  * @api {get} /proyectos/:id Obtener un proyecto por id
@@ -110,7 +110,7 @@ router.get('/', generarOpciones, controller.index);
     "fk_repositorio": 4
   }
  */
-router.get('/:id', controller.show);
+router.get('/:id',autenticacion.isAuthenticated(), controller.show);
 /**
  * @api {post} /proyectos Crear un proyecto
  * @apiName Crear Proyecto
@@ -152,9 +152,9 @@ router.get('/:id', controller.show);
     "fk_repositorio": 4
   }
  */
-router.post('/', controller.create);
-router.put('/:id', controller.upsert);
-router.patch('/:id', controller.patch);
+router.post('/',autenticacion.isAuthenticated(), controller.create);
+router.put('/:id',autenticacion.isAuthenticated(), controller.upsert);
+router.patch('/:id',autenticacion.isAuthenticated(), controller.patch);
 /**
  * @api {delete} /proyectos/:id Elimina un proyecto
  * @apiName Eliminar un proyecto
@@ -164,6 +164,6 @@ router.patch('/:id', controller.patch);
  * @apiSuccessExample {json} Success-Response
  * HTTP/1.1 204 OK
  */
-router.delete('/:id', controller.destroy);
+router.delete('/:id',autenticacion.isAuthenticated(), controller.destroy);
 
 module.exports = router;
