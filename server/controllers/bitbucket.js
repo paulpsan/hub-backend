@@ -27,7 +27,7 @@ function getJson() {
   };
 }
 
-function getCommit() {
+function getCommit(response) {
   return function(repositoriosBb) {
     let index = 1;
     for (const repositorio of repositoriosBb.values) {
@@ -60,10 +60,10 @@ function getCommit() {
                 }
               })
                 .then(resp => {
-                  console.log(resp);
+                  return usuarioBitbucket;
                 })
                 .catch(err => {
-                  console.log(err);
+                  return response.send(err);
                 });
             });
           }
@@ -75,7 +75,7 @@ function getCommit() {
   };
 }
 
-function getRepositorios() {
+function getRepositorios(response) {
   return function(usuarioBitbucket) {
     return fetch(
       usuarioBitbucket.links.repositories.href +
@@ -83,14 +83,14 @@ function getRepositorios() {
         usuarioBitbucket.access_token
     )
       .then(getJson())
-      .then(getCommit())
+      .then(getCommit(response))
       .catch(err => {
         console.log(err);
       });
   };
 }
 
-function getEmail() {
+function getEmail(response) {
   return function(usuarioBitbucket) {
     // console.log("getEmail", usuarioBitbucket);
     return fetch(
@@ -103,12 +103,12 @@ function getEmail() {
         return usuarioBitbucket;
       })
       .catch(err => {
-        console.log(err);
+        return response.send(err);
       });
   };
 }
 
-function crearActualizar() {
+function crearActualizar(resp) {
   return function(usuarioBitbucket) {
     return Usuario.findOne({
       where: {
@@ -127,7 +127,7 @@ function crearActualizar() {
             return usuarioBitbucket;
           })
           .catch(err => {
-            console.log(err);
+            return response.send(err);
           });
       } else {
         return Usuario.create(usuario)
@@ -135,14 +135,14 @@ function crearActualizar() {
             return usuarioBitbucket;
           })
           .catch(err => {
-            console.log(err);
+            return response.send(err);
           });
       }
     });
   };
 }
 
-function authenticateBitbucket(code) {
+function authenticateBitbucket(code, response) {
   return new Promise((resolver, rechazar) => {
     request.post(
       `https://bitbucket.org/site/oauth2/access_token`,
@@ -157,7 +157,7 @@ function authenticateBitbucket(code) {
           redirect_uri: "http://localhost:4200/inicio"
         }
       },
-      (err, response, body) => {
+      (err, resp, body) => {
         const data = JSON.parse(body);
         const {
           access_token,
@@ -182,11 +182,11 @@ function authenticateBitbucket(code) {
               usuario.avatar = usuarioBitbucket.links.avatar.href;
               return usuarioBitbucket;
             })
-            .then(getEmail())
+            .then(getEmail(response))
             // cargar datos del repositorios
-            .then(getRepositorios())
+            .then(getRepositorios(response))
             // .then(getCommit())
-            .then(crearActualizar())
+            .then(crearActualizar(response))
             .then(usuario => {
               resolver(usuario);
             })
@@ -201,7 +201,7 @@ function authenticateBitbucket(code) {
 }
 
 export function authBitbucket(req, res) {
-  authenticateBitbucket(req.params.code)
+  authenticateBitbucket(req.params.code, res)
     .then(
       result => {
         console.log("result :", result);
@@ -212,11 +212,11 @@ export function authBitbucket(req, res) {
           }
         })
           .then(resultado => {
-            console.log("enviando :", resultado);
+            delete resultado.password;
             res.json({ token: result.access_token, usuario: resultado });
           })
           .catch(err => {
-            console.log(err);
+            res.send(error);
           });
       },
       error => {
@@ -224,6 +224,6 @@ export function authBitbucket(req, res) {
       }
     )
     .catch(err => {
-      console.log(err);
+      res.send(error);
     });
 }

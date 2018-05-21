@@ -6,7 +6,6 @@ import config from "../config/environment";
 import qs from "querystringify";
 import https from "https";
 import request from "request";
-// import { fetch } from "node-fetch";
 var fetch = require("node-fetch");
 let objetoUsuario = {};
 let headersClient = qs.stringify(
@@ -22,13 +21,11 @@ function getJson() {
     return resultado.json();
   };
 }
-function crearActualizarUsuario() {
+function crearActualizarUsuario(response) {
   return function(usuarioGithub) {
-    console.log("crearActualiza", usuarioGithub);
-
     return Usuario.findOne({
       where: {
-        login: usuarioGithub.name,
+        login: usuarioGithub.login,
         tipo: "github"
       }
     }).then(user => {
@@ -43,102 +40,23 @@ function crearActualizarUsuario() {
             return usuarioGithub;
           })
           .catch(err => {
-            console.log(err);
+            return response.send(err);
           });
       } else {
         return Usuario.create(objetoUsuario)
           .then(resp => {
             objetoUsuario._id = resp._id;
-            console.log("res", resp);
-
             return usuarioGithub;
           })
           .catch(err => {
-            console.log(err);
+            return response.send(err);
           });
       }
     });
   };
 }
 
-// function getRepositorio(usuario) {
-//   console.log("Usuario :", usuario);
-//   if (usuario.repos_url) {
-//     fetch(usuario.repos_url + headersClient)
-//       .then(getJson())
-//       .then(repositorios => {
-//         // console.log("repos", repositorios);
-//         let i = 1;
-//         let objDatos = [];
-//         if (repositorios.length > 0) {
-//           for (let value of repositorios) {
-//             let objLenguajes = {};
-//             let objCommits = {};
-//             if (value.languages_url) {
-//               fetch(value.languages_url + headersClient)
-//                 .then(getJson())
-//                 .then(lenguajes => {
-//                   // console.log("lenguaje",lenguajes);
-//                   objLenguajes = lenguajes;
-//                   fetch(
-//                     "https://api.github.com/repos/" +
-//                       value.full_name +
-//                       "/commits" +
-//                       headersClient
-//                   )
-//                     .then(getJson())
-//                     .then(commits => {
-//                       objDatos.push({
-//                         lenguajes: objLenguajes,
-//                         repo: value,
-//                         commits: commits
-//                       });
-//                       // console.log("obj", objDatos);
-//                       if (i == repositorios.length) {
-//                         objetoUsuario.datos = objDatos;
-//                         objRes.usuario = objetoUsuario;
-
-//                         Usuario.findOne({
-//                           where: {
-//                             email: objRes.usuario.email.toLowerCase(),
-//                             tipo: objRes.usuario.tipo
-//                           }
-//                         })
-//                           .then(user => {
-//                             // console.log("entity", user);
-//                             if (user != null) {
-//                               return user.destroy().then();
-//                             }
-//                           })
-//                           .then(() => {
-//                             return Usuario.create(objRes.usuario);
-//                           })
-//                           .catch(err => {
-//                             console.log(err);
-//                           });
-//                         // res(objRes);
-//                       }
-//                       i++;
-//                       //creamnos usuario si no existe
-//                     })
-//                     .catch(err => {
-//                       console.log(err);
-//                     });
-//                 })
-//                 .catch(err => {
-//                   console.log(err);
-//                 });
-//             }
-//           }
-//         }
-//       })
-//       .catch(err => {
-//         console.log(err);
-//       });
-//   }
-// }
-
-let authenticateGithub = code => {
+let authenticateGithub = (code, response) => {
   return new Promise((resolver, rechazar) => {
     let data = qs.stringify({
       client_id: config.github.clientId,
@@ -151,8 +69,8 @@ let authenticateGithub = code => {
       body: data
     });
     promesa
-      .then(response => {
-        return response.text();
+      .then(resp => {
+        return resp.text();
       })
       .then(token => {
         objRes.token = qs.parse(token).access_token;
@@ -168,34 +86,32 @@ let authenticateGithub = code => {
               objetoUsuario.role = "usuario";
               objetoUsuario.login = json.login;
               objetoUsuario.avatar = json.avatar_url;
-              objetoUsuario.repos_url = json.repos_url;
+              objetoUsuario.url = json.url;
               objetoUsuario.token = objRes.token;
               return json;
             })
-            .then(crearActualizarUsuario())
+            .then(crearActualizarUsuario(response))
             .then(json => {
-              // getDatosRepositorio(json);
               resolver({
                 token: objRes.token,
                 usuario: objetoUsuario
               });
             })
             .catch(err => {
-              console.log(err);
+              rechazar(err);
             });
         }
       })
       .catch(err => {
-        console.log(err);
+        rechazar(err);
       });
   });
 };
 
 export function authGithub(req, res) {
-  authenticateGithub(req.params.code)
+  authenticateGithub(req.params.code, res)
     .then(
       result => {
-        console.log("191: ", result);
         res.json(result);
       },
       error => {
@@ -203,6 +119,6 @@ export function authGithub(req, res) {
       }
     )
     .catch(err => {
-      console.log(err);
+      res.send(error);
     });
 }

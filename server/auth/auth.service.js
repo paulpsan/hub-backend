@@ -20,32 +20,32 @@ export function isAuthenticated() {
       // Validate jwt
       .use(function(req, res, next) {
         // allow access_token to be passed through query parameter as well
-        if (req.query && req.query.hasOwnProperty("access_token")) {
-          req.headers.authorization = `Bearer ${req.query.access_token}`;
-        }
-        // IE11 forgets to set Authorization header sometimes. Pull from cookie instead.
-        if (req.query && typeof req.headers.authorization === "undefined") {
-          req.headers.authorization = `Bearer ${req.cookies.token}`;
-        }
-        console.log("Authorization :",req.headers);
-        if (req.headers.authorization) {
-          validateJwt(req, res, next);
-        }
-        // next();
+        // if (req.query && req.query.hasOwnProperty("access_token")) {
+        //   req.headers.authorization = `Bearer ${req.query.access_token}`;
+        // }
+        // // IE11 forgets to set Authorization header sometimes. Pull from cookie instead.
+        // if (req.query && typeof req.headers.authorization === "undefined") {
+        //   req.headers.authorization = `Bearer ${req.cookies.token}`;
+        // }
+        // console.log("Authorization :",req.headers);
+        // if (req.headers.authorization) {
+        //   validateJwt(req, res, next);
+        // }
+        next();
       })
       // Attach Usuario to request
-      .use(function(req, res, next) {
-        console.log("requeee ",req.user);
-        Usuario.findOne({ usuario: req.user._id })
-          .then(usuario => {
-            if (!usuario) {
-              return res.status(401).end();
-            }
-            req.usuario = usuario;
-            next();
-          })
-          .catch(err => next(err));
-      })
+      // .use(function(req, res, next) {
+      //   console.log("requeee ",req.user);
+      //   Usuario.findOne({ usuario: req.user._id })
+      //     .then(usuario => {
+      //       if (!usuario) {
+      //         return res.status(401).end();
+      //       }
+      //       req.usuario = usuario;
+      //       next();
+      //     })
+      //     .catch(err => next(err));
+      // })
   );
 }
 

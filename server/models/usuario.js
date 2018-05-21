@@ -70,7 +70,11 @@ export default (sequelize, DataTypes) => {
         }
       },
       datos: {
-        type: DataTypes.JSONB,
+        type: DataTypes.JSONB
+      },
+      url: {
+        type: DataTypes.TEXT,
+        defaultValue: ""
       }
     },
     {
