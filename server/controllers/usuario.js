@@ -19,6 +19,7 @@ import config from "../config/environment";
 import qs from "querystring";
 import https from "https";
 import _ from "lodash";
+import { Sequelize } from "sequelize";
 var fetch = require("node-fetch");
 
 function getJson() {
@@ -308,18 +309,33 @@ function handleError(res, statusCode) {
 
 // Gets a list of Usuarios
 export function index(req, res) {
-  return Usuario.findAndCountAll({
-    include: [{ all: true }],
-    order: [["clasificacion", "desc"]],
-    offset: req.opciones.offset,
-    limit: req.opciones.limit
-  })
-    .then(datos => {
-      console.log("datos:", datos);
-      return SequelizeHelper.generarRespuesta(datos, req.opciones);
+  if (req.query.filter != undefined) {
+    const Op = Sequelize.Op;
+    return Usuario.findAndCountAll({
+      where: {
+        nombre: {
+          [Op.iLike]: "%" + req.query.filter + "%"
+        }
+      }
     })
-    .then(respondWithResult(res))
-    .catch(handleError(res));
+      .then(datos => {
+        return SequelizeHelper.generarRespuesta(datos, req.opciones);
+      })
+      .then(respondWithResult(res))
+      .catch(handleError(res));
+  } else {
+    return Usuario.findAndCountAll({
+      include: [{ all: true }],
+      order: [["clasificacion", "desc"]],
+      offset: req.opciones.offset,
+      limit: req.opciones.limit
+    })
+      .then(datos => {
+        return SequelizeHelper.generarRespuesta(datos, req.opciones);
+      })
+      .then(respondWithResult(res))
+      .catch(handleError(res));
+  }
 }
 
 // Gets a single Usuario from the DB

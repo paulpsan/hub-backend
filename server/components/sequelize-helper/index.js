@@ -8,14 +8,14 @@ import Inclusor from './include';
 class SequelizeHelper {
 
   static generarOpciones(query) {
-    console.log(query);
+    console.log("query",query);
     let opciones = {};
     //orden
     if (query.ordenar_por) {
       opciones.order = Ordenador.ordenacionSequelize(query.ordenar_por, query.orden);
     }
     //paginacion
-    opciones = Object.assign(opciones, Paginador.paginacionSequelize(query.pagina, query.numero));
+    opciones = Object.assign(opciones, Paginador.paginacionSequelize(query.pagina, query.cantidad));
     //inclusiones
     if (query.incluir || query.atributos) {
       opciones.include = Inclusor.incluirSequelize(query.incluir, query.atributos);
@@ -24,7 +24,7 @@ class SequelizeHelper {
     if (atributosImplicitos !== null) {
       opciones = Object.assign(opciones, atributosImplicitos);
     }
-    console.log(opciones);
+    console.log("opciones:",opciones);
     return opciones;
   }
 

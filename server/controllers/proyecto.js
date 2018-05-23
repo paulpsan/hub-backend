@@ -15,6 +15,7 @@ import SequelizeHelper from "../components/sequelize-helper";
 import ProxyService from "../components/repository-proxy/proxy-service";
 import GitLab from "../components/repository-proxy/repositories/gitlab";
 import _ from "lodash";
+import Sequelize from "sequelize";
 import { createSecureContext } from "tls";
 
 function respondWithResult(res, statusCode) {
@@ -300,12 +301,28 @@ function asignarCommitsUsuarios(proyecto) {
 // }
 
 export function index(req, res) {
-  return Proyecto.findAndCountAll(req.opciones)
-    .then(datos => {
-      return SequelizeHelper.generarRespuesta(datos, req.opciones);
+  if (req.query.filter != undefined) {
+    const Op = Sequelize.Op;
+    return Proyecto.findAndCountAll({
+      where: {
+        nombre: {
+          [Op.iLike]: "%" + req.query.filter + "%"
+        }
+      }
     })
-    .then(respondWithResult(res))
-    .catch(handleError(res));
+      .then(datos => {
+        return SequelizeHelper.generarRespuesta(datos, req.opciones);
+      })
+      .then(respondWithResult(res))
+      .catch(handleError(res));
+  } else {
+    return Proyecto.findAndCountAll(req.opciones)
+      .then(datos => {
+        return SequelizeHelper.generarRespuesta(datos, req.opciones);
+      })
+      .then(respondWithResult(res))
+      .catch(handleError(res));
+  }
 }
 
 // Gets a single Proyecto from the DB

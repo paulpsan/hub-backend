@@ -2,7 +2,7 @@
 
 class Paginador {
 
-  static paginacionSequelize(pagina = 1, numero = 20) {
+  static paginacionSequelize(pagina = 1, numero = 10) {
     let opcionesSequelize = {};
     if (Number.isInteger(Number(pagina)) && Number.isInteger(Number(numero))) {
       opcionesSequelize.offset = numero * (pagina - 1);
