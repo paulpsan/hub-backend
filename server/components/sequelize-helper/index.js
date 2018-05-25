@@ -11,11 +11,11 @@ class SequelizeHelper {
     console.log("query",query);
     let opciones = {};
     //orden
-    if (query.ordenar_por) {
-      opciones.order = Ordenador.ordenacionSequelize(query.ordenar_por, query.orden);
+    if (query.ordenar) {
+      opciones.order = Ordenador.ordenacionSequelize(query.ordenar, query.orden);
     }
     //paginacion
-    opciones = Object.assign(opciones, Paginador.paginacionSequelize(query.pagina, query.cantidad));
+    opciones = Object.assign(opciones, Paginador.paginacionSequelize(query.pagina, query.limite));
     //inclusiones
     if (query.incluir || query.atributos) {
       opciones.include = Inclusor.incluirSequelize(query.incluir, query.atributos);

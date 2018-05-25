@@ -309,12 +309,15 @@ function handleError(res, statusCode) {
 
 // Gets a list of Usuarios
 export function index(req, res) {
-  if (req.query.filter != undefined) {
+  if (req.query.buscar != undefined) {
     const Op = Sequelize.Op;
     return Usuario.findAndCountAll({
+      include: [{ all: true }],
+      offset: req.opciones.offset,
+      limit: req.opciones.limit,
       where: {
         nombre: {
-          [Op.iLike]: "%" + req.query.filter + "%"
+          [Op.iLike]: "%" + req.query.buscar + "%"
         }
       }
     })
@@ -326,7 +329,7 @@ export function index(req, res) {
   } else {
     return Usuario.findAndCountAll({
       include: [{ all: true }],
-      order: [["clasificacion", "desc"]],
+      // order: [["clasificacion", "desc"]],
       offset: req.opciones.offset,
       limit: req.opciones.limit
     })

@@ -89,7 +89,7 @@ export default function seedDatabaseIfNeeded() {
         return Usuario.bulkCreate(
           [
             {
-              nombre: "D'jalmar Gutierrez",
+              nombre: "1D'jalmar Gutierrez1",
               email: "dgutierrez@adsib.gob.bo",
               //con password 123
               password:
@@ -100,7 +100,7 @@ export default function seedDatabaseIfNeeded() {
               clasificacion: 4
             },
             {
-              nombre: "Teodoro Nina",
+              nombre: "2Teodoro Nina2",
               email: "tnina@adsib.gob.bo",
               //con password 123
               password:
@@ -110,7 +110,7 @@ export default function seedDatabaseIfNeeded() {
               login: ""
             },
             {
-              nombre: "Edwin Salcedo",
+              nombre: "3Edwin Salcedo3",
               email: "esalcedo@adsib.gob.bo",
               //con password 123
               password:
@@ -121,7 +121,7 @@ export default function seedDatabaseIfNeeded() {
               clasificacion: 3
             },
             {
-              nombre: "Jhonny Monrroy",
+              nombre: "4Jhonny Monrroy4",
               email: "jmonrroy@adsib.gob.bo",
               //con password 123
               password:
@@ -131,7 +131,7 @@ export default function seedDatabaseIfNeeded() {
               login: ""
             },
             {
-              nombre: "Teodoro Nina",
+              nombre: "5Teodoro Nina5",
               email: "tnina@adsib.gob.bo",
               //con password 123
               password:
@@ -141,7 +141,7 @@ export default function seedDatabaseIfNeeded() {
               login: ""
             },
             {
-              nombre: "Edwin Salcedo",
+              nombre: "6Edwin Salcedo6",
               email: "esalcedo@adsib.gob.bo",
               //con password 123
               password:
@@ -152,7 +152,7 @@ export default function seedDatabaseIfNeeded() {
               clasificacion: 3
             },
             {
-              nombre: "Jhonny Monrroy",
+              nombre: "7Jhonny Monrroy7",
               email: "jmonrroy@adsib.gob.bo",
               //con password 123
               password:
@@ -162,7 +162,7 @@ export default function seedDatabaseIfNeeded() {
               login: ""
             },
             {
-              nombre: "Teodoro Nina",
+              nombre: "8Teodoro Nina8",
               email: "tnina@adsib.gob.bo",
               //con password 123
               password:
@@ -172,7 +172,7 @@ export default function seedDatabaseIfNeeded() {
               login: ""
             },
             {
-              nombre: "Teodoro Nina",
+              nombre: "9Teodoro Nina9",
               email: "tnina@adsib.gob.bo",
               //con password 123
               password:
@@ -182,7 +182,7 @@ export default function seedDatabaseIfNeeded() {
               login: ""
             },
             {
-              nombre: "Edwin Salcedo",
+              nombre: "10Edwin Salcedo10",
               email: "esalcedo@adsib.gob.bo",
               //con password 123
               password:
@@ -193,7 +193,7 @@ export default function seedDatabaseIfNeeded() {
               clasificacion: 3
             },
             {
-              nombre: "Jhonny Monrroy",
+              nombre: "11Jhonny Monrroy11",
               email: "jmonrroy@adsib.gob.bo",
               //con password 123
               password:
@@ -203,7 +203,7 @@ export default function seedDatabaseIfNeeded() {
               login: ""
             },
             {
-              nombre: "Teodoro Nina",
+              nombre: "12Teodoro Nina12",
               email: "tnina@adsib.gob.bo",
               //con password 123
               password:
@@ -213,7 +213,7 @@ export default function seedDatabaseIfNeeded() {
               login: ""
             },
             {
-              nombre: "Edwin Salcedo",
+              nombre: "13Edwin Salcedo13",
               email: "esalcedo@adsib.gob.bo",
               //con password 123
               password:
@@ -224,7 +224,7 @@ export default function seedDatabaseIfNeeded() {
               clasificacion: 3
             },
             {
-              nombre: "Jhonny Monrroy",
+              nombre: "14Jhonny Monrroy14",
               email: "jmonrroy@adsib.gob.bo",
               //con password 123
               password:
@@ -234,7 +234,7 @@ export default function seedDatabaseIfNeeded() {
               login: ""
             },
             {
-              nombre: "Edwin Salcedo",
+              nombre: "15Edwin Salcedo15",
               email: "esalcedo@adsib.gob.bo",
               //con password 123
               password:
@@ -245,7 +245,7 @@ export default function seedDatabaseIfNeeded() {
               clasificacion: 3
             },
             {
-              nombre: "Jhonny Monrroy",
+              nombre: "16Jhonny Monrroy16",
               email: "jmonrroy@adsib.gob.bo",
               //con password 123
               password:
@@ -255,7 +255,7 @@ export default function seedDatabaseIfNeeded() {
               login: ""
             },
             {
-              nombre: "Teodoro Nina",
+              nombre: "17Teodoro Nina17",
               email: "tnina@adsib.gob.bo",
               //con password 123
               password:
@@ -265,7 +265,7 @@ export default function seedDatabaseIfNeeded() {
               login: ""
             },
             {
-              nombre: "Edwin Salcedo",
+              nombre: "18Edwin Salcedo18",
               email: "esalcedo@adsib.gob.bo",
               //con password 123
               password:
@@ -276,7 +276,7 @@ export default function seedDatabaseIfNeeded() {
               clasificacion: 3
             },
             {
-              nombre: "Jhonny Monrroy",
+              nombre: "19Jhonny Monrroy19",
               email: "jmonrroy@adsib.gob.bo",
               //con password 123
               password:
@@ -286,7 +286,7 @@ export default function seedDatabaseIfNeeded() {
               login: ""
             },
             {
-              nombre: "Teodoro Nina",
+              nombre: "20Teodoro Nina20",
               email: "tnina@adsib.gob.bo",
               //con password 123
               password:
@@ -296,7 +296,7 @@ export default function seedDatabaseIfNeeded() {
               login: ""
             },
             {
-              nombre: "Edwin Salcedo",
+              nombre: "21Edwin Salcedo21",
               email: "esalcedo@adsib.gob.bo",
               //con password 123
               password:
@@ -307,7 +307,7 @@ export default function seedDatabaseIfNeeded() {
               clasificacion: 3
             },
             {
-              nombre: "Jhonny Monrroy",
+              nombre: "22Jhonny Monrroy",
               email: "jmonrroy@adsib.gob.bo",
               //con password 123
               password:
@@ -317,7 +317,7 @@ export default function seedDatabaseIfNeeded() {
               login: ""
             },
             {
-              nombre: "Andrea Soria",
+              nombre: "23Andrea Soria",
               email: "asoria@adsib.gob.bo",
               //con password 123
               password:

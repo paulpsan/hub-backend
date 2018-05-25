@@ -301,12 +301,15 @@ function asignarCommitsUsuarios(proyecto) {
 // }
 
 export function index(req, res) {
-  if (req.query.filter != undefined) {
+  if (req.query.buscar != undefined) {
     const Op = Sequelize.Op;
     return Proyecto.findAndCountAll({
+      include: [{ all: true }],
+      offset: req.opciones.offset,
+      limit: req.opciones.limit,
       where: {
         nombre: {
-          [Op.iLike]: "%" + req.query.filter + "%"
+          [Op.iLike]: "%" + req.query.buscar + "%"
         }
       }
     })
@@ -316,7 +319,12 @@ export function index(req, res) {
       .then(respondWithResult(res))
       .catch(handleError(res));
   } else {
-    return Proyecto.findAndCountAll(req.opciones)
+    return Proyecto.findAndCountAll({
+      include: [{ all: true }],
+      // order: [["clasificacion", "desc"]],
+      offset: req.opciones.offset,
+      limit: req.opciones.limit
+    })
       .then(datos => {
         return SequelizeHelper.generarRespuesta(datos, req.opciones);
       })
