@@ -1,7 +1,6 @@
-# MODULO DE RECEPCION DE CORRESPONDENCIA
+# BACKEND DE CATALOGO DE SOFTWARE LIBRE
 
-
-Modulo de recepcion de documentos con firmada digital
+Backend de catalogo de software libre, api de repositorios, usuarios, proyectos
 
 ## URL
 
@@ -12,9 +11,6 @@ Modulo de recepcion de documentos con firmada digital
  - **GIT** 
  - **CURL**
  - **NODEJS**(>= 6.X.X)
- - **ANGULAR CLI**
- - **RETHINKDB**
- - **RABBITMQ**
 
 ## Instalar Proyecto
 
@@ -28,4 +24,4 @@ Instalar las dependencias del proyecto
 
 Iniciar el proyecto
 
-> $ node index.js
+> $ npm start

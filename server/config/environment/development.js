@@ -15,7 +15,8 @@ module.exports = {
 
   github: {
     clientId: "deafb08eb71ea00e531c",
-    clientSecret: "10fe3d839e76615964b8d52ebfe7219169825f57"
+    clientSecret: "10fe3d839e76615964b8d52ebfe7219169825f57",
+    callback:"http://localhost:4200/inicio"
   },
   gitlabGeo: {
     clientId:
@@ -26,7 +27,8 @@ module.exports = {
   },
   bitbucket: {
     clientId: "UEp5BUWsGZH9jAE962",
-    clientSecret: "EPQf3yDRYtY5dGFS3BRndWHwTG6M9uMx"
+    clientSecret: "EPQf3yDRYtY5dGFS3BRndWHwTG6M9uMx",
+    callback:"http://localhost:4200/inicio"
   }
   // Seed database on startup
   //seedDB: true

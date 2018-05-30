@@ -9,7 +9,7 @@ import request from "request";
 // import { fetch } from "node-fetch";
 var fetch = require("node-fetch");
 
-let objetoUsuario = {};
+let usuarioGitlab = {};
 const agent = new https.Agent({
   rejectUnauthorized: false
 });
@@ -21,54 +21,56 @@ function getJson() {
 }
 
 function crearActualizarUsuario(response) {
-  return function(usuarioGitlab) {
+  return function(responseGitlab) {
     return Usuario.findOne({
       where: {
-        login: usuarioGitlab.username,
+        login: responseGitlab.username,
         tipo: "gitlab"
       }
-    }).then(user => {
-      console.log(user);
-      if (user !== null) {
-        //colocar modelo de usuario
-        return Usuario.update(objetoUsuario, {
-          where: {
-            _id: user._id
-          }
-        })
-          .then(resp => {
-            return usuarioGitlab;
+    })
+      .then(user => {
+        console.log(user);
+        if (user !== null) {
+          //colocar modelo de usuario
+          return Usuario.update(usuarioGitlab, {
+            where: {
+              _id: user._id
+            }
           })
-          .catch(err => {
-            return response.send(err);
-          });
-      } else {
-        return Usuario.create(objetoUsuario)
-          .then(resp => {
-            objetoUsuario._id = resp._id;
-            return usuarioGitlab;
-          })
-          .catch(err => {
-            return response.send(err);
-          });
-      }
-    });
+            .then(resp => {
+              return responseGitlab;
+            })
+            .catch(err => {
+              return response.send(err);
+            });
+        } else {
+          return Usuario.create(usuarioGitlab)
+            .then(resp => {
+              usuarioGitlab._id = resp._id;
+              return responseGitlab;
+            })
+            .catch(err => {
+              return response.send(err);
+            });
+        }
+      })
+      .catch(err => {
+        return response.send(err);
+      });
   };
 }
 
-let authenticateGitlab = (code, response) => {
+function authenticateGitlab(code, response) {
   return new Promise((resolver, rechazar) => {
+    let objRes = {};
     require("ssl-root-cas").inject();
     let data = qs.stringify({
       client_id: config.gitlabGeo.clientId,
       client_secret: config.gitlabGeo.clientSecret,
       code: code,
       grant_type: "authorization_code",
-      // redirect_uri: "https://test.adsib.gob.bo/softwarelibre/inicio"
       redirect_uri: config.gitlabGeo.callback
     });
-
-    let objRes = {};
     fetch("https://gitlab.geo.gob.bo/oauth/token", {
       // fetch("https://gitlab.com/oauth/token", {
       method: "POST",
@@ -86,25 +88,25 @@ let authenticateGitlab = (code, response) => {
         )
           // fetch("https://gitlab.com/api/v4/user?access_token=" + token.access_token)
           .then(getJson())
-          .then(usuarioGitlab => {
-            console.log("user", usuarioGitlab);
-            objetoUsuario.nombre = usuarioGitlab.name;
-            objetoUsuario.email = usuarioGitlab.email;
-            objetoUsuario.password = "gitlab";
-            objetoUsuario.tipo = "gitlab";
-            objetoUsuario.role = "usuario";
-            objetoUsuario.login = usuarioGitlab.username;
-            objetoUsuario.avatar = usuarioGitlab.avatar_url;
-            // objetoUsuario.url = usuarioGitlab.url;
-            objetoUsuario.token = objRes.token;
-            return usuarioGitlab;
+          .then(responseGitlab => {
+            console.log("user", responseGitlab);
+            usuarioGitlab.nombre = responseGitlab.name;
+            usuarioGitlab.email = responseGitlab.email;
+            usuarioGitlab.password = "gitlab";
+            usuarioGitlab.tipo = "gitlab";
+            usuarioGitlab.role = "usuario";
+            usuarioGitlab.login = responseGitlab.username;
+            usuarioGitlab.avatar = responseGitlab.avatar_url;
+            usuarioGitlab.url = responseGitlab.web_url;
+            usuarioGitlab.token = objRes.token;
+            return responseGitlab;
           })
           .then(crearActualizarUsuario(response))
-          .then(json => {
-            console.log(": ", json);
+          .then(responseGitlab => {
+            delete usuarioGitlab.password;
             resolver({
               token: objRes.token,
-              usuario: objetoUsuario
+              usuario: usuarioGitlab
             });
           })
           .catch(err => {
@@ -115,11 +117,11 @@ let authenticateGitlab = (code, response) => {
         rej(err);
       });
   });
-};
+}
 
 //   fetch(
 //     "https://gitlab.geo.gob.bo/api/v4/users/" +
-//       usuarioGitlab.id +
+//       responseGitlab.id +
 //       "/projects?access_token=" +
 //       token.access_token,
 //     { agent, strictSSL: false }
@@ -160,8 +162,8 @@ let authenticateGitlab = (code, response) => {
 //                     members: members
 //                   });
 //                   if (i == repositorios.length) {
-//                     objetoUsuario.datos = objDatos;
-//                     objRes.usuario = objetoUsuario;
+//                     usuarioGitlab.datos = objDatos;
+//                     objRes.usuario = usuarioGitlab;
 //                     console.log("resultado", objRes);
 //                     Usuario.findOne({
 //                       where: {
