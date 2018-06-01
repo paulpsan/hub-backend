@@ -1,12 +1,13 @@
 "use strict";
-
 import { Usuario } from "../sqldb";
+import { Repositorio } from "../sqldb";
+import { Commit } from "../sqldb";
 import SequelizeHelper from "../components/sequelize-helper";
 import config from "../config/environment";
 import qs from "querystringify";
-import https from "https";
 import request from "request";
 var fetch = require("node-fetch");
+
 let usuarioGithub = {};
 let headersClient = qs.stringify(
   {
@@ -21,6 +22,14 @@ function getJson() {
     return resultado.json();
   };
 }
+
+function handleError(res, statusCode) {
+  statusCode = statusCode || 500;
+  return function(err) {
+    res.status(statusCode).send(err);
+  };
+}
+
 function crearActualizarUsuario(response) {
   return function(responseGithub) {
     return Usuario.findOne({
@@ -28,34 +37,35 @@ function crearActualizarUsuario(response) {
         login: responseGithub.login,
         tipo: "github"
       }
-    }).then(user => {
-      if (user !== null) {
-        //colocar modelo de usuario
-        return Usuario.update(usuarioGithub, {
-          where: {
-            _id: user._id
-          }
-        })
-          .then(resp => {
-            return responseGithub;
-          })
-          .catch(err => {
-            return response.send(err);
-          });
-      } else {
-        return Usuario.create(usuarioGithub)
-          .then(resp => {
-            usuarioGithub._id = resp._id;
-            return responseGithub;
-          })
-          .catch(err => {
-            return response.send(err);
-          });
-      }
     })
-    .catch(err => {
-      return response.send(err);
-    });
+      .then(user => {
+        if (user !== null) {
+          //colocar modelo de usuario
+          return Usuario.update(usuarioGithub, {
+            where: {
+              _id: user._id
+            }
+          })
+            .then(resp => {
+              return responseGithub;
+            })
+            .catch(err => {
+              return response.send(err);
+            });
+        } else {
+          return Usuario.create(usuarioGithub)
+            .then(resp => {
+              usuarioGithub._id = resp._id;
+              return responseGithub;
+            })
+            .catch(err => {
+              return response.send(err);
+            });
+        }
+      })
+      .catch(err => {
+        return response.send(err);
+      });
   };
 }
 
@@ -125,4 +135,149 @@ export function authGithub(req, res) {
     .catch(err => {
       res.send(err);
     });
+}
+
+var asyncLoop = function(o) {
+  var i = -1;
+  var loop = function() {
+    i++;
+    if (i == o.length) {
+      o.callback();
+      return;
+    }
+    o.functionToLoop(loop, i);
+  };
+  loop(); //init
+};
+
+export function datosGithub(req, res) {
+  let headersClient = qs.stringify(
+    {
+      client_id: config.github.clientId,
+      client_secret: config.github.clientSecret
+    },
+    true
+  );
+  let objetoUsuario = req.body.usuario;
+  let token = req.body.usuario.token;
+  console.log("asdd", req.body);
+  fetch(
+    "https://api.github.com/users/" +
+      objetoUsuario.login +
+      "/repos" +
+      "?access_token=" +
+      token
+  )
+    .then(getJson())
+    .then(repositorios => {
+      let i = 1;
+      let objDatos = [];
+      if (repositorios.length > 0) {
+        let objCommits = {};
+        asyncLoop({
+          length: repositorios.length,
+          functionToLoop: function(loop, i) {
+            fetch(
+              "https://api.github.com/repos/" +
+                repositorios[i].full_name +
+                "/commits?access_token=" +
+                token
+            )
+              .then(getJson())
+              .then(commits => {
+                let objRepositorio = {
+                  id_repositorio: repositorios[i].id,
+                  nombre: repositorios[i].name,
+                  descripcion: repositorios[i].description || "",
+                  avatar: "",
+                  html_url: repositorios[i].html_url,
+                  git_url: repositorios[i].git_url,
+                  api_url: repositorios[i].url,
+                  fork: repositorios[i].forks_url,
+                  hooks: repositorios[i].hooks_url,
+                  tags: repositorios[i].tags_url,
+                  issues: repositorios[i].url + "/issues",
+                  branches: repositorios[i].url + "/branches",
+                  lenguajes: repositorios[i].languages_url,
+                  star: "repositorios[i].stargazers_count",
+                  commits: commits,
+                  downloads: "repositorios[i].stargazers_count",
+                  fk_usuario: objetoUsuario._id
+                };
+                console.log("objRepositorio", objRepositorio);
+                Repositorio.findOne({
+                  where: {
+                    id_repositorio: objRepositorio.id_repositorio,
+                    fk_usuario: objetoUsuario._id
+                  }
+                })
+                  .then(user => {
+                    if (user !== null) {
+                      // Repositorio.update(objRepositorio, {
+                      //   where: {
+                      //     _id: user._id
+                      //   }
+                      // })
+                      //   .then(resultRepo => {})
+                      //   .catch(handleError(res));
+                    } else {
+                      console.log("objRepositorio",objRepositorio)
+                      return Repositorio.create(objRepositorio)
+                        .then(resultRepo => {
+                          return;
+                          console.log(resultRepo);
+                          // for (const commit of commits) {
+                          //   let objCommit = {
+                          //     sha: commit.sha,
+                          //     autor: commit.commit.author.name,
+                          //     mensaje: commit.commit.message,
+                          //     fecha: commit.commit.author.date,
+                          //     fk_repositorio: resultRepo._id
+                          //   };
+                          //   Commit.create(objCommit)
+                          //     .then(resultCommit => {
+                          //       console.log("resul", resultCommit);
+                          //     })
+                          //     .catch(handleError(res));
+                          // }
+                        })
+                        .catch(handleError(res));
+                    }
+                  })
+                  .catch(handleError(res));
+
+                objDatos.push({
+                  lenguajes: repositorios[i].language,
+                  repo: repositorios[i],
+                  commits: commits
+                });
+                loop();
+              })
+              .catch(handleError(res));
+          },
+          callback: function() {
+            objetoUsuario.datos = objDatos;
+            Usuario.update(objetoUsuario, {
+              where: {
+                email: req.body.usuario.email.toLowerCase(),
+                tipo: "github"
+              }
+            }).then(result => {
+              result > 0
+                ? res
+                    .status(200)
+                    .json({ result: "Se realizaron actualizaciones" })
+                : res.status(200).json({ result: "No tiene actualizaciones" });
+              // if(result>0){
+              //   res.status(200).json({ result:"Se realizaron actualizaciones" });
+              // }
+              // else{
+              //   res.status(200).json({ result:"No tiene actualizaciones" });
+              // }
+            });
+          }
+        });
+      }
+    })
+    .catch(handleError(res));
 }

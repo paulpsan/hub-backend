@@ -1,6 +1,7 @@
 "use strict";
 
 import { Usuario } from "../sqldb";
+import { Repositorio} from "../sqldb";
 import SequelizeHelper from "../components/sequelize-helper";
 import config from "../config/environment";
 import qs from "querystringify";
@@ -20,6 +21,13 @@ let usuario = {};
 function getJson() {
   return function(resultado) {
     return resultado.json();
+  };
+}
+
+function handleError(res, statusCode) {
+  statusCode = statusCode || 500;
+  return function(err) {
+    res.status(statusCode).send(err);
   };
 }
 
@@ -145,58 +153,57 @@ function crearActualizar(response) {
 function authenticateBitbucket(code, response) {
   return new Promise((resolver, rechazar) => {
     let objRes = {};
-    request
-      .post(
-        `https://bitbucket.org/site/oauth2/access_token`,
-        {
-          auth: {
-            username: config.bitbucket.clientId,
-            password: config.bitbucket.clientSecret
-          },
-          form: {
-            grant_type: "authorization_code",
-            code: code,
-            redirect_uri: config.bitbucket.callback
-          }
+    request.post(
+      `https://bitbucket.org/site/oauth2/access_token`,
+      {
+        auth: {
+          username: config.bitbucket.clientId,
+          password: config.bitbucket.clientSecret
         },
-        (err, resp, body) => {
-          const data = JSON.parse(body);
-          objRes.token = data.access_token;
-          if (objRes.token) {
-            fetch(
-              "https://api.bitbucket.org/2.0/user?access_token=" + objRes.token
-            )
-              .then(getJson())
-              .then(responseBitbucket => {
-                console.log("obj :", responseBitbucket);
-                usuarioBitbucket.nombre = responseBitbucket.display_name;
-                usuarioBitbucket.email = "";
-                usuarioBitbucket.password = "bitbucket";
-                usuarioBitbucket.tipo = "bitbucket";
-                usuarioBitbucket.role = "usuario";
-                usuarioBitbucket.login = responseBitbucket.username;
-                usuarioBitbucket.avatar = responseBitbucket.links.avatar.href;
-                usuarioBitbucket.url = responseBitbucket.links.html.href;
-                return responseBitbucket;
-              })
-              .then(getEmail(response, objRes.token))
-              // cargar datos del repositorios
-              // .then(getRepositorios(response))
-              // .then(getCommit())
-              .then(crearActualizar(response))
-              .then(responseBitbucket => {
-                delete usuarioBitbucket.password;
-                resolver({
-                  token: objRes.token,
-                  usuario: usuarioBitbucket
-                });
-              })
-              .catch(err => {
-                rechazar(err);
-              });
-          }
+        form: {
+          grant_type: "authorization_code",
+          code: code,
+          redirect_uri: config.bitbucket.callback
         }
-      )
+      },
+      (err, resp, body) => {
+        const data = JSON.parse(body);
+        objRes.token = data.access_token;
+        if (objRes.token) {
+          fetch(
+            "https://api.bitbucket.org/2.0/user?access_token=" + objRes.token
+          )
+            .then(getJson())
+            .then(responseBitbucket => {
+              console.log("obj :", responseBitbucket);
+              usuarioBitbucket.nombre = responseBitbucket.display_name;
+              usuarioBitbucket.email = "";
+              usuarioBitbucket.password = "bitbucket";
+              usuarioBitbucket.tipo = "bitbucket";
+              usuarioBitbucket.role = "usuario";
+              usuarioBitbucket.login = responseBitbucket.username;
+              usuarioBitbucket.avatar = responseBitbucket.links.avatar.href;
+              usuarioBitbucket.url = responseBitbucket.links.html.href;
+              return responseBitbucket;
+            })
+            .then(getEmail(response, objRes.token))
+            // cargar datos del repositorios
+            // .then(getRepositorios(response))
+            // .then(getCommit())
+            .then(crearActualizar(response))
+            .then(responseBitbucket => {
+              delete usuarioBitbucket.password;
+              resolver({
+                token: objRes.token,
+                usuario: usuarioBitbucket
+              });
+            })
+            .catch(err => {
+              rechazar(err);
+            });
+        }
+      }
+    );
   });
 }
 
@@ -213,4 +220,139 @@ export function authBitbucket(req, res) {
     .catch(err => {
       res.send(err);
     });
+}
+
+var asyncLoop = function(o) {
+  var i = -1;
+  var loop = function() {
+    i++;
+    if (i == o.length) {
+      o.callback();
+      return;
+    }
+    o.functionToLoop(loop, i);
+  };
+  loop(); //init
+};
+
+export function datosBitbucket(req, res) {
+  let objetoUsuario = req.body.usuario;
+  let token = req.body.token;
+  fetch("https://api.bitbucket.org/2.0/user?access_token=" + token)
+    .then(getJson())
+    .then(usuario => {
+      fetch(usuario.links.repositories.href + "?access_token=" + token)
+        .then(getJson())
+        .then(repositorios => {
+          console.log("", repositorios);
+          let i = 1;
+          let objDatos = [];
+          if (repositorios.values.length > 0) {
+            let objCommits = {};
+            asyncLoop({
+              length: repositorios.values.length,
+              functionToLoop: function(loop, i) {
+                fetch(
+                  repositorios.values[i].links.commits.href +
+                    "?access_token=" +
+                    token
+                )
+                  .then(getJson())
+                  .then(commits => {
+                    let objRepositorio = {
+                      id_repositorio: i,
+                      nombre: repositorios.values[i].name,
+                      descripcion: repositorios.values[i].description,
+                      avatar: repositorios.values[i].links.avatar.href,
+                      html_url: repositorios.values[i].links.html.href,
+                      git_url: repositorios.values[i].links.clone[1].href,
+                      api_url: repositorios.values[i].links.self.href,
+                      fork: repositorios.values[i].links.forks.href,
+                      hooks: repositorios.values[i].links.hooks.href,
+                      tags: repositorios.values[i].links.tags.href,
+                      issues:
+                        config.bitbucket.api_url +
+                        "repositories/" +
+                        repositorios.values[i].full_name +
+                        "/issues",
+                      branches: repositorios.values[i].links.branches.href,
+                      lenguajes: repositorios.values[i].language,
+                      star: "",
+                      commits: commits,
+                      downloads: repositorios.values[i].links.downloads.href,
+                      fk_usuario: objetoUsuario._id
+                    };
+                    console.log("sssss: ", objRepositorio);
+                    Repositorio.findOne({
+                      where: {
+                        nombre: objRepositorio.nombre,
+                        fk_usuario: objetoUsuario._id
+                      }
+                    })
+                    .then(user => {
+                      if (user !== null) {
+                        Repositorio.update(objRepositorio, {
+                          where: {
+                            _id: user._id
+                          }
+                        })
+                          .then(resultRepo => {})
+                          .catch(handleError(res));
+                      } else {
+                        Repositorio.create(objRepositorio)
+                          .then(resultRepo => {
+                            // for (const commit of commits) {
+                            //   let objCommit = {
+                            //     sha: commit.sha,
+                            //     autor: commit.commit.author.name,
+                            //     mensaje: commit.commit.message,
+                            //     fecha: commit.commit.author.date,
+                            //     fk_repositorio: resultRepo._id
+                            //   };
+                            //   Commit.create(objCommit)
+                            //     .then(resultCommit => {
+                            //       console.log("resul", resultCommit);
+                            //     })
+                            //     .catch(handleError(res));
+                            // }
+                          })
+                          .catch(handleError(res));
+                      }
+                    })
+                    .catch(handleError(res));
+
+                    objDatos.push({
+                      lenguajes: repositorios.values[i].language,
+                      // lenguajes: objLenguajes,
+                      repo: repositorios.values[i],
+                      commits: commits.values
+                    });
+                    loop();
+                  })
+                  .catch(handleError(res));
+              },
+              callback: function() {
+                objetoUsuario.datos = objDatos;
+                console.log("usuario", req.body.usuario);
+                Usuario.update(objetoUsuario, {
+                  where: {
+                    email: req.body.usuario.email.toLowerCase(),
+                    tipo: "bitbucket"
+                  }
+                }).then(result => {
+                  result > 0
+                    ? res
+                        .status(200)
+                        .json({ result: "Se realizaron actualizaciones" })
+                    : res
+                        .status(200)
+                        .json({ result: "No tiene actualizaciones" });
+                });
+              }
+            });
+          }
+        })
+        .catch(handleError(res));
+    })
+    .catch(handleError(res));
 }

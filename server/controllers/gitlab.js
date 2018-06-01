@@ -1,6 +1,8 @@
 "use strict";
 
 import { Usuario } from "../sqldb";
+import { Repositorio } from "../sqldb";
+import { Commit } from "../sqldb";
 import SequelizeHelper from "../components/sequelize-helper";
 import config from "../config/environment";
 import qs from "querystringify";
@@ -17,6 +19,13 @@ const agent = new https.Agent({
 function getJson() {
   return function(resultado) {
     return resultado.json();
+  };
+}
+
+function handleError(res, statusCode) {
+  statusCode = statusCode || 500;
+  return function(err) {
+    res.status(statusCode).send(err);
   };
 }
 
@@ -251,5 +260,168 @@ export function getMembers(req, res) {
     })
     .catch(err => {
       console.log(err);
+    });
+}
+
+var asyncLoop = function(o) {
+  var i = -1;
+  var loop = function() {
+    i++;
+    if (i == o.length) {
+      o.callback();
+      return;
+    }
+    o.functionToLoop(loop, i);
+  };
+  loop(); //init
+};
+
+export function datosGitlab(req, res) {
+  const agent = new https.Agent({
+    rejectUnauthorized: false
+  });
+  let objetoUsuario = req.body.usuario;
+  let token = req.body.token;
+  fetch("https://gitlab.geo.gob.bo/api/v4/user?access_token=" + token, {
+    agent,
+    strictSSL: false
+  })
+    // fetch("https://gitlab.com/api/v4/user?access_token=" + token.access_token)
+    .then(getJson())
+    .then(usuario => {
+      fetch(
+        "https://gitlab.geo.gob.bo/api/v4/users/" +
+          usuario.id +
+          "/projects" +
+          "?access_token=" +
+          token,
+        { agent, strictSSL: false }
+      )
+        .then(getJson())
+        .then(repositorios => {
+          console.log("projects", repositorios);
+          let i = 1;
+          let objDatos = [];
+          if (repositorios.length > 0) {
+            let objCommits = {};
+            asyncLoop({
+              length: repositorios.length,
+              functionToLoop: function(loop, i) {
+                fetch(
+                  "https://gitlab.geo.gob.bo/api/v4/projects/" +
+                    repositorios[i].id +
+                    "/repository/commits?access_token=" +
+                    token,
+                  { agent, strictSSL: false }
+                )
+                  .then(getJson())
+                  .then(commits => {
+                    let objRepositorio = {
+                      id_repositorio: repositorios[i].id,
+                      nombre: repositorios[i].name,
+                      descripcion: repositorios[i].description || " ",
+                      avatar: repositorios[i].avatar_url,
+                      html_url: repositorios[i].web_url,
+                      git_url: repositorios[i].ssh_url_to_repo,
+                      api_url: config.gitlabGeo.api_url+"projects/",
+                      fork: config.gitlabGeo.api_url+"projects/"+repositorios[i].id+"/forks",
+                      hooks: config.gitlabGeo.api_url+"projects/"+repositorios[i].id+"/hooks",
+                      tags: repositorios[i].tag_list || " ",
+                      issues: config.gitlabGeo.api_url+"projects/"+repositorios[i].id+"/issues",
+                      branches: config.gitlabGeo.api_url+"projects/"+repositorios[i].id+"/repository/branches",
+                      lenguajes: config.gitlabGeo.api_url+"projects/"+repositorios[i].id+"/languages" || "",
+                      star:repositorios[i].star_count,
+                      commits: commits,
+                      downloads: "",
+                      fk_usuario: objetoUsuario._id
+                    };
+
+                    Repositorio.findOne({
+                      where:{
+                        id_repositorio:objRepositorio.id_repositorio,
+                        fk_usuario: objetoUsuario._id
+                      }
+                    })
+                    .then(user=>{
+                      if(user!==null){
+
+                        Repositorio.update(objRepositorio,{
+                          where:{
+                            _id: user._id
+                          }
+                        })
+                          .then(resultRepo => {
+                            // Crea commits de un repositorio
+                            // for (const commit of commits) {
+                            //   let objCommit = {
+                            //     sha: commit.sha,
+                            //     autor: commit.commit.author.name,
+                            //     mensaje: commit.commit.message,
+                            //     fecha: commit.commit.author.date,
+                            //     fk_repositorio: resultRepo._id
+                            //   };
+                            //   Commit.create(objCommit)
+                            //     .then(resultCommit => {
+                            //       console.log("resul", resultCommit);
+                            //     })
+                            //     .catch(handleError(res));
+                            // }
+                          })
+                          .catch(handleError(res));
+                      }else{
+                        Repositorio.create(objRepositorio)
+                          .then(resultRepo => {
+                            // Crea commits de un repositorio
+                            // for (const commit of commits) {
+                            //   let objCommit = {
+                            //     sha: commit.sha,
+                            //     autor: commit.commit.author.name,
+                            //     mensaje: commit.commit.message,
+                            //     fecha: commit.commit.author.date,
+                            //     fk_repositorio: resultRepo._id
+                            //   };
+                            //   Commit.create(objCommit)
+                            //     .then(resultCommit => {
+                            //       console.log("resul", resultCommit);
+                            //     })
+                            //     .catch(handleError(res));
+                            // }
+                          })
+                          .catch(handleError(res));
+                      }
+                    })  
+                    .catch(handleError(res));                  
+
+                    objDatos.push({
+                      lenguajes: "",
+                      repo: repositorios[i],
+                      commits: commits
+                    });
+
+                    loop();
+                  })
+                  .catch(handleError(res));
+              },
+              callback: function() {
+                objetoUsuario.datos = objDatos;
+                Usuario.update(objetoUsuario, {
+                  where: {
+                    email: req.body.usuario.email.toLowerCase(),
+                    tipo: "gitlab"
+                  }
+                }).then(result => {
+                  result > 0
+                    ? res
+                        .status(200)
+                        .json({ result: "Se realizaron actualizaciones" })
+                    : res
+                        .status(200)
+                        .json({ result: "No tiene actualizaciones" });
+                });
+              }
+            });
+          }
+        })
+        .catch(handleError(res));
     });
 }

@@ -6,85 +6,20 @@
 "use strict";
 import sqldb from "../sqldb";
 import config from "./environment/";
+import repositorio from "../models/repositorio";
 
 export default function seedDatabaseIfNeeded() {
   if (config.seedDB) {
-    //let Thing = sqldb.Thing;
-    let Repositorio = sqldb.Repositorio;
-    let repositorios;
-    let Commit = sqldb.Commit;
-    let commits;
     let Proyecto = sqldb.Proyecto;
     let proyectos;
     let Usuario = sqldb.Usuario;
     let usuarios;
-    let UsuarioRepositorio = sqldb.UsuarioRepositorio;
+    let Repositorio = sqldb.Repositorio;
+    let repositorios;
 
-    return Repositorio.destroy({
+    return Usuario.destroy({
       where: {}
     })
-      .then(() => {
-        return Repositorio.bulkCreate(
-          [
-            {
-              nombre: "Gitlab GeoBolivia",
-              url: "https://gitlab.geo.gob.bo",
-              tipo: "gitlab"
-            },
-            {
-              nombre: "Gitlab",
-              url: "https://about.gitlab.com",
-              tipo: "gitlab"
-            },
-            {
-              nombre: "GitHub",
-              url: "https://github.com",
-              tipo: "github"
-            }
-          ],
-          {
-            returning: true
-          }
-        );
-      })
-      .then(resultado => {
-        repositorios = resultado;
-        console.log("Se crearon repositorios de prueba");
-        return Proyecto.destroy({
-          where: {}
-        });
-      })
-      .then(() => {
-        return Proyecto.bulkCreate(
-          [
-            {
-              nombre: "Gitlab GeoBolivia",
-              urlRepositorio: "https://gitlab.geo.gob.bo",
-              descripcion: "gitlab"
-            },
-            {
-              nombre: "Gitlab",
-              urlRepositorio: "https://about.gitlab.com",
-              descripcion: "gitlab"
-            },
-            {
-              nombre: "GitHub",
-              urlRepositorio: "https://github.com",
-              descripcion: "github"
-            }
-          ],
-          {
-            returning: true
-          }
-        );
-      })
-      .then(resultado => {
-        proyectos = resultado;
-        console.log("Se crearon proyectos de prueba");
-        return Usuario.destroy({
-          where: {}
-        });
-      })
       .then(() => {
         return Usuario.bulkCreate(
           [
@@ -95,9 +30,13 @@ export default function seedDatabaseIfNeeded() {
               password:
                 "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
               role: "admin",
-              tipo: "local",
               login: "",
-              clasificacion: 4
+              tipo: "local",
+              avatar: "",
+              descripcion: "",
+              clasificacion: 4,
+              datos: "",
+              url: ""
             },
             {
               nombre: "2Teodoro Nina2",
@@ -106,8 +45,13 @@ export default function seedDatabaseIfNeeded() {
               password:
                 "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
               role: "admin",
+              login: "",
               tipo: "local",
-              login: ""
+              avatar: "",
+              descripcion: "",
+              clasificacion: 4,
+              datos: "",
+              url: ""
             },
             {
               nombre: "3Edwin Salcedo3",
@@ -116,9 +60,13 @@ export default function seedDatabaseIfNeeded() {
               password:
                 "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
               role: "admin",
-              tipo: "local",
               login: "",
-              clasificacion: 3
+              tipo: "local",
+              avatar: "",
+              descripcion: "",
+              clasificacion: 4,
+              datos: "",
+              url: ""
             },
             {
               nombre: "4Jhonny Monrroy4",
@@ -127,205 +75,13 @@ export default function seedDatabaseIfNeeded() {
               password:
                 "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
               role: "admin",
-              tipo: "local",
-              login: ""
-            },
-            {
-              nombre: "5Teodoro Nina5",
-              email: "tnina@adsib.gob.bo",
-              //con password 123
-              password:
-                "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
-              role: "admin",
-              tipo: "local",
-              login: ""
-            },
-            {
-              nombre: "6Edwin Salcedo6",
-              email: "esalcedo@adsib.gob.bo",
-              //con password 123
-              password:
-                "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
-              role: "admin",
-              tipo: "local",
               login: "",
-              clasificacion: 3
-            },
-            {
-              nombre: "7Jhonny Monrroy7",
-              email: "jmonrroy@adsib.gob.bo",
-              //con password 123
-              password:
-                "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
-              role: "admin",
               tipo: "local",
-              login: ""
-            },
-            {
-              nombre: "8Teodoro Nina8",
-              email: "tnina@adsib.gob.bo",
-              //con password 123
-              password:
-                "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
-              role: "admin",
-              tipo: "local",
-              login: ""
-            },
-            {
-              nombre: "9Teodoro Nina9",
-              email: "tnina@adsib.gob.bo",
-              //con password 123
-              password:
-                "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
-              role: "admin",
-              tipo: "local",
-              login: ""
-            },
-            {
-              nombre: "10Edwin Salcedo10",
-              email: "esalcedo@adsib.gob.bo",
-              //con password 123
-              password:
-                "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
-              role: "admin",
-              tipo: "local",
-              login: "",
-              clasificacion: 3
-            },
-            {
-              nombre: "11Jhonny Monrroy11",
-              email: "jmonrroy@adsib.gob.bo",
-              //con password 123
-              password:
-                "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
-              role: "admin",
-              tipo: "local",
-              login: ""
-            },
-            {
-              nombre: "12Teodoro Nina12",
-              email: "tnina@adsib.gob.bo",
-              //con password 123
-              password:
-                "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
-              role: "admin",
-              tipo: "local",
-              login: ""
-            },
-            {
-              nombre: "13Edwin Salcedo13",
-              email: "esalcedo@adsib.gob.bo",
-              //con password 123
-              password:
-                "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
-              role: "admin",
-              tipo: "local",
-              login: "",
-              clasificacion: 3
-            },
-            {
-              nombre: "14Jhonny Monrroy14",
-              email: "jmonrroy@adsib.gob.bo",
-              //con password 123
-              password:
-                "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
-              role: "admin",
-              tipo: "local",
-              login: ""
-            },
-            {
-              nombre: "15Edwin Salcedo15",
-              email: "esalcedo@adsib.gob.bo",
-              //con password 123
-              password:
-                "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
-              role: "admin",
-              tipo: "local",
-              login: "",
-              clasificacion: 3
-            },
-            {
-              nombre: "16Jhonny Monrroy16",
-              email: "jmonrroy@adsib.gob.bo",
-              //con password 123
-              password:
-                "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
-              role: "admin",
-              tipo: "local",
-              login: ""
-            },
-            {
-              nombre: "17Teodoro Nina17",
-              email: "tnina@adsib.gob.bo",
-              //con password 123
-              password:
-                "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
-              role: "admin",
-              tipo: "local",
-              login: ""
-            },
-            {
-              nombre: "18Edwin Salcedo18",
-              email: "esalcedo@adsib.gob.bo",
-              //con password 123
-              password:
-                "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
-              role: "admin",
-              tipo: "local",
-              login: "",
-              clasificacion: 3
-            },
-            {
-              nombre: "19Jhonny Monrroy19",
-              email: "jmonrroy@adsib.gob.bo",
-              //con password 123
-              password:
-                "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
-              role: "admin",
-              tipo: "local",
-              login: ""
-            },
-            {
-              nombre: "20Teodoro Nina20",
-              email: "tnina@adsib.gob.bo",
-              //con password 123
-              password:
-                "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
-              role: "admin",
-              tipo: "local",
-              login: ""
-            },
-            {
-              nombre: "21Edwin Salcedo21",
-              email: "esalcedo@adsib.gob.bo",
-              //con password 123
-              password:
-                "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
-              role: "admin",
-              tipo: "local",
-              login: "",
-              clasificacion: 3
-            },
-            {
-              nombre: "22Jhonny Monrroy",
-              email: "jmonrroy@adsib.gob.bo",
-              //con password 123
-              password:
-                "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
-              role: "admin",
-              tipo: "local",
-              login: ""
-            },
-            {
-              nombre: "23Andrea Soria",
-              email: "asoria@adsib.gob.bo",
-              //con password 123
-              password:
-                "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
-              role: "admin",
-              tipo: "local",
-              login: "",
-              clasificacion: 2
+              avatar: "",
+              descripcion: "",
+              clasificacion: 4,
+              datos: "",
+              url: ""
             }
           ],
           {
@@ -336,64 +92,30 @@ export default function seedDatabaseIfNeeded() {
       .then(resultado => {
         usuarios = resultado;
         console.log("Se crearon usuarios de prueba");
-        return UsuarioRepositorio.destroy({
+        return Repositorio.destroy({
           where: {}
         });
       })
       .then(() => {
-        return UsuarioRepositorio.bulkCreate([
-          {
-            email: "dgutierrez@adsib.gob.bo",
-            fk_repositorio: repositorios[0]._id,
-            fk_usuario: usuarios[0]._id
-          },
-          {
-            email: "tnina@adsib.gob.bo",
-            fk_repositorio: repositorios[0]._id,
-            fk_usuario: usuarios[1]._id
-          },
-          {
-            email: "esalcedo@adsib.gob.bo",
-            fk_repositorio: repositorios[0]._id,
-            fk_usuario: usuarios[2]._id
-          },
-          {
-            email: "jmonrroy@adsib.gob.bo",
-            fk_repositorio: repositorios[0]._id,
-            fk_usuario: usuarios[3]._id
-          },
-          {
-            email: "asoria@adsib.gob.bo",
-            fk_repositorio: repositorios[0]._id,
-            fk_usuario: usuarios[4]._id
-          }
-        ]);
-      })
-      .then(() => {
-        console.log(
-          "Se crearon las relaciones entre los usuarios y los repositorios"
-        );
-        return Organizacion.destroy({
-          where: {}
-        });
-      })
-      .then(() => {
-        return Organizacion.bulkCreate(
+        return Repositorio.bulkCreate(
           [
             {
-              nombre: "ADSIB",
-              descripcion:
-                "Agencia para el Desarrollo de la Sociedad de la Informacion"
+              _id: 1,
+              nombre: "1D'jalmar Gutierrez1",
+              email: "dgutierrez@adsib.gob.bo",
+              fk_usuario: 1
             },
             {
-              nombre: "AGETIC",
-              descripcion:
-                "Agencia de Gobierno Electronico y Tecnologias de Informacion y Comunicacion"
+              _id: 2,
+              nombre: "2Teodoro Nina2",
+              email: "tnina@adsib.gob.bo",
+              fk_usuario: 2
             },
             {
-              nombre: "ADSIB",
-              descripcion:
-                "Agencia para el Desarrollo de la Sociedad de la Informacion"
+              _id: 3,
+              nombre: "3Edwin Salcedo3",
+              email: "esalcedo@adsib.gob.bo",
+              fk_usuario: 3
             }
           ],
           {
@@ -402,8 +124,83 @@ export default function seedDatabaseIfNeeded() {
         );
       })
       .then(resultado => {
-        organizaciones = resultado;
-        console.log("Se crearon las organizaciones de prueba");
+        repositorios = resultado;
+        return Proyecto.destroy({
+          where: {}
+        });
+      })
+      .then(() => {
+        return Proyecto.bulkCreate(
+          [
+            {
+              id: 123,
+              nombre: "Plantillas formly",
+              descripcion:
+                "Usuarios, roles y menús del sistema. Configuración de las plantillas de documentos. Creación de documentos en base a las plantillas configuradas previamente",
+              urlRepositorio:
+                "https://gitlab.geo.gob.bo/agetic/plantillas-formly-frontend",
+              avatar: "",
+              tipo: "gitlab",
+              categorias: "",
+              licencias: "",
+              clasificacion: "",
+              usuarios: "",
+              commits: "",
+              fechaCreacion: "2018-05-05",
+              ultimaActividad: "2018-05-05",
+              datos: "",
+              fk_repositorio: 3
+            },
+            {
+              id: 1234,
+              nombre: "veritas-client",
+              descripcion:
+                "Sistema de correspondencia de documentos con firma digital",
+              avatar: "",
+              urlRepositorio:
+                "https://gitlab.geo.gob.bo/mmayori/veritas-client",
+              tipo: "gitlab",
+              avatar: "",
+              tipo: "gitlab",
+              categorias: "",
+              licencias: "",
+              clasificacion: "",
+              usuarios: "",
+              commits: "",
+              fechaCreacion: "2018-05-05",
+              ultimaActividad: "2018-05-05",
+              datos: "",
+              fk_repositorio: 2
+            },
+            {
+              id: 12345,
+              nombre: "catalogo de software",
+              descripcion: "Publique, revise y comparta proyectos",
+              avatar: "",
+              urlRepositorio:
+                "https://gitlab.geo.gob.bo/psanchez/hub-software-backend",
+              tipo: "gitlab",
+              avatar: "",
+              tipo: "gitlab",
+              categorias: "",
+              licencias: "",
+              clasificacion: "",
+              usuarios: "",
+              commits: "",
+              fechaCreacion: "2018-05-05",
+              ultimaActividad: "2018-05-05",
+              datos: "",
+              fk_repositorio: 1
+            }
+          ],
+          {
+            returning: true
+          }
+        );
+      })
+      .then(resultado => {
+        proyectos = resultado;
+        console.log("Se crearon proyectos de prueba");
       })
       .catch(err => console.log("error populating things", err));
   }
