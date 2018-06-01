@@ -3,7 +3,7 @@
 var express = require("express");
 var controller = require("../controllers/usuario");
 import { generarOpciones } from "../components/sequelize-middleware";
-import * as autenticacion from '../auth/auth.service';
+import * as autenticacion from "../auth/auth.service";
 var router = express.Router();
 
 /**
@@ -144,7 +144,16 @@ router.post(
   autenticacion.isAuthenticated(),
   controller.datosGithub
 );
-
+router.post(
+  "/datosgitlab",
+  autenticacion.isAuthenticated(),
+  controller.datosGitlab
+);
+router.post(
+  "/datosbitbucket",
+  autenticacion.isAuthenticated(),
+  controller.datosBitbucket
+);
 router.post(
   "/commits/:id/github",
   autenticacion.isAuthenticated(),

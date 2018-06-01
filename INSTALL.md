@@ -24,108 +24,31 @@ Para verificar la instalación: $ curl --version
 
 Para verificar la instalación: npm –version (>= 2.x.x)
 
-**ANGULAR CLI**
-
-> $ npm install -g @angular/cli
-
-Para verificar la instalación: $ ng --version
-
-**RETHINKDB**
-En caso de haber instalado rethink en el artefacto git@gitlab.geo.gob.bo:mmayori/veritas.git saltar este paso!
-
-Fuente: https://www.rethinkdb.com/docs/install/debian/
-
-> $ echo "deb http://download.rethinkdb.com/apt `lsb_release -cs` main" | sudo tee /etc/apt/sources.list.d/rethinkdb.list
->
-> $ wget -qO- https://download.rethinkdb.com/apt/pubkey.gpg | sudo apt-key add -
-> $ sudo apt-get update
->
-> $ sudo apt-get install rethinkdb
->
-> $ sudo service rethinkdb start
->
-> Para verificar la instalación:
-
-> $ rethinkdb --version
-
-**_Nota_**
-En caso de problemas con libreria libprotobuf9v5 descargar e instalar
-
-> $ wget http://archive.ubuntu.com/ubuntu/pool/main/p/protobuf/libprotobuf9v5_2.6.1-1.3_amd64.deb
->
-> $ sudo dpkg -i libprotobuf9v5_2.6.1-1.3_amd64.deb
->
-> $ sudo apt-get install rethinkdb
-
-para verificar instalacion y iniciar servicio
-
-> $ rethinkdb --version
-
-> $ sudo cp /etc/rethinkdb/default.conf.sample /etc/rethinkdb/instances.d/instance1.conf
-
-> $ sudo nano /etc/rethinkdb/instances.d/instance1.conf
-
-habilitar web opciones
-
-> http-port=8080
->
-> Reiniciar Servicio
-> $ sudo service rethinkdb restart
-
-respuesta:
-
-> rethinkdb 2.3.5~0stretch (GCC 5.2.1)
-
-**RABBITMQ**
-
-En caso de haber instalado rabbitmq en el artefacto git@gitlab.geo.gob.bo:mmayori/veritas.git saltar este paso!
-
-> $ wget -O- https://dl.bintray.com/rabbitmq/Keys/rabbitmq-release-signing-key.asc |sudo apt-key add -
->
-> sudo apt-get update
-
-Instalar server rabbitmq
-
-> $ sudo apt-get install rabbitmq-server
->
-> Habilitar cliente administrador en localhost:15672
-> $ sudo rabbitmq-plugins enable rabbitmq_management
->
-> Adicionamos usuario y contraseña
-
-> $ sudo rabbitmqctl add_user {usuario} {contraseña}
-
-> $ sudo rabbitmqctl set_user_tags {usuario} administrator
-
-> $ sudo rabbitmqctl set*permissions -p / veritas ".*" ".\_" ".\*"
-
-> $ sudo service rabbitmq-server start
-
 ## Clonar el repositorio
 
 Clonar el proyecto desde GitLab
 
-> $ git clone git@gitlab.geo.gob.bo:mmayori/veritas-client.git
+> $ git clone git@gitlab.geo.gob.bo:psanchez/hub-software-backend.git
 
-Ingresar al directorio del proyecto clonado veritas-client
+Ingresar al directorio del proyecto clonado hub-software-backend
 
-> $ cd veritas-client
+> $ cd hub-software-backend
 
 ## Configuracion del Proyecto
 
 Ingresar al directorio config
 
-> $ cd config
+> $ cd config/environment
 
-Copiar el archivo default.js.sample a default.js y production.js.sample a production.js
+Copiar el archivo development.js.sample a development.js y production.js.sample a production.js
 
-> $ cp default.sample.js default.js
+> $ cp development.sample.js development.js
 
 > $ cp production.sample.js production.js
 
 Configuracion en desarrollo
 
-> $ nano default.js
+> $ nano development.js
 
 Configuracion en produccion
 

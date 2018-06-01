@@ -307,7 +307,7 @@ function handleError(res, statusCode) {
   };
 }
 
-// Gets a list of Usuarios
+// Gets a list of Usuarios y busca usuario
 export function index(req, res) {
   if (req.query.buscar != undefined) {
     const Op = Sequelize.Op;
@@ -386,7 +386,6 @@ export function create(req, res) {
 }
 // Login usuario en la DB
 export function login(req, res) {
-  console.log("estoy aqui");
   const params = req.body;
   let email = params.email;
   let password = params.password;
@@ -400,7 +399,6 @@ export function login(req, res) {
     // .then(respondWithResult(res, 201))
     .then(user => {
       if (user != null) {
-        console.log(user);
         bcrypt.compare(password, user.password, (err, check) => {
           if (check) {
             res.status(200).send({
@@ -477,6 +475,19 @@ export function graficos(req, res) {
     .catch(handleError(res));
 }
 
+var asyncLoop = function(o) {
+  var i = -1;
+  var loop = function() {
+    i++;
+    if (i == o.length) {
+      o.callback();
+      return;
+    }
+    o.functionToLoop(loop, i);
+  };
+  loop(); //init
+};
+
 export function datosGithub(req, res) {
   let headersClient = qs.stringify(
     {
@@ -486,84 +497,207 @@ export function datosGithub(req, res) {
     true
   );
   let objetoUsuario = req.body.usuario;
-  let repos_url = req.body.usuario.repos_url;
   let token = req.body.usuario.token;
-  console.log("tokenl:", token);
 
-  if (repos_url) {
-    fetch(repos_url + "?access_token=" + token)
-      .then(getJson())
-      .then(repositorios => {
-        // console.log("repos", repositorios);
-        let i = 1;
-        let objDatos = [];
-        if (repositorios.length > 0) {
-          for (let value of repositorios) {
-            let objLenguajes = {};
-            let objCommits = {};
-            if (value.languages_url) {
-              fetch(value.languages_url + "?access_token=" + token)
-                .then(getJson())
-                .then(lenguajes => {
-                  objLenguajes = lenguajes;
-                  fetch(
-                    "https://api.github.com/repos/" +
-                      value.full_name +
-                      "/commits" +
-                      "?access_token=" +
-                      token
-                  )
-                    .then(getJson())
-                    .then(commits => {
-                      objDatos.push({
-                        lenguajes: objLenguajes,
-                        repo: value,
-                        commits: commits
-                      });
-                      Usuario.findOne({
-                        where: {
-                          email: req.body.usuario.email.toLowerCase(),
-                          tipo: "github"
-                        }
-                      })
-                        .then(user => {
-                          objetoUsuario.datos = objDatos;
-                          // console.log(objetoUsuario);
-                          Usuario.update(objetoUsuario, {
-                            where: {
-                              _id: user._id
-                            }
-                          })
-                            .then(result => {
-                              res.end();
-                            })
-                            .catch(handleError(res));
-                        })
-                        .catch(err => {
-                          console.log(err);
-                        });
-                      //   // res(objRes);
-                      // }
-                      i++;
-                      //creamnos usuario si no existe
-                    });
-                })
-                .catch(err => {
-                  console.log(err);
+  fetch(
+    "https://api.github.com/users/" +
+      objetoUsuario.login +
+      "/repos" +
+      "?access_token=" +
+      token
+  )
+    .then(getJson())
+    .then(repositorios => {
+      let i = 1;
+      let objDatos = [];
+      if (repositorios.length > 0) {
+        let objCommits = {};
+        asyncLoop({
+          length: repositorios.length,
+          functionToLoop: function(loop, i) {
+            fetch(
+              "https://api.github.com/repos/" +
+                repositorios[i].full_name +
+                "/commits?access_token=" +
+                token
+            )
+              .then(getJson())
+              .then(commits => {
+                objDatos.push({
+                  lenguajes: repositorios[i].language,
+                  // lenguajes: objLenguajes,
+                  repo: repositorios[i],
+                  commits: commits
                 });
-            }
+
+                loop();
+              })
+              .catch(handleError(res));
+          },
+          callback: function() {
+            objetoUsuario.datos = objDatos;
+            Usuario.update(objetoUsuario, {
+              where: {
+                email: req.body.usuario.email.toLowerCase(),
+                tipo: "github"
+              }
+            }).then(result => {
+              result > 0
+                ? res
+                    .status(200)
+                    .json({ result: "Se realizaron actualizaciones" })
+                : res.status(200).json({ result: "No tiene actualizaciones" });
+              // if(result>0){
+              //   res.status(200).json({ result:"Se realizaron actualizaciones" });
+              // }
+              // else{
+              //   res.status(200).json({ result:"No tiene actualizaciones" });
+              // }
+            });
           }
-        }
-      })
-      .catch(err => {
-        console.log(err);
-      });
-  }
+        });
+      }
+    })
+    .catch(handleError(res));
+}
+
+export function datosGitlab(req, res) {
+  const agent = new https.Agent({
+    rejectUnauthorized: false
+  });
+  let objetoUsuario = req.body.usuario;
+  let token = req.body.token;
+  fetch("https://gitlab.geo.gob.bo/api/v4/user?access_token=" + token, {
+    agent,
+    strictSSL: false
+  })
+    // fetch("https://gitlab.com/api/v4/user?access_token=" + token.access_token)
+    .then(getJson())
+    .then(usuario => {
+      fetch(
+        "https://gitlab.geo.gob.bo/api/v4/users/" +
+          usuario.id +
+          "/projects" +
+          "?access_token=" +
+          token,
+        { agent, strictSSL: false }
+      )
+        .then(getJson())
+        .then(repositorios => {
+          console.log("projects", repositorios);
+          let i = 1;
+          let objDatos = [];
+          if (repositorios.length > 0) {
+            let objCommits = {};
+            asyncLoop({
+              length: repositorios.length,
+              functionToLoop: function(loop, i) {
+                fetch(
+                  "https://gitlab.geo.gob.bo/api/v4/projects/" +
+                    repositorios[i].id +
+                    "/repository/commits?access_token=" +
+                    token,
+                  { agent, strictSSL: false }
+                )
+                  .then(getJson())
+                  .then(commits => {
+                    objDatos.push({
+                      lenguajes: "",
+                      repo: repositorios[i],
+                      commits: commits
+                    });
+
+                    loop();
+                  })
+                  .catch(handleError(res));
+              },
+              callback: function() {
+                objetoUsuario.datos = objDatos;
+                Usuario.update(objetoUsuario, {
+                  where: {
+                    email: req.body.usuario.email.toLowerCase(),
+                    tipo: "gitlab"
+                  }
+                }).then(result => {
+                  result > 0
+                    ? res
+                        .status(200)
+                        .json({ result: "Se realizaron actualizaciones" })
+                    : res
+                        .status(200)
+                        .json({ result: "No tiene actualizaciones" });
+                });
+              }
+            });
+          }
+        })
+        .catch(handleError(res));
+    });
+}
+
+export function datosBitbucket(req, res) {
+  let objetoUsuario = req.body.usuario;
+  let token = req.body.token;
+  fetch("https://api.bitbucket.org/2.0/user?access_token=" + token)
+    .then(getJson())
+    .then(usuario => {
+      fetch(usuario.links.repositories.href + "?access_token=" + token)
+        .then(getJson())
+        .then(repositorios => {
+          console.log(repositorios);
+          let i = 1;
+          let objDatos = [];
+          if (repositorios.values.length > 0) {
+            let objCommits = {};
+            asyncLoop({
+              length: repositorios.values.length,
+              functionToLoop: function(loop, i) {
+                console.log("url", repositorios.values[i].links.commits.href);
+                fetch(
+                  repositorios.values[i].links.commits.href +
+                    "?access_token=" +
+                    token
+                )
+                  .then(getJson())
+                  .then(commits => {
+                    console.log("commits", commits);
+                    objDatos.push({
+                      lenguajes: repositorios.values[i].language,
+                      // lenguajes: objLenguajes,
+                      repo: repositorios.values[i],
+                      commits: commits.values
+                    });
+                    loop();
+                  })
+                  .catch(handleError(res));
+              },
+              callback: function() {
+                objetoUsuario.datos = objDatos;
+                console.log("usuario", req.body.usuario);
+                Usuario.update(objetoUsuario, {
+                  where: {
+                    email: req.body.usuario.email.toLowerCase(),
+                    tipo: "bitbucket"
+                  }
+                }).then(result => {
+                  result > 0
+                    ? res
+                        .status(200)
+                        .json({ result: "Se realizaron actualizaciones" })
+                    : res
+                        .status(200)
+                        .json({ result: "No tiene actualizaciones" });
+                });
+              }
+            });
+          }
+        })
+        .catch(handleError(res));
+    })
+    .catch(handleError(res));
 }
 
 export function commitsGithub(req, res) {
-  console.log("object", req.params.id);
-  console.log("body", req.body);
   return Usuario.find({
     where: {
       _id: req.params.id
@@ -574,8 +708,6 @@ export function commitsGithub(req, res) {
 }
 
 export function commitsGitlab(req, res) {
-  console.log("object", req.params.id);
-  console.log("body", req.body);
   return Usuario.find({
     where: {
       _id: req.params.id

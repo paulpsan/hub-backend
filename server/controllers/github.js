@@ -7,7 +7,7 @@ import qs from "querystringify";
 import https from "https";
 import request from "request";
 var fetch = require("node-fetch");
-let objetoUsuario = {};
+let usuarioGithub = {};
 let headersClient = qs.stringify(
   {
     client_id: config.github.clientId,
@@ -22,41 +22,44 @@ function getJson() {
   };
 }
 function crearActualizarUsuario(response) {
-  return function(usuarioGithub) {
+  return function(responseGithub) {
     return Usuario.findOne({
       where: {
-        login: usuarioGithub.login,
+        login: responseGithub.login,
         tipo: "github"
       }
     }).then(user => {
       if (user !== null) {
         //colocar modelo de usuario
-        return Usuario.update(objetoUsuario, {
+        return Usuario.update(usuarioGithub, {
           where: {
             _id: user._id
           }
         })
           .then(resp => {
-            return usuarioGithub;
+            return responseGithub;
           })
           .catch(err => {
             return response.send(err);
           });
       } else {
-        return Usuario.create(objetoUsuario)
+        return Usuario.create(usuarioGithub)
           .then(resp => {
-            objetoUsuario._id = resp._id;
-            return usuarioGithub;
+            usuarioGithub._id = resp._id;
+            return responseGithub;
           })
           .catch(err => {
             return response.send(err);
           });
       }
+    })
+    .catch(err => {
+      return response.send(err);
     });
   };
 }
 
-let authenticateGithub = (code, response) => {
+function authenticateGithub(code, response) {
   return new Promise((resolver, rechazar) => {
     let data = qs.stringify({
       client_id: config.github.clientId,
@@ -77,24 +80,25 @@ let authenticateGithub = (code, response) => {
         if (objRes.token) {
           fetch("https://api.github.com/user?access_token=" + objRes.token)
             .then(getJson())
-            .then(json => {
-              console.log("user", json);
-              objetoUsuario.nombre = json.name;
-              objetoUsuario.email = json.email;
-              objetoUsuario.password = "github";
-              objetoUsuario.tipo = "github";
-              objetoUsuario.role = "usuario";
-              objetoUsuario.login = json.login;
-              objetoUsuario.avatar = json.avatar_url;
-              objetoUsuario.url = json.url;
-              objetoUsuario.token = objRes.token;
-              return json;
+            .then(responseGithub => {
+              console.log("user", responseGithub);
+              usuarioGithub.nombre = responseGithub.name;
+              usuarioGithub.email = responseGithub.email;
+              usuarioGithub.password = "github";
+              usuarioGithub.tipo = "github";
+              usuarioGithub.role = "usuario";
+              usuarioGithub.login = responseGithub.login;
+              usuarioGithub.avatar = responseGithub.avatar_url;
+              usuarioGithub.url = responseGithub.html_url;
+              usuarioGithub.token = objRes.token;
+              return responseGithub;
             })
             .then(crearActualizarUsuario(response))
-            .then(json => {
+            .then(responseGithub => {
+              delete usuarioGithub.password;
               resolver({
                 token: objRes.token,
-                usuario: objetoUsuario
+                usuario: usuarioGithub
               });
             })
             .catch(err => {
@@ -106,7 +110,7 @@ let authenticateGithub = (code, response) => {
         rechazar(err);
       });
   });
-};
+}
 
 export function authGithub(req, res) {
   authenticateGithub(req.params.code, res)
@@ -119,6 +123,6 @@ export function authGithub(req, res) {
       }
     )
     .catch(err => {
-      res.send(error);
+      res.send(err);
     });
 }
