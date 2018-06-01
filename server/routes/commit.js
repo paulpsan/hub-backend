@@ -1,7 +1,7 @@
 'use strict';
 
 var express = require('express');
-var controller = require('../controllers/organizacion');
+var controller = require('../controllers/commit');
 
 var router = express.Router();
 

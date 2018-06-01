@@ -7,10 +7,10 @@ let db = {
   sequelize: new Sequelize(config.sequelize.uri, config.sequelize.options)
 };
 db.Usuario = db.sequelize.import("../models/usuario");
-db.Organizacion = db.sequelize.import("../models/organizacion");
+db.Commit = db.sequelize.import("../models/commit");
 db.Repositorio = db.sequelize.import("../models/repositorio");
 db.Proyecto = db.sequelize.import("../models/proyecto");
-db.UsuarioRepositorio = db.sequelize.import("../models/usuarioRepositorio");
+
 //aqui agregamos inclusiones
 /**
  * variable que ayuda con las inclusiones
@@ -24,6 +24,27 @@ db.Usuario.belongsToMany(db.Proyecto, {
 db.Proyecto.belongsToMany(db.Usuario, {
   through: "UsuarioProyecto",
   foreignKey: "fk_usuario"
+});
+
+db.Repositorio.belongsTo(db.Usuario, {
+  foreignKey: {
+    name: "fk_usuario",
+    allowNull: false
+  }
+});
+
+db.Proyecto.belongsTo(db.Repositorio, {
+  foreignKey: {
+    name: "fk_repositorio",
+    allowNull: false
+  }
+});
+
+db.Commit.belongsTo(db.Repositorio, {
+  foreignKey: {
+    name: "fk_repositorio",
+    allowNull: false
+  }
 });
 
 module.exports = db;

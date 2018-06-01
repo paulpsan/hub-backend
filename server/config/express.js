@@ -28,7 +28,7 @@ export default app => {
 
   app.use(
     session({
-      secret: "hub-software",
+      secret: "catalogo-software",
       resave: false,
       saveUninitialized: false //guarda informacion en la base de datos cuando nos conectamos
     })

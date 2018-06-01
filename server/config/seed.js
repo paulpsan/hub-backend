@@ -12,13 +12,13 @@ export default function seedDatabaseIfNeeded() {
     //let Thing = sqldb.Thing;
     let Repositorio = sqldb.Repositorio;
     let repositorios;
+    let Commit = sqldb.Commit;
+    let commits;
     let Proyecto = sqldb.Proyecto;
     let proyectos;
     let Usuario = sqldb.Usuario;
     let usuarios;
     let UsuarioRepositorio = sqldb.UsuarioRepositorio;
-    let Organizacion = sqldb.Organizacion;
-    let organizaciones;
 
     return Repositorio.destroy({
       where: {}

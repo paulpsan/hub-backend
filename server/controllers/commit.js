@@ -1,17 +1,17 @@
 /**
  * Using Rails-like standard naming convention for endpoints.
- * GET     /api/organizaciones              ->  index
- * POST    /api/organizaciones              ->  create
- * GET     /api/organizaciones/:id          ->  show
- * PUT     /api/organizaciones/:id          ->  upsert
- * PATCH   /api/organizaciones/:id          ->  patch
- * DELETE  /api/organizaciones/:id          ->  destroy
+ * GET     /api/commits              ->  index
+ * POST    /api/commits              ->  create
+ * GET     /api/commits/:id          ->  show
+ * PUT     /api/commits/:id          ->  upsert
+ * PATCH   /api/commits/:id          ->  patch
+ * DELETE  /api/commits/:id          ->  destroy
  */
 
 'use strict';
 
 import jsonpatch from 'fast-json-patch';
-import {Organizacion} from '../sqldb';
+import {Commit} from '../sqldb';
 
 function respondWithResult(res, statusCode) {
   statusCode = statusCode || 200;
@@ -64,9 +64,9 @@ function handleError(res, statusCode) {
 }
 
 /**
- * @api {get} /organizaciones Obtener una lista paginada de organizaciones
- * @apiName Organizaciones
- * @apiGroup organizaciones
+ * @api {get} /commits Obtener una lista paginada de commits
+ * @apiName Commites
+ * @apiGroup commits
  *
  * @apiParam (query) {String} [ordenar_por] Campo por el cual se debe ordenar la respuesta
  * @apiParam (query) {String} [orden="DESC"] Campo para cambiar el orden de los datos "ASC" ascendente y "DESC" descendente
@@ -75,14 +75,14 @@ function handleError(res, statusCode) {
  *
  */
 export function index(req, res) {
-  return Organizacion.findAll()
+  return Commit.findAll()
     .then(respondWithResult(res))
     .catch(handleError(res));
 }
 
-// Gets a single Organizacion from the DB
+// Gets a single Commit from the DB
 export function show(req, res) {
-  return Organizacion.find({
+  return Commit.find({
     where: {
       _id: req.params.id
     }
@@ -92,20 +92,20 @@ export function show(req, res) {
     .catch(handleError(res));
 }
 
-// Creates a new Organizacion in the DB
+// Creates a new Commit in the DB
 export function create(req, res) {
-  return Organizacion.create(req.body)
+  return Commit.create(req.body)
     .then(respondWithResult(res, 201))
     .catch(handleError(res));
 }
 
-// Upserts the given Organizacion in the DB at the specified ID
+// Upserts the given Commit in the DB at the specified ID
 export function upsert(req, res) {
   if(req.body._id) {
     delete req.body._id;
   }
 
-  return Organizacion.upsert(req.body, {
+  return Commit.upsert(req.body, {
     where: {
       _id: req.params.id
     }
@@ -114,12 +114,12 @@ export function upsert(req, res) {
     .catch(handleError(res));
 }
 
-// Updates an existing Organizacion in the DB
+// Updates an existing Commit in the DB
 export function patch(req, res) {
   if(req.body._id) {
     delete req.body._id;
   }
-  return Organizacion.find({
+  return Commit.find({
     where: {
       _id: req.params.id
     }
@@ -130,9 +130,9 @@ export function patch(req, res) {
     .catch(handleError(res));
 }
 
-// Deletes a Organizacion from the DB
+// Deletes a Commit from the DB
 export function destroy(req, res) {
-  return Organizacion.find({
+  return Commit.find({
     where: {
       _id: req.params.id
     }
