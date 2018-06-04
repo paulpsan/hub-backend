@@ -14,6 +14,13 @@ import jsonpatch from "fast-json-patch";
 import { Repositorio } from "../sqldb";
 import Gitlab from "../components/repository-proxy/repositories/gitlab";
 import SequelizeHelper from "../components/sequelize-helper";
+var fetch = require("node-fetch");
+
+function getJson() {
+  return function(resultado) {
+    return resultado.json();
+  };
+}
 
 function respondWithResult(res, statusCode) {
   statusCode = statusCode || 200;
@@ -74,9 +81,23 @@ export function index(req, res) {
     .catch(handleError(res));
 }
 
+export function indexUser(req, res) {
+  return Repositorio.findAndCountAll({
+    // include: [{ all: true }],
+    where: {
+      fk_usuario: req.params.id
+    }
+  })
+    .then(datos => {
+      return SequelizeHelper.generarRespuesta(datos, req.opciones);
+    })
+    .then(respondWithResult(res))
+    .catch(handleError(res));
+}
 // Gets a single Repositorio from the DB
 export function show(req, res) {
   return Repositorio.find({
+    // include: [{ all: true }],
     where: {
       _id: req.params.id
     }
@@ -96,7 +117,6 @@ export function proyectos(req, res) {
 
 // Creates a new Repositorio in the DB
 export function create(req, res) {
-  console.log("object-body", req.body);
   return Repositorio.create(req.body)
     .then(respondWithResult(res, 201))
     .catch(handleError(res));
@@ -143,4 +163,16 @@ export function destroy(req, res) {
     .then(handleEntityNotFound(res))
     .then(removeEntity(res))
     .catch(handleError(res));
+}
+// devuelve list de lenguajes
+export function lenguajes(req, res) {
+  console.log("object", req.body);
+
+  fetch(req.body.url)
+    .then(getJson())
+    .then(respuesta => {
+      console.log(respuesta);
+      res.send(respuesta);
+    })
+    .catch();
 }

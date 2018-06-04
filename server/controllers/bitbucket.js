@@ -1,7 +1,7 @@
 "use strict";
 
 import { Usuario } from "../sqldb";
-import { Repositorio} from "../sqldb";
+import { Repositorio } from "../sqldb";
 import SequelizeHelper from "../components/sequelize-helper";
 import config from "../config/environment";
 import qs from "querystringify";
@@ -122,6 +122,7 @@ function crearActualizar(response) {
       .then(user => {
         if (user !== null) {
           //colocar modelo de usuario
+          usuarioBitbucket._id = user._id;
           return Usuario.update(usuarioBitbucket, {
             where: {
               _id: user._id
@@ -175,7 +176,6 @@ function authenticateBitbucket(code, response) {
           )
             .then(getJson())
             .then(responseBitbucket => {
-              console.log("obj :", responseBitbucket);
               usuarioBitbucket.nombre = responseBitbucket.display_name;
               usuarioBitbucket.email = "";
               usuarioBitbucket.password = "bitbucket";
@@ -244,7 +244,6 @@ export function datosBitbucket(req, res) {
       fetch(usuario.links.repositories.href + "?access_token=" + token)
         .then(getJson())
         .then(repositorios => {
-          console.log("", repositorios);
           let i = 1;
           let objDatos = [];
           if (repositorios.values.length > 0) {
@@ -282,44 +281,46 @@ export function datosBitbucket(req, res) {
                       downloads: repositorios.values[i].links.downloads.href,
                       fk_usuario: objetoUsuario._id
                     };
-                    console.log("sssss: ", objRepositorio);
                     Repositorio.findOne({
                       where: {
                         nombre: objRepositorio.nombre,
                         fk_usuario: objetoUsuario._id
                       }
                     })
-                    .then(user => {
-                      if (user !== null) {
-                        Repositorio.update(objRepositorio, {
-                          where: {
-                            _id: user._id
-                          }
-                        })
-                          .then(resultRepo => {})
-                          .catch(handleError(res));
-                      } else {
-                        Repositorio.create(objRepositorio)
-                          .then(resultRepo => {
-                            // for (const commit of commits) {
-                            //   let objCommit = {
-                            //     sha: commit.sha,
-                            //     autor: commit.commit.author.name,
-                            //     mensaje: commit.commit.message,
-                            //     fecha: commit.commit.author.date,
-                            //     fk_repositorio: resultRepo._id
-                            //   };
-                            //   Commit.create(objCommit)
-                            //     .then(resultCommit => {
-                            //       console.log("resul", resultCommit);
-                            //     })
-                            //     .catch(handleError(res));
-                            // }
+                      .then(user => {
+                        if (user !== null) {
+                          Repositorio.update(objRepositorio, {
+                            where: {
+                              _id: user._id
+                            }
                           })
-                          .catch(handleError(res));
-                      }
-                    })
-                    .catch(handleError(res));
+                            .then(resultRepo => {})
+                            .catch(err => {
+                            });
+                        } else {
+                          Repositorio.create(objRepositorio)
+                            .then(resultRepo => {
+                              // for (const commit of commits) {
+                              //   let objCommit = {
+                              //     sha: commit.sha,
+                              //     autor: commit.commit.author.name,
+                              //     mensaje: commit.commit.message,
+                              //     fecha: commit.commit.author.date,
+                              //     fk_repositorio: resultRepo._id
+                              //   };
+                              //   Commit.create(objCommit)
+                              //     .then(resultCommit => {
+                              //       console.log("resul", resultCommit);
+                              //     })
+                              //     .catch(handleError(res));
+                              // }
+                            })
+                            .catch(err => {
+                            });
+                        }
+                      })
+                      .catch(err => {
+                      });
 
                     objDatos.push({
                       lenguajes: repositorios.values[i].language,
@@ -333,7 +334,6 @@ export function datosBitbucket(req, res) {
               },
               callback: function() {
                 objetoUsuario.datos = objDatos;
-                console.log("usuario", req.body.usuario);
                 Usuario.update(objetoUsuario, {
                   where: {
                     email: req.body.usuario.email.toLowerCase(),

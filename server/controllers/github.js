@@ -41,6 +41,7 @@ function crearActualizarUsuario(response) {
       .then(user => {
         if (user !== null) {
           //colocar modelo de usuario
+          usuarioGithub._id = user._id;
           return Usuario.update(usuarioGithub, {
             where: {
               _id: user._id
@@ -126,7 +127,20 @@ export function authGithub(req, res) {
   authenticateGithub(req.params.code, res)
     .then(
       result => {
-        res.json(result);
+        Usuario.findOne({
+          where: {
+            email: result.usuario.email,
+            tipo: result.usuario.tipo
+          }
+        })
+          .then(user => {
+            //armar usuario respuesta
+            delete user.password;
+            res.json({ token: result.token, usuario: user });
+          })
+          .catch(err => {
+            res.send(err);
+          });
       },
       error => {
         res.send(error);
@@ -199,12 +213,11 @@ export function datosGithub(req, res) {
                   issues: repositorios[i].url + "/issues",
                   branches: repositorios[i].url + "/branches",
                   lenguajes: repositorios[i].languages_url,
-                  star: "repositorios[i].stargazers_count",
+                  star: repositorios[i].stargazers_count,
                   commits: commits,
-                  downloads: "repositorios[i].stargazers_count",
+                  downloads: repositorios[i].stargazers_count,
                   fk_usuario: objetoUsuario._id
                 };
-                console.log("objRepositorio", objRepositorio);
                 Repositorio.findOne({
                   where: {
                     id_repositorio: objRepositorio.id_repositorio,
@@ -213,19 +226,18 @@ export function datosGithub(req, res) {
                 })
                   .then(user => {
                     if (user !== null) {
-                      // Repositorio.update(objRepositorio, {
-                      //   where: {
-                      //     _id: user._id
-                      //   }
-                      // })
-                      //   .then(resultRepo => {})
-                      //   .catch(handleError(res));
+                      Repositorio.update(objRepositorio, {
+                        where: {
+                          _id: user._id
+                        }
+                      })
+                        .then(resultRepo => {})
+                        .catch();
                     } else {
-                      console.log("objRepositorio",objRepositorio)
+                      console.log("objRepositorio", objRepositorio);
                       return Repositorio.create(objRepositorio)
                         .then(resultRepo => {
                           return;
-                          console.log(resultRepo);
                           // for (const commit of commits) {
                           //   let objCommit = {
                           //     sha: commit.sha,
@@ -241,10 +253,10 @@ export function datosGithub(req, res) {
                           //     .catch(handleError(res));
                           // }
                         })
-                        .catch(handleError(res));
+                        .catch();
                     }
                   })
-                  .catch(handleError(res));
+                  .catch();
 
                 objDatos.push({
                   lenguajes: repositorios[i].language,

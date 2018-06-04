@@ -38,9 +38,9 @@ function crearActualizarUsuario(response) {
       }
     })
       .then(user => {
-        console.log(user);
         if (user !== null) {
           //colocar modelo de usuario
+          usuarioGitlab._id = user._id;
           return Usuario.update(usuarioGitlab, {
             where: {
               _id: user._id
@@ -98,7 +98,6 @@ function authenticateGitlab(code, response) {
           // fetch("https://gitlab.com/api/v4/user?access_token=" + token.access_token)
           .then(getJson())
           .then(responseGitlab => {
-            console.log("user", responseGitlab);
             usuarioGitlab.nombre = responseGitlab.name;
             usuarioGitlab.email = responseGitlab.email;
             usuarioGitlab.password = "gitlab";
@@ -225,7 +224,6 @@ export function authGitlab(req, res) {
   authenticateGitlab(req.params.code)
     .then(
       result => {
-        console.log("result:", result);
         res.json(result);
       },
       error => {
@@ -255,11 +253,9 @@ export function getMembers(req, res) {
       return response.json();
     })
     .then(response => {
-      console.log("res", response);
       res.send(response);
     })
     .catch(err => {
-      console.log(err);
     });
 }
 
@@ -299,7 +295,6 @@ export function datosGitlab(req, res) {
       )
         .then(getJson())
         .then(repositorios => {
-          console.log("projects", repositorios);
           let i = 1;
           let objDatos = [];
           if (repositorios.length > 0) {
@@ -323,74 +318,93 @@ export function datosGitlab(req, res) {
                       avatar: repositorios[i].avatar_url,
                       html_url: repositorios[i].web_url,
                       git_url: repositorios[i].ssh_url_to_repo,
-                      api_url: config.gitlabGeo.api_url+"projects/",
-                      fork: config.gitlabGeo.api_url+"projects/"+repositorios[i].id+"/forks",
-                      hooks: config.gitlabGeo.api_url+"projects/"+repositorios[i].id+"/hooks",
+                      api_url: config.gitlabGeo.api_url + "projects/",
+                      fork:
+                        config.gitlabGeo.api_url +
+                        "projects/" +
+                        repositorios[i].id +
+                        "/forks",
+                      hooks:
+                        config.gitlabGeo.api_url +
+                        "projects/" +
+                        repositorios[i].id +
+                        "/hooks",
                       tags: repositorios[i].tag_list || " ",
-                      issues: config.gitlabGeo.api_url+"projects/"+repositorios[i].id+"/issues",
-                      branches: config.gitlabGeo.api_url+"projects/"+repositorios[i].id+"/repository/branches",
-                      lenguajes: config.gitlabGeo.api_url+"projects/"+repositorios[i].id+"/languages" || "",
-                      star:repositorios[i].star_count,
+                      issues:
+                        config.gitlabGeo.api_url +
+                        "projects/" +
+                        repositorios[i].id +
+                        "/issues",
+                      branches:
+                        config.gitlabGeo.api_url +
+                        "projects/" +
+                        repositorios[i].id +
+                        "/repository/branches",
+                      lenguajes:
+                        config.gitlabGeo.api_url +
+                          "projects/" +
+                          repositorios[i].id +
+                          "/languages" || "",
+                      star: repositorios[i].star_count,
                       commits: commits,
                       downloads: "",
                       fk_usuario: objetoUsuario._id
                     };
 
                     Repositorio.findOne({
-                      where:{
-                        id_repositorio:objRepositorio.id_repositorio,
+                      where: {
+                        id_repositorio: objRepositorio.id_repositorio,
                         fk_usuario: objetoUsuario._id
                       }
                     })
-                    .then(user=>{
-                      if(user!==null){
-
-                        Repositorio.update(objRepositorio,{
-                          where:{
-                            _id: user._id
-                          }
-                        })
-                          .then(resultRepo => {
-                            // Crea commits de un repositorio
-                            // for (const commit of commits) {
-                            //   let objCommit = {
-                            //     sha: commit.sha,
-                            //     autor: commit.commit.author.name,
-                            //     mensaje: commit.commit.message,
-                            //     fecha: commit.commit.author.date,
-                            //     fk_repositorio: resultRepo._id
-                            //   };
-                            //   Commit.create(objCommit)
-                            //     .then(resultCommit => {
-                            //       console.log("resul", resultCommit);
-                            //     })
-                            //     .catch(handleError(res));
-                            // }
+                      .then(user => {
+                        if (user !== null) {
+                          Repositorio.update(objRepositorio, {
+                            where: {
+                              _id: user._id
+                            }
                           })
-                          .catch(handleError(res));
-                      }else{
-                        Repositorio.create(objRepositorio)
-                          .then(resultRepo => {
-                            // Crea commits de un repositorio
-                            // for (const commit of commits) {
-                            //   let objCommit = {
-                            //     sha: commit.sha,
-                            //     autor: commit.commit.author.name,
-                            //     mensaje: commit.commit.message,
-                            //     fecha: commit.commit.author.date,
-                            //     fk_repositorio: resultRepo._id
-                            //   };
-                            //   Commit.create(objCommit)
-                            //     .then(resultCommit => {
-                            //       console.log("resul", resultCommit);
-                            //     })
-                            //     .catch(handleError(res));
-                            // }
-                          })
-                          .catch(handleError(res));
-                      }
-                    })  
-                    .catch(handleError(res));                  
+                            .then(resultRepo => {
+                              // Crea commits de un repositorio
+                              // for (const commit of commits) {
+                              //   let objCommit = {
+                              //     sha: commit.sha,
+                              //     autor: commit.commit.author.name,
+                              //     mensaje: commit.commit.message,
+                              //     fecha: commit.commit.author.date,
+                              //     fk_repositorio: resultRepo._id
+                              //   };
+                              //   Commit.create(objCommit)
+                              //     .then(resultCommit => {
+                              //       console.log("resul", resultCommit);
+                              //     })
+                              //     .catch(handleError(res));
+                              // }
+                            })
+                            .catch(handleError(res));
+                        } else {
+                          Repositorio.create(objRepositorio)
+                            .then(resultRepo => {
+                              // Crea commits de un repositorio
+                              // for (const commit of commits) {
+                              //   let objCommit = {
+                              //     sha: commit.sha,
+                              //     autor: commit.commit.author.name,
+                              //     mensaje: commit.commit.message,
+                              //     fecha: commit.commit.author.date,
+                              //     fk_repositorio: resultRepo._id
+                              //   };
+                              //   Commit.create(objCommit)
+                              //     .then(resultCommit => {
+                              //       console.log("resul", resultCommit);
+                              //     })
+                              //     .catch(handleError(res));
+                              // }
+                            })
+                            .catch(handleError(res));
+                        }
+                      })
+                      .catch(handleError(res));
 
                     objDatos.push({
                       lenguajes: "",

@@ -30,7 +30,6 @@ function getJson() {
 
 function generaCommitsGitlab(res) {
   return function(entity) {
-    console.log("dd:", entity);
     let nombreRepo = [];
     let barChartData = [];
     let commitsArray = [];
@@ -49,7 +48,6 @@ function generaCommitsGitlab(res) {
         if (año != fecha.getFullYear() && sw) {
           año = fecha.getFullYear();
           sw = false;
-          // console.log("entro", año);
         } else {
           if (año == fecha.getFullYear()) {
             commitTotal++;
@@ -106,7 +104,6 @@ function generaCommitsGitlab(res) {
 
 function generaCommits(res) {
   return function(entity) {
-    console.log("dd:", entity);
     let nombreRepo = [];
     let barChartData = [];
     let commitsArray = [];
@@ -235,7 +232,6 @@ function generaDatos(res) {
       let dataCommit = [];
       let i = 0;
       for (let index = 0; index < años.length; index++) {
-        console.log(años[index], datos[i].año);
         if (años[index] != datos[i].año) {
           dataCommit.push(0);
         } else {
@@ -367,7 +363,6 @@ export function create(req, res) {
 
   if (params.password) {
     bcrypt.hash(params.password, null, null, (err, hash) => {
-      console.log(hash);
       obj.password = hash;
       if (obj.nombre != null && obj.email != null && obj.password != null) {
         return Usuario.create(obj)
@@ -465,7 +460,6 @@ export function destroy(req, res) {
 
 // Genera Json para graficos de usuarios - commits - proyecto
 export function graficos(req, res) {
-  console.log("object", req.params.id);
   return Usuario.find({
     where: {
       _id: req.params.id

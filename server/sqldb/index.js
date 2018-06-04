@@ -26,6 +26,12 @@ db.Proyecto.belongsToMany(db.Usuario, {
   foreignKey: "fk_usuario"
 });
 
+db.Usuario.hasMany(db.Repositorio, {
+  foreignKey: {
+    name: "fk_usuario",
+    allowNull: false
+  }
+});
 db.Repositorio.belongsTo(db.Usuario, {
   foreignKey: {
     name: "fk_usuario",
@@ -33,7 +39,22 @@ db.Repositorio.belongsTo(db.Usuario, {
   }
 });
 
+
+db.Repositorio.hasMany(db.Proyecto, {
+  foreignKey: {
+    name: "fk_repositorio",
+    allowNull: false
+  }
+});
+
 db.Proyecto.belongsTo(db.Repositorio, {
+  foreignKey: {
+    name: "fk_repositorio",
+    allowNull: false
+  }
+});
+
+db.Repositorio.hasMany(db.Commit, {
   foreignKey: {
     name: "fk_repositorio",
     allowNull: false

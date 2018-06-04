@@ -93,14 +93,14 @@ function setDatos(proyectoData, res) {
           break;
         case "gitlab":
           proyectoObj.avatar = "assets/images/gitlab.png";
-          for (const commit of proyectoData.datos.members) {
-            usuarios.push({
-              nombre: commit.name,
-              avatar_url: commit.avatar_url,
-              web_url: commit.web_url
-            });
-          }
-          proyectoObj.usuarios = usuarios;
+          // for (const commit of proyectoData.datos.members) {
+          //   usuarios.push({
+          //     nombre: commit.name,
+          //     avatar_url: commit.avatar_url,
+          //     web_url: commit.web_url
+          //   });
+          // }
+          // proyectoObj.usuarios = usuarios;
           proyectoObj.commits = proyectoData.datos.commits.length;
           proyectoObj.fechaCreacion =
             proyectoData.datos.commits[
@@ -110,10 +110,8 @@ function setDatos(proyectoData, res) {
             proyectoData.datos.commits[0].committed_date;
           break;
         case "bitbucket":
-          proyectoObj.avatar = proyectoData.datos.repo.links.avatar.href;
-          proyectoObj.descripcion = proyectoData.datos.repo.description;
           let datos = [];
-          for (let commits of proyectoData.datos.commits) {
+          for (let commits of proyectoData.datos.commits.values) {
             datos.push({
               nombre: commits.author.user.display_name,
               avatar_url: commits.author.user.links.avatar.href,
@@ -130,10 +128,10 @@ function setDatos(proyectoData, res) {
           proyectoObj.usuarios = datos;
           proyectoObj.commits = proyectoData.datos.commits.length;
           proyectoObj.fechaCreacion =
-            proyectoData.datos.commits[
-              proyectoData.datos.commits.length - 1
+            proyectoData.datos.commits.values[
+              proyectoData.datos.commits.values.length - 1
             ].date;
-          proyectoObj.ultimaActividad = proyectoData.datos.commits[0].date;
+          proyectoObj.ultimaActividad = proyectoData.datos.commits.values[0].date;
 
           break;
 
@@ -149,7 +147,6 @@ function setDatos(proyectoData, res) {
 
 function createEntity(res) {
   return function(entity) {
-    console.log("entidad:", entity);
     if (entity) {
       return Proyecto.create(entity)
         .then(response => {
@@ -195,7 +192,6 @@ function handleEntityNotFound(res) {
 function handleError(res, statusCode) {
   statusCode = statusCode || 500;
   return function(err) {
-    console.log(err);
     res.status(statusCode).send(err);
   };
 }
@@ -217,7 +213,6 @@ function asignarCommitsUsuarios(proyecto) {
       .then(usuario => {
         if (usuario) {
           if (!usuario.datos || !usuario.datos.commits) {
-            console.log("entra");
             usuario.datos = {
               commits: 0
             };

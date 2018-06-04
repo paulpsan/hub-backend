@@ -19,6 +19,9 @@ export default function(sequelize, DataTypes) {
           }
         }
       },
+      descripcion: {
+        type: DataTypes.TEXT
+      },
       urlRepositorio: {
         allowNull: false,
         type: DataTypes.TEXT,
@@ -29,9 +32,6 @@ export default function(sequelize, DataTypes) {
         }
       },
       avatar: {
-        type: DataTypes.TEXT
-      },
-      tipo: {
         type: DataTypes.TEXT
       },
       categorias: {
@@ -55,7 +55,7 @@ export default function(sequelize, DataTypes) {
       ultimaActividad: {
         type: DataTypes.DATE
       },
-      descripcion: {
+      tipo: {
         type: DataTypes.TEXT
       },
       datos: {

@@ -1,10 +1,8 @@
-'use strict';
+"use strict";
 
-var express = require('express');
-var controller = require('../controllers/repositorio');
-import {
-  generarOpciones
-} from '../components/sequelize-middleware';
+var express = require("express");
+var controller = require("../controllers/repositorio");
+import { generarOpciones } from "../components/sequelize-middleware";
 
 var router = express.Router();
 /**
@@ -65,9 +63,10 @@ var router = express.Router();
     "totalPaginas": 1
   }
 }
- */
-router.get('/', generarOpciones, controller.index);
-router.get('/:id/proyectos', controller.proyectos);
+*/
+router.get("/", generarOpciones, controller.index);
+router.get("/:id/usuarios", generarOpciones, controller.indexUser);
+router.get("/:id/proyectos", controller.proyectos);
 /**
  * @api {get} /repositorios/:id Obtener un repositorio por id
  * @apiName Repositorio
@@ -88,7 +87,7 @@ router.get('/:id/proyectos', controller.proyectos);
     "updatedAt": "2017-04-17T15:03:22.819Z"
   }
  */
-router.get('/:id', generarOpciones, controller.show);
+router.get("/:id", generarOpciones, controller.show);
 /**
  * @api {post} /repositorios Crear un repositorio
  * @apiName Crear Repositorio
@@ -107,9 +106,10 @@ router.get('/:id', generarOpciones, controller.show);
     "updatedAt": "2017-04-17T15:03:22.819Z"
   }
  */
-router.post('/', controller.create);
-router.put('/:id', controller.upsert);
-router.patch('/:id', controller.patch);
+router.post("/", controller.create);
+router.post("/lenguajes", controller.lenguajes);
+router.put("/:id", controller.upsert);
+router.patch("/:id", controller.patch);
 /**
  * @api {delete} /repositorios Eliminar un repositorio
  * @apiName Eliminar repositorio
@@ -119,6 +119,6 @@ router.patch('/:id', controller.patch);
  * @apiSuccessExample {json} Success-Response:
  * HTTP/1.1 204 OK
  */
-router.delete('/:id', controller.destroy);
+router.delete("/:id", controller.destroy);
 
 module.exports = router;
