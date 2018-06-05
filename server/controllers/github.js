@@ -173,7 +173,7 @@ export function datosGithub(req, res) {
     true
   );
   let objetoUsuario = req.body.usuario;
-  let token = req.body.usuario.token;
+  let token = req.body.token;
   console.log("asdd", req.body);
   fetch(
     "https://api.github.com/users/" +
