@@ -82,6 +82,7 @@ export function index(req, res) {
 }
 
 export function indexUser(req, res) {
+  console.log(req.params.id);
   return Repositorio.findAndCountAll({
     // include: [{ all: true }],
     where: {
