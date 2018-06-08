@@ -95,10 +95,11 @@ function authenticateGithub(code, response) {
               console.log("user", responseGithub);
               usuarioGithub.nombre = responseGithub.name;
               usuarioGithub.email = responseGithub.email;
-              usuarioGithub.password = "github";
+              usuarioGithub.password = "";
               usuarioGithub.tipo = "github";
               usuarioGithub.role = "usuario";
               usuarioGithub.login = responseGithub.login;
+              usuarioGithub.cuentas = ["github"];
               usuarioGithub.avatar = responseGithub.avatar_url;
               usuarioGithub.url = responseGithub.html_url;
               usuarioGithub.token = objRes.token;

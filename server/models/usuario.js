@@ -45,6 +45,9 @@ export default (sequelize, DataTypes) => {
         type: DataTypes.TEXT,
         defaultValue: ""
       },
+      cuentas: {
+        type: DataTypes.JSONB,
+      },
       //tipo puede ser Local, Github, Gitlab.
       tipo: {
         type: DataTypes.TEXT,

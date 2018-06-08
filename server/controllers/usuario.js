@@ -357,7 +357,7 @@ export function create(req, res) {
   obj.nombre = params.nombre;
   obj.email = params.email.toLowerCase();
   obj.password = params.password;
-  obj.login = params.login;
+  obj.cuentas = ["local"];
   obj.tipo = params.tipo;
   obj.role = params.role;
 
