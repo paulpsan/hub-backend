@@ -264,15 +264,16 @@ function respondWithResult(res, statusCode) {
   };
 }
 
-function patchUpdates(patches) {
+function saveUpdates(updates) {
   return function(entity) {
-    try {
-      jsonpatch.apply(entity, patches, /*validate*/ true);
-    } catch (err) {
-      return Promise.reject(err);
-    }
-
-    return entity.save();
+    return entity
+      .updateAttributes(updates)
+      .then(updated => {
+        return updated;
+      })
+      .catch(err => {
+        return err;
+      });
   };
 }
 
@@ -441,7 +442,7 @@ export function patch(req, res) {
     }
   })
     .then(handleEntityNotFound(res))
-    .then(patchUpdates(req.body))
+    .then(saveUpdates(req.body))
     .then(respondWithResult(res))
     .catch(handleError(res));
 }
@@ -468,19 +469,6 @@ export function graficos(req, res) {
     .then(generaDatos(res))
     .catch(handleError(res));
 }
-
-var asyncLoop = function(o) {
-  var i = -1;
-  var loop = function() {
-    i++;
-    if (i == o.length) {
-      o.callback();
-      return;
-    }
-    o.functionToLoop(loop, i);
-  };
-  loop(); //init
-};
 
 export function commitsGithub(req, res) {
   return Usuario.find({
