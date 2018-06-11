@@ -15,6 +15,7 @@ export default function(sequelize, DataTypes) {
       descripcion: DataTypes.STRING,
       avatar: DataTypes.STRING,
       html_url: DataTypes.STRING,
+      estado: DataTypes.STRING,
       tipo:DataTypes.STRING,
       git_url: DataTypes.STRING,
       api_url:DataTypes.STRING,

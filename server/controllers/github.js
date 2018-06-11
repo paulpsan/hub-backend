@@ -205,6 +205,8 @@ export function datosGithub(req, res) {
                   nombre: repositorios[i].name,
                   descripcion: repositorios[i].description || "",
                   avatar: "",
+                  tipo: "github",
+                  estado: true,
                   html_url: repositorios[i].html_url,
                   git_url: repositorios[i].git_url,
                   api_url: repositorios[i].url,

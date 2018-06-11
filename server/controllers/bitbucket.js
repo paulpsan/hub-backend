@@ -263,6 +263,8 @@ export function datosBitbucket(req, res) {
                       nombre: repositorios.values[i].name,
                       descripcion: repositorios.values[i].description,
                       avatar: repositorios.values[i].links.avatar.href,
+                      tipo: "bitbucket",
+                      estado: true,
                       html_url: repositorios.values[i].links.html.href,
                       git_url: repositorios.values[i].links.clone[1].href,
                       api_url: repositorios.values[i].links.self.href,

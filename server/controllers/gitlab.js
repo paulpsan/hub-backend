@@ -316,6 +316,8 @@ export function datosGitlab(req, res) {
                       nombre: repositorios[i].name,
                       descripcion: repositorios[i].description || " ",
                       avatar: repositorios[i].avatar_url,
+                      tipo: "gitlab",
+                      estado: true,
                       html_url: repositorios[i].web_url,
                       git_url: repositorios[i].ssh_url_to_repo,
                       api_url: config.gitlabGeo.api_url + "projects/",
