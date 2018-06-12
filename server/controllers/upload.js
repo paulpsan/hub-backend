@@ -9,24 +9,36 @@
  */
 
 "use strict";
-
-import _ from "lodash";
 import { Usuario, Repositorio, Proyecto } from "../sqldb";
-var fs = require("fs");
+import fs from "fs";
+const path = require("path");
 
+export function getImage(req, res) {
+  var tipo = req.params.tipo;
+  var img = req.params.img;
+
+  var pathImagen = path.resolve(__dirname, `../uploads/${tipo}/${img}`);
+
+  console.log("pathImagen", pathImagen);
+
+  if (fs.existsSync(pathImagen)) {
+    res.sendFile(pathImagen);
+  } else {
+    var pathNoImagen = path.resolve(__dirname, "../assets/no-img.jpg");
+    res.sendFile(pathNoImagen);
+  }
+}
 export function uploadFile(req, res) {
   var tipo = req.params.tipo;
   var id = req.params.id;
   if (!req.files) {
     return res.status(400).json({
-      ok: false,
       mensaje: "No selecciono nada",
       errors: { message: "Debe de seleccionar una imagen" }
     });
   }
   // Obtener nombre del archivo
-  let archivo = req.files.imagen;
-  console.log("archivo", archivo);
+  let archivo = req.files.avatar;
   let nombreCortado = archivo.name.split(".");
   let extensionArchivo = nombreCortado[nombreCortado.length - 1];
 
@@ -35,7 +47,6 @@ export function uploadFile(req, res) {
 
   if (extensionesValidas.indexOf(extensionArchivo) < 0) {
     return res.status(400).json({
-      ok: false,
       mensaje: "Extension no válida",
       errors: {
         message: "Las extensiones válidas son " + extensionesValidas.join(", ")
@@ -53,7 +64,6 @@ export function uploadFile(req, res) {
   archivo.mv(path, err => {
     if (err) {
       return res.status(500).json({
-        ok: false,
         mensaje: "Error al mover archivo",
         errors: err
       });
@@ -72,15 +82,10 @@ export function uploadFile(req, res) {
 function subirPorTipo(tipo, id, nombreArchivo, res) {
   console.log("entro");
   if (tipo === "usuarios") {
-    Usuario.find({
-      where: {
-        _id: id
-      }
-    })
+    Usuario.findById(id)
       .then(usuario => {
         if (!usuario) {
           return res.status(400).json({
-            ok: true,
             mensaje: "Usuario no existe",
             errors: { message: "Usuario no existe" }
           });
@@ -88,14 +93,15 @@ function subirPorTipo(tipo, id, nombreArchivo, res) {
         var pathViejo = "./server/uploads/usuarios/" + usuario.avatar;
 
         // Si existe, elimina la imagen anterior
+        console.log(pathViejo);
         if (fs.existsSync(pathViejo)) {
           fs.unlink(pathViejo);
         }
         usuario
           .update({ avatar: nombreArchivo })
           .then(usuarioActualizado => {
+            usuarioActualizado.password = ":)";
             return res.status(200).json({
-              ok: true,
               mensaje: "Imagen de usuario actualizada",
               usuario: usuarioActualizado
             });
@@ -113,60 +119,63 @@ function subirPorTipo(tipo, id, nombreArchivo, res) {
   }
 
   if (tipo === "repositorios") {
-    Repositorio.findById(id, (err, repositorio) => {
-      if (!repositorio) {
-        return res.status(400).json({
-          ok: true,
-          mensaje: "repositorio no existe",
-          errors: { message: "repositorio no existe" }
-        });
-      }
+    Repositorio.findById(id)
+      .then(repositorio => {
+        if (!repositorio) {
+          return res.status(400).json({
+            mensaje: "repositorio no existe",
+            errors: { message: "repositorio no existe" }
+          });
+          var pathViejo = "./uploads/repositorios/" + repositorio.avatar;
 
-      var pathViejo = "./uploads/repositorios/" + repositorio.avatar;
+          // Si existe, elimina la imagen anterior
+          if (fs.existsSync(pathViejo)) {
+            fs.unlink(pathViejo);
+          }
 
-      // Si existe, elimina la imagen anterior
-      if (fs.existsSync(pathViejo)) {
-        fs.unlink(pathViejo);
-      }
-
-      repositorio.avatar = nombreArchivo;
-
-      repositorio.save((err, repositorioActualizado) => {
-        return res.status(200).json({
-          ok: true,
-          mensaje: "Imagen de médico actualizada",
-          repositorio: repositorioActualizado
-        });
-      });
-    });
+          repositorio.avatar = nombreArchivo;
+          repositorio
+            .update({ avatar: nombreArchivo })
+            .then(repositorioActualizado => {
+              return res.status(200).json({
+                mensaje: "Imagen de médico actualizada",
+                repositorio: repositorioActualizado
+              });
+            })
+            .catch();
+        }
+      })
+      .catch();
   }
 
   if (tipo === "proyectos") {
-    Proyecto.findById(id, (err, proyecto) => {
-      if (!proyecto) {
-        return res.status(400).json({
-          ok: true,
-          mensaje: "proyecto no existe",
-          errors: { message: "proyecto no existe" }
-        });
-      }
+    Proyecto.findById(id)
+      .then(proyecto => {
+        if (!proyecto) {
+          return res.status(400).json({
+            mensaje: "proyecto no existe",
+            errors: { message: "proyecto no existe" }
+          });
+        }
 
-      var pathViejo = "./uploads/proyectos/" + proyecto.avatar;
+        var pathViejo = "./uploads/proyectos/" + proyecto.avatar;
 
-      // Si existe, elimina la imagen anterior
-      if (fs.existsSync(pathViejo)) {
-        fs.unlink(pathViejo);
-      }
+        // Si existe, elimina la imagen anterior
+        if (fs.existsSync(pathViejo)) {
+          fs.unlink(pathViejo);
+        }
 
-      proyecto.avatar = nombreArchivo;
-
-      proyecto.save((err, proyectoActualizado) => {
-        return res.status(200).json({
-          ok: true,
-          mensaje: "Imagen de proyecto actualizada",
-          proyecto: proyectoActualizado
-        });
-      });
-    });
+        proyecto.avatar = nombreArchivo;
+        proyecto
+          .update({ avatar: nombreArchivo })
+          .then(proyectoActualizado => {
+            return res.status(200).json({
+              mensaje: "Imagen de proyecto actualizada",
+              proyecto: proyectoActualizado
+            });
+          })
+          .catch();
+      })
+      .catch();
   }
 }

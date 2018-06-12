@@ -10,5 +10,9 @@ router.put(
   autenticacion.isAuthenticated(),
   controller.uploadFile
 );
-
+router.get(
+  "/:tipo/:img",
+  autenticacion.isAuthenticated(),
+  controller.getImage
+);
 module.exports = router;
