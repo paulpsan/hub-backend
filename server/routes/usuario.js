@@ -7,6 +7,7 @@ var controllerGitLab = require("../controllers/gitlab");
 var controllerBitbucket = require("../controllers/bitbucket");
 import { generarOpciones } from "../components/sequelize-middleware";
 import * as autenticacion from "../auth/auth.service";
+
 var router = express.Router();
 
 /**
