@@ -144,6 +144,12 @@ router.post("/", autenticacion.isAuthenticated(), controller.create);
 router.post("/login", autenticacion.isAuthenticated(), controller.login);
 
 router.post(
+  "/github",
+  autenticacion.isAuthenticated(),
+  controllerGithub.crearUsuarioOauth
+);
+
+router.post(
   "/datosgithub",
   autenticacion.isAuthenticated(),
   controllerGithub.datosGithub

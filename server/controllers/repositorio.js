@@ -82,7 +82,7 @@ export function index(req, res) {
 }
 
 export function indexUser(req, res) {
-  console.log(req.params.id);
+  // console.log(req.params.id);
   return Repositorio.findAndCountAll({
     // include: [{ all: true }],
     where: {
@@ -167,12 +167,12 @@ export function destroy(req, res) {
 }
 // devuelve list de lenguajes
 export function lenguajes(req, res) {
-  console.log("object", req.body);
+  // console.log("object", req.body);
 
   fetch(req.body.url)
     .then(getJson())
     .then(respuesta => {
-      console.log(respuesta);
+      // console.log(respuesta);
       res.send(respuesta);
     })
     .catch();

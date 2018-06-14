@@ -29,7 +29,6 @@ class SequelizeHelper {
   }
 
   static generarRespuesta(datos, opciones) {
-    console.log("datos",datos);
     return Paginador.respuestaPaginacion(datos.rows.length, datos.rows, opciones.offset / opciones.limit, opciones.limit);
   }
 }

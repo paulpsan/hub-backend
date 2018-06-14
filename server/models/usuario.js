@@ -30,11 +30,6 @@ export default (sequelize, DataTypes) => {
       },
       password: {
         type: DataTypes.TEXT
-        // validate: {
-        //   notEmpty: {
-        //     msg: "Ingrese su password"
-        //   }
-        // }
       },
       role: {
         type: DataTypes.TEXT,
@@ -52,18 +47,13 @@ export default (sequelize, DataTypes) => {
       tipo: {
         type: DataTypes.TEXT,
         defaultValue: "local"
-        // validate: {
-        //   notEmpty: {
-        //     msg: "Ingrese su role"
-        //   }
-        // }
       },
       avatar: {
         type: DataTypes.TEXT,
         defaultValue: ""
       },
       descripcion: {
-        type: DataTypes.STRING
+        type: DataTypes.TEXT
       },
       clasificacion: {
         type: DataTypes.JSONB,
@@ -83,6 +73,9 @@ export default (sequelize, DataTypes) => {
       url: {
         type: DataTypes.TEXT,
         defaultValue: ""
+      },
+      estado: {
+        type: DataTypes.STRING,
       }
     },
     {

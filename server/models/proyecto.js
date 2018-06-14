@@ -60,6 +60,9 @@ export default function(sequelize, DataTypes) {
       },
       datos: {
         type: DataTypes.JSONB
+      },
+      estado: {
+        type: DataTypes.STRING
       }
     },
     {

@@ -94,7 +94,7 @@ function subirPorTipo(tipo, id, nombreArchivo, res) {
 
         // Si existe, elimina la imagen anterior
         console.log(pathViejo);
-        if (fs.existsSync(pathViejo)) {
+        if (fs.existsSync(pathViejo) && usuario.avatar != "") {
           fs.unlink(pathViejo);
         }
         usuario
@@ -129,7 +129,7 @@ function subirPorTipo(tipo, id, nombreArchivo, res) {
           var pathViejo = "./uploads/repositorios/" + repositorio.avatar;
 
           // Si existe, elimina la imagen anterior
-          if (fs.existsSync(pathViejo)) {
+          if (fs.existsSync(pathViejo) && repositorio.avatar != "") {
             fs.unlink(pathViejo);
           }
 
@@ -161,10 +161,9 @@ function subirPorTipo(tipo, id, nombreArchivo, res) {
         var pathViejo = "./uploads/proyectos/" + proyecto.avatar;
 
         // Si existe, elimina la imagen anterior
-        if (fs.existsSync(pathViejo)) {
+        if (fs.existsSync(pathViejo) && proyecto.avatar != "") {
           fs.unlink(pathViejo);
         }
-
         proyecto.avatar = nombreArchivo;
         proyecto
           .update({ avatar: nombreArchivo })
