@@ -15,7 +15,10 @@ export default function(sequelize, DataTypes) {
       descripcion: DataTypes.TEXT,
       avatar: DataTypes.TEXT,
       html_url: DataTypes.TEXT,
-      estado: DataTypes.STRING,
+      estado: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
+      },
       tipo:DataTypes.STRING,
       git_url: DataTypes.STRING,
       api_url:DataTypes.STRING,

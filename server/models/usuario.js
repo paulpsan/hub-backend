@@ -41,7 +41,7 @@ export default (sequelize, DataTypes) => {
         defaultValue: ""
       },
       cuentas: {
-        type: DataTypes.JSONB,
+        type: DataTypes.JSONB
       },
       //tipo puede ser Local, Github, Gitlab.
       tipo: {
@@ -64,10 +64,10 @@ export default (sequelize, DataTypes) => {
       },
       datos: {
         type: DataTypes.JSONB,
-        defaultValue:{
-          repo:{},
-          lenguajes:[],
-          commits:[]
+        defaultValue: {
+          repo: {},
+          lenguajes: [],
+          commits: []
         }
       },
       url: {
@@ -75,7 +75,29 @@ export default (sequelize, DataTypes) => {
         defaultValue: ""
       },
       estado: {
-        type: DataTypes.STRING,
+        type: DataTypes.BOOLEAN,
+        defaultValue: true
+      },
+      github: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
+      },
+      id_github: {
+        type: DataTypes.INTEGER
+      },
+      gitlab: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
+      },
+      id_gitlab: {
+        type: DataTypes.INTEGER
+      },
+      bitbucket: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
+      },
+      id_bitbucket: {
+        type: DataTypes.STRING
       }
     },
     {

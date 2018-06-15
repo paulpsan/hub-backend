@@ -62,7 +62,8 @@ export default function(sequelize, DataTypes) {
         type: DataTypes.JSONB
       },
       estado: {
-        type: DataTypes.STRING
+        type: DataTypes.BOOLEAN,
+        defaultValue: true
       }
     },
     {
