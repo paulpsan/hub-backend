@@ -126,26 +126,33 @@ function subirPorTipo(tipo, id, nombreArchivo, res) {
             mensaje: "repositorio no existe",
             errors: { message: "repositorio no existe" }
           });
-          var pathViejo = "./uploads/repositorios/" + repositorio.avatar;
-
-          // Si existe, elimina la imagen anterior
-          if (fs.existsSync(pathViejo) && repositorio.avatar != "") {
-            fs.unlink(pathViejo);
-          }
-
-          repositorio.avatar = nombreArchivo;
-          repositorio
-            .update({ avatar: nombreArchivo })
-            .then(repositorioActualizado => {
-              return res.status(200).json({
-                mensaje: "Imagen de médico actualizada",
-                repositorio: repositorioActualizado
-              });
-            })
-            .catch();
         }
+        var pathViejo = "./server/uploads/repositorios/" + repositorio.avatar;
+
+        // Si existe, elimina la imagen anterior
+        if (fs.existsSync(pathViejo) && repositorio.avatar != "") {
+          fs.unlink(pathViejo);
+        }
+
+        repositorio.avatar = nombreArchivo;
+        repositorio
+          .update({ avatar: nombreArchivo })
+          .then(repositorioActualizado => {
+            return res.status(200).json({
+              mensaje: "Imagen de repositorio actualizada",
+              repositorio: repositorioActualizado
+            });
+          })
+          .catch(err => {
+            return err;
+          });
       })
-      .catch();
+      .catch(err => {
+        return res.status(500).json({
+          mensaje: "No se pudo actualizar",
+          errors: err
+        });
+      });
   }
 
   if (tipo === "proyectos") {
@@ -164,7 +171,6 @@ function subirPorTipo(tipo, id, nombreArchivo, res) {
         if (fs.existsSync(pathViejo) && proyecto.avatar != "") {
           fs.unlink(pathViejo);
         }
-        proyecto.avatar = nombreArchivo;
         proyecto
           .update({ avatar: nombreArchivo })
           .then(proyectoActualizado => {
@@ -173,8 +179,15 @@ function subirPorTipo(tipo, id, nombreArchivo, res) {
               proyecto: proyectoActualizado
             });
           })
-          .catch();
+          .catch(err => {
+            return err;
+          });
       })
-      .catch();
+      .catch(err => {
+        return res.status(500).json({
+          mensaje: "No se pudo actualizar",
+          errors: err
+        });
+      });
   }
 }

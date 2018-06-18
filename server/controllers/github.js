@@ -293,22 +293,23 @@ export function crearUsuarioOauth(req, res) {
       }
     );
   } else {
-    console.log("adiciona al repo");
-    adicionaDatosUsuario(token, usuario, usuarioOauth)
-      .then(resp => {
-        Usuario.findById(resp.usuario._id)
-          .then(user => {
-            //armar usuario respuesta
-            res.json({ token: resp.token, usuario: user });
-          })
-          .catch(err => {
-            res.send(err);
-          });
-      })
 
-      .catch(err => {
-        res.send(err);
-      });
+    console.log("adiciona al repo");
+    // adicionaDatosUsuario(token, usuario, usuarioOauth)
+    //   .then(resp => {
+    //     Usuario.findById(resp.usuario._id)
+    //       .then(user => {
+    //         //armar usuario respuesta
+    //         res.json({ token: resp.token, usuario: user });
+    //       })
+    //       .catch(err => {
+    //         res.send(err);
+    //       });
+    //   })
+
+    //   .catch(err => {
+    //     res.send(err);
+    //   });
   }
 
   // usuarioGithub(req.params.code, res)

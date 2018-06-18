@@ -69,6 +69,7 @@ function handleEntityNotFound(res) {
 function handleError(res, statusCode) {
   statusCode = statusCode || 500;
   return function(err) {
+    console.log(err);
     res.status(statusCode).send(err);
   };
 }
@@ -120,6 +121,7 @@ export function proyectos(req, res) {
 
 // Creates a new Repositorio in the DB
 export function create(req, res) {
+  console.log(req.body);
   return Repositorio.create(req.body)
     .then(respondWithResult(res, 201))
     .catch(handleError(res));
