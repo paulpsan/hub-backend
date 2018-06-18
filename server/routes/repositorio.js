@@ -107,6 +107,7 @@ router.get("/:id", generarOpciones, controller.show);
   }
  */
 router.post("/", controller.create);
+router.post("/oauth", controller.addOauth);
 router.post("/lenguajes", controller.lenguajes);
 router.put("/:id", controller.upsert);
 router.patch("/:id", controller.patch);

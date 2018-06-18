@@ -74,6 +74,118 @@ function handleError(res, statusCode) {
   };
 }
 
+function adicionaDatosGithub(token, usuario, usuarioOauth) {
+  return new Promise((resolver, rechazar) => {
+    fetch(
+      "https://api.github.com/users/" +
+        usuarioOauth.login +
+        "/repos" +
+        "?access_token=" +
+        token
+    )
+      .then(getJson())
+      .then(repositorios => {
+        // console.log("reps", repositorios);
+        let i = 1;
+        let objDatos = [];
+        if (repositorios.length > 0) {
+          let objCommits = {};
+          asyncLoop({
+            length: repositorios.length,
+            functionToLoop: function(loop, i) {
+              fetch(
+                "https://api.github.com/repos/" +
+                  repositorios[i].full_name +
+                  "/commits?access_token=" +
+                  token
+              )
+                .then(getJson())
+                .then(commits => {
+                  let objRepositorio = {
+                    id_repositorio: repositorios[i].id,
+                    nombre: repositorios[i].name,
+                    descripcion: repositorios[i].description || "",
+                    avatar: "",
+                    tipo: "github",
+                    estado: false,
+                    html_url: repositorios[i].html_url,
+                    git_url: repositorios[i].git_url,
+                    api_url: repositorios[i].url,
+                    fork: repositorios[i].forks_url,
+                    hooks: repositorios[i].hooks_url,
+                    tags: repositorios[i].tags_url,
+                    issues: repositorios[i].url + "/issues",
+                    branches: repositorios[i].url + "/branches",
+                    lenguajes: repositorios[i].languages_url,
+                    star: repositorios[i].stargazers_count,
+                    commits: commits,
+                    downloads: repositorios[i].stargazers_count,
+                    fk_usuario: usuario._id
+                  };
+
+                  Repositorio.findOne({
+                    where: {
+                      id_repositorio: objRepositorio.id_repositorio,
+                      fk_usuario: usuario._id
+                    }
+                  })
+                    .then(user => {
+                      if (user !== null) {
+                        Repositorio.update(objRepositorio, {
+                          where: {
+                            _id: user._id
+                          }
+                        })
+                          .then(resultRepo => {})
+                          .catch();
+                      } else {
+                        // console.log("objRepositorio", objRepositorio);
+                        return Repositorio.create(objRepositorio)
+                          .then(resultRepo => {
+                            return;
+
+                          })
+                          .catch();
+                      }
+                    })
+                    .catch();
+                  loop();
+                })
+                .catch(err => {
+                  console.log(err);
+                });
+            },
+            callback: function() {
+              usuario.github = true;
+              usuario.id_github = usuarioOauth.id;
+              Usuario.update(usuario, {
+                where: {
+                  _id: usuario._id
+                }
+              }).then(result => {
+                console.log("++++++++++++++++++", result, "++++++++++++++++");
+                if (result.length > 0) {
+                  resolver({
+                    token: token,
+                    usuario: usuario
+                  });
+                  // res
+                  //   .status(200)
+                  //   .json({ result: "Se realizaron actualizaciones" });
+                } else {
+                  rechazar({ err: "No tiene actualizaciones" });
+                  // res.status(200).json({ result: "No tiene actualizaciones" });
+                }
+              });
+            }
+          });
+        }
+      })
+      .catch();
+  });
+}
+
+
 // Gets a list of Repositorios
 export function index(req, res) {
   return Repositorio.findAndCountAll(req.opciones)
@@ -125,6 +237,38 @@ export function create(req, res) {
   return Repositorio.create(req.body)
     .then(respondWithResult(res, 201))
     .catch(handleError(res));
+}
+
+export function addOauth(req, res) {
+  let usuario = req.body.usuario;
+  let usuarioOauth = req.body.usuarioOauth;
+  let token = req.body.token;
+  let tipo = req.body.tipo;
+  switch (tipo) {
+    case "github":
+    adicionaDatosGithub(token, usuario,usuarioOauth)
+    .then(resp => {
+      Usuario.findById(resp.usuario._id)
+        .then(user => {
+          //armar usuario respuesta
+          res.json({ token: resp.token, usuario: user });
+        })
+        .catch(err => {
+          res.send(err);
+        });
+    })
+    .catch(err => {
+      res.send(err);
+    });
+      break;
+    case "gitlab":
+      break;
+    case "bitbucket":
+      break;
+
+    default:
+      break;
+  }
 }
 
 // Upserts the given Repositorio in the DB at the specified ID
