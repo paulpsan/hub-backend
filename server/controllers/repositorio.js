@@ -32,15 +32,17 @@ function respondWithResult(res, statusCode) {
   };
 }
 
-function patchUpdates(patches) {
+function saveUpdates(updates) {
   return function(entity) {
-    try {
-      jsonpatch.apply(entity, patches, /*validate*/ true);
-    } catch (err) {
-      return Promise.reject(err);
-    }
-
-    return entity.save();
+    console.log("--------", entity, updates);
+    return entity
+      .updateAttributes(updates)
+      .then(updated => {
+        return updated;
+      })
+      .catch(err => {
+        return err;
+      });
   };
 }
 
@@ -140,16 +142,13 @@ export function upsert(req, res) {
 
 // Updates an existing Repositorio in the DB
 export function patch(req, res) {
-  if (req.body._id) {
-    delete req.body._id;
-  }
   return Repositorio.find({
     where: {
-      _id: req.params.id
+      _id: req.body._id
     }
   })
     .then(handleEntityNotFound(res))
-    .then(patchUpdates(req.body))
+    .then(saveUpdates(req.body))
     .then(respondWithResult(res))
     .catch(handleError(res));
 }
