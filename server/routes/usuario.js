@@ -144,9 +144,21 @@ router.post("/", autenticacion.isAuthenticated(), controller.create);
 router.post("/login", autenticacion.isAuthenticated(), controller.login);
 
 router.post(
-  "/github",
+  "/oauth/github",
   autenticacion.isAuthenticated(),
-  controllerGithub.crearUsuarioOauth
+  controllerGithub.singOauthGithub
+);
+
+router.post(
+  "/oauth/gitlab",
+  autenticacion.isAuthenticated(),
+  controllerGitLab.singOauthGitlab
+);
+
+router.post(
+  "/oauth/bitbucket",
+  autenticacion.isAuthenticated(),
+  controllerBitbucket.singOauthBitbucket
 );
 
 router.post(
@@ -154,6 +166,7 @@ router.post(
   autenticacion.isAuthenticated(),
   controllerGithub.datosGithub
 );
+
 router.post(
   "/datosgitlab",
   autenticacion.isAuthenticated(),
@@ -164,6 +177,7 @@ router.post(
   autenticacion.isAuthenticated(),
   controllerBitbucket.datosBitbucket
 );
+
 router.post(
   "/commits/:id/github",
   autenticacion.isAuthenticated(),

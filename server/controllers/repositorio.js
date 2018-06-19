@@ -10,11 +10,16 @@
 
 "use strict";
 
-import jsonpatch from "fast-json-patch";
 import { Repositorio } from "../sqldb";
 import Gitlab from "../components/repository-proxy/repositories/gitlab";
 import SequelizeHelper from "../components/sequelize-helper";
+import config from "../config/environment";
+import https from "https";
 var fetch = require("node-fetch");
+
+const agent = new https.Agent({
+  rejectUnauthorized: false
+});
 
 function getJson() {
   return function(resultado) {
@@ -34,7 +39,7 @@ function respondWithResult(res, statusCode) {
 
 function saveUpdates(updates) {
   return function(entity) {
-    console.log("--------", entity, updates);
+    // console.log("--------", entity, updates);
     return entity
       .updateAttributes(updates)
       .then(updated => {
@@ -74,117 +79,242 @@ function handleError(res, statusCode) {
   };
 }
 
-function adicionaDatosGithub(token, usuario, usuarioOauth) {
-  return new Promise((resolver, rechazar) => {
-    fetch(
-      "https://api.github.com/users/" +
-        usuarioOauth.login +
-        "/repos" +
-        "?access_token=" +
-        token
-    )
-      .then(getJson())
-      .then(repositorios => {
-        // console.log("reps", repositorios);
-        let i = 1;
-        let objDatos = [];
-        if (repositorios.length > 0) {
-          let objCommits = {};
-          asyncLoop({
-            length: repositorios.length,
-            functionToLoop: function(loop, i) {
-              fetch(
-                "https://api.github.com/repos/" +
-                  repositorios[i].full_name +
-                  "/commits?access_token=" +
-                  token
-              )
-                .then(getJson())
-                .then(commits => {
-                  let objRepositorio = {
-                    id_repositorio: repositorios[i].id,
-                    nombre: repositorios[i].name,
-                    descripcion: repositorios[i].description || "",
-                    avatar: "",
-                    tipo: "github",
-                    estado: false,
-                    html_url: repositorios[i].html_url,
-                    git_url: repositorios[i].git_url,
-                    api_url: repositorios[i].url,
-                    fork: repositorios[i].forks_url,
-                    hooks: repositorios[i].hooks_url,
-                    tags: repositorios[i].tags_url,
-                    issues: repositorios[i].url + "/issues",
-                    branches: repositorios[i].url + "/branches",
-                    lenguajes: repositorios[i].languages_url,
-                    star: repositorios[i].stargazers_count,
-                    commits: commits,
-                    downloads: repositorios[i].stargazers_count,
-                    fk_usuario: usuario._id
-                  };
-
-                  Repositorio.findOne({
-                    where: {
-                      id_repositorio: objRepositorio.id_repositorio,
-                      fk_usuario: usuario._id
-                    }
-                  })
-                    .then(user => {
-                      if (user !== null) {
-                        Repositorio.update(objRepositorio, {
-                          where: {
-                            _id: user._id
-                          }
-                        })
-                          .then(resultRepo => {})
-                          .catch();
-                      } else {
-                        // console.log("objRepositorio", objRepositorio);
-                        return Repositorio.create(objRepositorio)
-                          .then(resultRepo => {
-                            return;
-
-                          })
-                          .catch();
-                      }
-                    })
-                    .catch();
-                  loop();
-                })
-                .catch(err => {
-                  console.log(err);
-                });
-            },
-            callback: function() {
-              usuario.github = true;
-              usuario.id_github = usuarioOauth.id;
-              Usuario.update(usuario, {
-                where: {
-                  _id: usuario._id
-                }
-              }).then(result => {
-                console.log("++++++++++++++++++", result, "++++++++++++++++");
-                if (result.length > 0) {
-                  resolver({
-                    token: token,
-                    usuario: usuario
-                  });
-                  // res
-                  //   .status(200)
-                  //   .json({ result: "Se realizaron actualizaciones" });
-                } else {
-                  rechazar({ err: "No tiene actualizaciones" });
-                  // res.status(200).json({ result: "No tiene actualizaciones" });
-                }
-              });
-            }
-          });
+function creaAdiciona(usuario) {
+  return async function(repositorios) {
+    for (const repo of repositorios) {
+      let objRepositorio = {
+        id_repositorio: repo.id,
+        nombre: repo.name,
+        descripcion: repo.description || "",
+        avatar: "",
+        tipo: "github",
+        estado: false,
+        html_url: repo.html_url,
+        git_url: repo.git_url,
+        api_url: repo.url,
+        fork: repo.forks_url,
+        hooks: repo.hooks_url,
+        tags: repo.tags_url,
+        issues: repo.url + "/issues",
+        branches: repo.url + "/branches",
+        lenguajes: repo.languages_url,
+        star: repo.stargazers_count,
+        commits: repo.url + "/commits",
+        downloads: repo.stargazers_count,
+        fk_usuario: usuario._id
+      };
+      await Repositorio.findOne({
+        where: {
+          id_repositorio: objRepositorio.id_repositorio,
+          fk_usuario: usuario._id
         }
       })
-      .catch();
+        .then(user => {
+          if (user !== null) {
+            return Repositorio.update(objRepositorio, {
+              where: {
+                _id: user._id
+              }
+            });
+          } else {
+            // console.log("objRepositorio", objRepositorio);
+            return Repositorio.create(objRepositorio);
+          }
+        })
+        .catch();
+    }
+    return;
+  };
+}
+
+function adicionaGithub(token, usuario) {
+  return new Promise((resolver, rechazar) => {
+    fetch("https://api.github.com/user?access_token=" + token)
+      .then(getJson())
+      .then(responseGithub => {
+        fetch(
+          "https://api.github.com/users/" +
+            responseGithub.login +
+            "/repos" +
+            "?access_token=" +
+            token
+        )
+          .then(getJson())
+          .then(creaAdiciona(usuario))
+          .then(resp => {
+            resolver("se agrego correctamente los repositorios");
+          })
+          .catch(err => {
+            rechazar(err);
+          });
+      })
+      .catch(err => {
+        rechazar(err);
+      });
   });
 }
 
+function creaGitlab(usuario) {
+  return async function(repositorios) {
+    console.log("repos", repositorios);
+    for (const repo of repositorios) {
+      let objRepositorio = {
+        id_repositorio: repo.id,
+        nombre: repo.name,
+        descripcion: repo.description || " ",
+        avatar: repo.avatar_url,
+        tipo: "gitlab",
+        estado: false,
+        html_url: repo.web_url,
+        git_url: repo.ssh_url_to_repo,
+        api_url: config.gitlabGeo.api_url + "projects/",
+        fork: config.gitlabGeo.api_url + "projects/" + repo.id + "/forks",
+        hooks: config.gitlabGeo.api_url + "projects/" + repo.id + "/hooks",
+        tags: repo.tag_list || " ",
+        issues: config.gitlabGeo.api_url + "projects/" + repo.id + "/issues",
+        branches:
+          config.gitlabGeo.api_url +
+          "projects/" +
+          repo.id +
+          "/repository/branches",
+        lenguajes:
+          config.gitlabGeo.api_url + "projects/" + repo.id + "/languages" || "",
+        star: repo.star_count,
+        commits: config.gitlabGeo.api_url + "projects/" + repo.id + "/repository/commits",
+        downloads: "",
+        fk_usuario: usuario._id
+      };
+
+      await Repositorio.findOne({
+        where: {
+          id_repositorio: objRepositorio.id_repositorio,
+          fk_usuario: usuario._id
+        }
+      })
+        .then(user => {
+          if (user !== null) {
+            return Repositorio.update(objRepositorio, {
+              where: {
+                _id: user._id
+              }
+            });
+          } else {
+            // console.log("objRepositorio", objRepositorio);
+            return Repositorio.create(objRepositorio);
+          }
+        })
+        .catch();
+    }
+    return;
+  };
+}
+
+function adicionaGitlab(token, usuario) {
+  return new Promise((resolver, rechazar) => {
+    fetch("https://gitlab.geo.gob.bo/api/v4/user?access_token=" + token, {
+      agent,
+      strictSSL: false
+    })
+      .then(getJson())
+      .then(responseGitlab => {
+        fetch(
+          "https://gitlab.geo.gob.bo/api/v4/users/" +
+            responseGitlab.id +
+            "/projects" +
+            "?access_token=" +
+            token,
+          { agent, strictSSL: false }
+        )
+          .then(getJson())
+          .then(creaGitlab(usuario))
+          .then(resp => {
+            resolver("se agrego correctamente los repositorios");
+          })
+          .catch(err => {
+            rechazar(err);
+          });
+      })
+      .catch(err => {
+        rechazar(err);
+      });
+  });
+}
+function creaBitbucket(usuario) {
+  return async function(repositorios) {
+    let i = 0;
+    for (const repo of repositorios.values) {
+      console.log("repos", repo);
+      let objRepositorio = {
+        id_repositorio: i,
+        nombre: repo.name,
+        descripcion: repo.description,
+        avatar: repo.links.avatar.href,
+        tipo: "bitbucket",
+        estado: false,
+        html_url: repo.links.html.href,
+        git_url: repo.links.clone[1].href,
+        api_url: repo.links.self.href,
+        fork: repo.links.forks.href,
+        hooks: repo.links.hooks.href,
+        tags: repo.links.tags.href,
+        issues:
+          config.bitbucket.api_url +
+          "repositories/" +
+          repo.full_name +
+          "/issues",
+        branches: repo.links.branches.href,
+        lenguajes: repo.language,
+        star: "",
+        commits: repo.links.commits.href,
+        downloads: repo.links.downloads.href,
+        fk_usuario: usuario._id
+      };
+
+      await Repositorio.findOne({
+        where: {
+          id_repositorio: objRepositorio.id_repositorio,
+          fk_usuario: usuario._id
+        }
+      })
+        .then(user => {
+          if (user !== null) {
+            return Repositorio.update(objRepositorio, {
+              where: {
+                _id: user._id
+              }
+            });
+          } else {
+            // console.log("objRepositorio", objRepositorio);
+            return Repositorio.create(objRepositorio);
+          }
+        })
+        .catch();
+      i++;
+    }
+    return;
+  };
+}
+
+function adicionaBitbucket(token, usuario) {
+  return new Promise((resolver, rechazar) => {
+    fetch("https://api.bitbucket.org/2.0/user?access_token=" + token)
+      .then(getJson())
+      .then(responseGitlab => {
+        fetch(responseGitlab.links.repositories.href + "?access_token=" + token)
+          .then(getJson())
+          .then(creaBitbucket(usuario))
+          .then(resp => {
+            resolver("se agrego correctamente los repositorios");
+          })
+          .catch(err => {
+            rechazar(err);
+          });
+      })
+      .catch(err => {
+        rechazar(err);
+      });
+  });
+}
 
 // Gets a list of Repositorios
 export function index(req, res) {
@@ -241,29 +371,48 @@ export function create(req, res) {
 
 export function addOauth(req, res) {
   let usuario = req.body.usuario;
-  let usuarioOauth = req.body.usuarioOauth;
+  // let usuarioOauth = req.body.usuarioOauth;
   let token = req.body.token;
   let tipo = req.body.tipo;
   switch (tipo) {
     case "github":
-    adicionaDatosGithub(token, usuario,usuarioOauth)
-    .then(resp => {
-      Usuario.findById(resp.usuario._id)
-        .then(user => {
-          //armar usuario respuesta
-          res.json({ token: resp.token, usuario: user });
+      adicionaGithub(token, usuario)
+        .then(resp => {
+          res.json({ respuesta: resp });
         })
         .catch(err => {
-          res.send(err);
+          console.log(err);
+          res
+            .status(500)
+            .json(err)
+            .end();
         });
-    })
-    .catch(err => {
-      res.send(err);
-    });
       break;
     case "gitlab":
+      adicionaGitlab(token, usuario)
+        .then(resp => {
+          res.json({ respuesta: resp });
+        })
+        .catch(err => {
+          console.log(err);
+          res
+            .status(500)
+            .json(err)
+            .end();
+        });
       break;
     case "bitbucket":
+      adicionaBitbucket(token, usuario)
+        .then(resp => {
+          res.json({ respuesta: resp });
+        })
+        .catch(err => {
+          console.log(err);
+          res
+            .status(500)
+            .json(err)
+            .end();
+        });
       break;
 
     default:

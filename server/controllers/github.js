@@ -108,32 +108,23 @@ function authenticateGithub(code, response) {
   });
 }
 
-function nuevoUsuario(token) {
+function nuevoUsuario(usuarioOauth) {
   return new Promise((resolver, rechazar) => {
-    fetch("https://api.github.com/user?access_token=" + token)
-      .then(getJson())
-      .then(responseGithub => {
-        // console.log("user", responseGithub);
-        usuarioGithub.nombre = responseGithub.name;
-        usuarioGithub.email = responseGithub.email;
-        usuarioGithub.password = "";
-        usuarioGithub.tipo = "github";
-        usuarioGithub.role = "usuario";
-        usuarioGithub.login = responseGithub.login;
-        usuarioGithub.cuentas = ["local", "github"];
-        usuarioGithub.avatar = responseGithub.avatar_url;
-        usuarioGithub.url = responseGithub.html_url;
-        usuarioGithub.github = true;
-        usuarioGithub.id_github = responseGithub.id;
-        return responseGithub;
-      })
-      .then(crearActualizarUsuario())
-      .then(responseGithub => {
-        console.log("responseGithub", usuarioGithub);
-        resolver({
-          token: token,
-          usuario: usuarioGithub
-        });
+    let objGithub = {};
+    objGithub.nombre = usuarioOauth.name;
+    objGithub.email = usuarioOauth.email;
+    objGithub.password = "";
+    objGithub.tipo = "github";
+    objGithub.role = "usuario";
+    objGithub.login = usuarioOauth.login;
+    objGithub.cuentas = ["local", "github"];
+    objGithub.avatar = usuarioOauth.avatar_url;
+    objGithub.url = usuarioOauth.html_url;
+    objGithub.github = true;
+    objGithub.id_github = usuarioOauth.id;
+    Usuario.create(objGithub)
+      .then(respUsuario => {
+        resolver(respUsuario);
       })
       .catch(err => {
         rechazar(err);
@@ -265,78 +256,31 @@ function adicionaDatosUsuario(token, usuario, usuarioOauth) {
   });
 }
 
-export function crearUsuarioOauth(req, res) {
-  let usuario = req.body.usuario;
+export function singOauthGithub(req, res) {
   let usuarioOauth = req.body.usuarioOauth;
   let token = req.body.token;
-  if (usuario == null) {
-    nuevoUsuario(token).then(
-      result => {
-        console.log("result", result);
-        Usuario.findOne({
-          where: {
-            email: result.usuario.email,
-            tipo: result.usuario.tipo
-          }
-        })
-          .then(user => {
-            //armar usuario respuesta
-            delete user.password;
-            res.json({ token: result.token, usuario: user });
+  Usuario.findOne({
+    where: {
+      id_github: usuarioOauth.id
+    }
+  })
+    .then(user => {
+      if (user !== null) {
+        //eliminar password
+        res.json({ token: token, usuario: user });
+      } else {
+        nuevoUsuario(usuarioOauth, token)
+          .then(result => {
+            res.json({ usuario: result, token: token });
           })
           .catch(err => {
-            res.send(err);
+            res.status(500).json(err).end();
           });
-      },
-      error => {
-        res.send(error);
       }
-    );
-  } else {
-
-    console.log("adiciona al repo");
-    // adicionaDatosUsuario(token, usuario, usuarioOauth)
-    //   .then(resp => {
-    //     Usuario.findById(resp.usuario._id)
-    //       .then(user => {
-    //         //armar usuario respuesta
-    //         res.json({ token: resp.token, usuario: user });
-    //       })
-    //       .catch(err => {
-    //         res.send(err);
-    //       });
-    //   })
-
-    //   .catch(err => {
-    //     res.send(err);
-    //   });
-  }
-
-  // usuarioGithub(req.params.code, res)
-  //   .then(
-  //     result => {
-  //       Usuario.findOne({
-  //         where: {
-  //           email: result.usuario.email,
-  //           tipo: result.usuario.tipo
-  //         }
-  //       })
-  //         .then(user => {
-  //           //armar usuario respuesta
-  //           delete user.password;
-  //           res.json({ token: result.token, usuario: user });
-  //         })
-  //         .catch(err => {
-  //           res.send(err);
-  //         });
-  //     },
-  //     error => {
-  //       res.send(error);
-  //     }
-  //   )
-  //   .catch(err => {
-  //     res.send(err);
-  //   });
+    })
+    .catch(err => {
+      res.status(500).json(err).end();
+    });
 }
 
 export function authGithub(req, res) {

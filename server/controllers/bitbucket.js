@@ -2,21 +2,12 @@
 
 import { Usuario } from "../sqldb";
 import { Repositorio } from "../sqldb";
-import SequelizeHelper from "../components/sequelize-helper";
 import config from "../config/environment";
-import qs from "querystringify";
 import request from "request";
-import UsuarioBitbucket from "../models/usuarioBitbucket";
-import UsuarioResponse from "../models/usuarioResponse";
 // import { fetch } from "node-fetch";
 
 var fetch = require("node-fetch");
 let usuarioBitbucket = {};
-let usuarioResponse = new UsuarioResponse();
-let repositoriosBb = {};
-let commitsBb = 0;
-let datos = [];
-let usuario = {};
 
 function getJson() {
   return function(resultado) {
@@ -176,28 +167,33 @@ function authenticateBitbucket(code, response) {
           )
             .then(getJson())
             .then(responseBitbucket => {
-              usuarioBitbucket.nombre = responseBitbucket.display_name;
-              usuarioBitbucket.email = "";
-              usuarioBitbucket.password = "bitbucket";
-              usuarioBitbucket.tipo = "bitbucket";
-              usuarioBitbucket.role = "usuario";
-              usuarioBitbucket.login = responseBitbucket.username;
-              usuarioBitbucket.avatar = responseBitbucket.links.avatar.href;
-              usuarioBitbucket.url = responseBitbucket.links.html.href;
-              return responseBitbucket;
-            })
-            .then(getEmail(response, objRes.token))
-            // cargar datos del repositorios
-            // .then(getRepositorios(response))
-            // .then(getCommit())
-            .then(crearActualizar(response))
-            .then(responseBitbucket => {
-              delete usuarioBitbucket.password;
               resolver({
                 token: objRes.token,
-                usuario: usuarioBitbucket
+                usuario: responseBitbucket
               });
+
+              // usuarioBitbucket.nombre = responseBitbucket.display_name;
+              // usuarioBitbucket.email = "";
+              // usuarioBitbucket.password = "bitbucket";
+              // usuarioBitbucket.tipo = "bitbucket";
+              // usuarioBitbucket.role = "usuario";
+              // usuarioBitbucket.login = responseBitbucket.username;
+              // usuarioBitbucket.avatar = responseBitbucket.links.avatar.href;
+              // usuarioBitbucket.url = responseBitbucket.links.html.href;
+              // return responseBitbucket;
             })
+            // .then(getEmail(response, objRes.token))
+            // // cargar datos del repositorios
+            // // .then(getRepositorios(response))
+            // // .then(getCommit())
+            // .then(crearActualizar(response))
+            // .then(responseBitbucket => {
+            //   delete usuarioBitbucket.password;
+            //   resolver({
+            //     token: objRes.token,
+            //     usuario: usuarioBitbucket
+            //   });
+            // })
             .catch(err => {
               rechazar(err);
             });
@@ -234,6 +230,68 @@ var asyncLoop = function(o) {
   };
   loop(); //init
 };
+
+function nuevoUsuario(usuarioOauth, token) {
+  return new Promise((resolver, rechazar) => {
+    console.log("user", usuarioOauth);
+    let objBitbucket = {};
+    objBitbucket.nombre = usuarioOauth.display_name;
+    objBitbucket.email = "";
+    objBitbucket.password = "";
+    objBitbucket.tipo = "gitlab";
+    objBitbucket.role = "usuario";
+    objBitbucket.login = usuarioOauth.username;
+    objBitbucket.cuentas = ["local", "bitbucket"];
+    objBitbucket.avatar = usuarioOauth.links.avatar.href;
+    objBitbucket.url = usuarioOauth.links.html.href;
+    objBitbucket.bitbucket = true;
+    objBitbucket.id_bitbucket = usuarioOauth.account_id;
+    fetch("https://api.bitbucket.org/2.0/user/emails?access_token=" + token)
+      .then(getJson())
+      .then(result => {
+        console.log(result);
+        objBitbucket.email = result.values[0].email;
+        Usuario.create(objBitbucket)
+          .then(respUsuario => {
+            resolver(respUsuario);
+          })
+          .catch(err => {
+            rechazar(err);
+          });
+      })
+      .catch(err => {
+        rechazar(err);
+      });
+  });
+}
+
+export function singOauthBitbucket(req, res) {
+  let usuarioOauth = req.body.usuarioOauth;
+  let token = req.body.token;
+  Usuario.findOne({
+    where: {
+      id_bitbucket: usuarioOauth.account_id
+    }
+  })
+    .then(user => {
+      if (user !== null) {
+        //eliminar password
+        res.json({ token: token, usuario: user });
+      } else {
+        nuevoUsuario(usuarioOauth, token)
+          .then(result => {
+            res.json({ usuario: result, token: token });
+          })
+          .catch(err => {
+            res.send(err);
+          });
+      }
+    })
+    .catch(err => {
+      console.log(err);
+      res.send(err);
+    });
+}
 
 export function datosBitbucket(req, res) {
   let objetoUsuario = req.body.usuario;
@@ -297,8 +355,7 @@ export function datosBitbucket(req, res) {
                             }
                           })
                             .then(resultRepo => {})
-                            .catch(err => {
-                            });
+                            .catch(err => {});
                         } else {
                           Repositorio.create(objRepositorio)
                             .then(resultRepo => {
@@ -317,12 +374,10 @@ export function datosBitbucket(req, res) {
                               //     .catch(handleError(res));
                               // }
                             })
-                            .catch(err => {
-                            });
+                            .catch(err => {});
                         }
                       })
-                      .catch(err => {
-                      });
+                      .catch(err => {});
 
                     objDatos.push({
                       lenguajes: repositorios.values[i].language,

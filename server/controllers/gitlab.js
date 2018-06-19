@@ -98,127 +98,89 @@ function authenticateGitlab(code, response) {
           // fetch("https://gitlab.com/api/v4/user?access_token=" + token.access_token)
           .then(getJson())
           .then(responseGitlab => {
-            usuarioGitlab.nombre = responseGitlab.name;
-            usuarioGitlab.email = responseGitlab.email;
-            usuarioGitlab.password = "gitlab";
-            usuarioGitlab.tipo = "gitlab";
-            usuarioGitlab.role = "usuario";
-            usuarioGitlab.login = responseGitlab.username;
-            usuarioGitlab.avatar = responseGitlab.avatar_url;
-            usuarioGitlab.url = responseGitlab.web_url;
-            usuarioGitlab.token = objRes.token;
-            return responseGitlab;
-          })
-          .then(crearActualizarUsuario(response))
-          .then(responseGitlab => {
-            delete usuarioGitlab.password;
             resolver({
               token: objRes.token,
-              usuario: usuarioGitlab
+              usuario: responseGitlab
             });
+            // usuarioGitlab.nombre = responseGitlab.name;
+            // usuarioGitlab.email = responseGitlab.email;
+            // usuarioGitlab.password = "gitlab";
+            // usuarioGitlab.tipo = "gitlab";
+            // usuarioGitlab.role = "usuario";
+            // usuarioGitlab.login = responseGitlab.username;
+            // usuarioGitlab.avatar = responseGitlab.avatar_url;
+            // usuarioGitlab.url = responseGitlab.web_url;
+            // usuarioGitlab.token = objRes.token;
+            // return responseGitlab;
           })
+          // .then(crearActualizarUsuario(response))
+          // .then(responseGitlab => {
+          //   delete usuarioGitlab.password;
+          //   resolver({
+          //     token: objRes.token,
+          //     usuario: usuarioGitlab
+          //   });
+          // })
           .catch(err => {
             rechazar(err);
           });
       })
       .catch(err => {
-        rej(err);
+        rechazar(err);
       });
   });
 }
 
-//   fetch(
-//     "https://gitlab.geo.gob.bo/api/v4/users/" +
-//       responseGitlab.id +
-//       "/projects?access_token=" +
-//       token.access_token,
-//     { agent, strictSSL: false }
-//   )
-//     .then(getJson())
-//     .then(repositorios => {
-//       console.log("repos", repositorios);
-//       let i = 1;
-//       let objDatos = [];
-//       if (repositorios.length > 0) {
-//         for (let value of repositorios) {
-//           let objCommits = {};
-//           let members;
+function nuevoUsuario(usuarioOauth) {
+  return new Promise((resolver, rechazar) => {
+    let objGitlab = {};
+    objGitlab.nombre = usuarioOauth.name;
+    objGitlab.email = usuarioOauth.email;
+    objGitlab.password = "";
+    objGitlab.tipo = "gitlab";
+    objGitlab.role = "usuario";
+    objGitlab.login = usuarioOauth.login;
+    objGitlab.cuentas = ["local", "gitlab"];
+    objGitlab.avatar = usuarioOauth.avatar_url;
+    objGitlab.url = usuarioOauth.html_url;
+    objGitlab.gitlab = true;
+    objGitlab.id_gitlab = usuarioOauth.id;
+    Usuario.create(objGitlab)
+      .then(respUsuario => {
+        resolver(respUsuario);
+      })
+      .catch(err => {
+        rechazar(err);
+      });
+  });
+}
 
-//           fetch(
-//             "https://gitlab.geo.gob.bo/api/v4/projects/" +
-//               value.id +
-//               "/repository/commits?access_token=" +
-//               token.access_token,
-//             { agent, strictSSL: false }
-//           )
-//             .then(getJson())
-//             .then(commits => {
-//               fetch(
-//                 "https://gitlab.geo.gob.bo/api/v4/projects/" +
-//                   value.id +
-//                   "/members?access_token=" +
-//                   token.access_token,
-//                 { agent, strictSSL: false }
-//               )
-//                 .then(getJson())
-//                 .then(response => {
-//                   members = response;
-//                   console.log("commits", commits.length);
-//                   objDatos.push({
-//                     repo: value,
-//                     commits: commits,
-//                     members: members
-//                   });
-//                   if (i == repositorios.length) {
-//                     usuarioGitlab.datos = objDatos;
-//                     objRes.usuario = usuarioGitlab;
-//                     console.log("resultado", objRes);
-//                     Usuario.findOne({
-//                       where: {
-//                         email: objRes.usuario.email.toLowerCase(),
-//                         tipo: objRes.usuario.tipo
-//                       }
-//                     })
-//                       .then(user => {
-//                         // console.log("entity", user);
-//                         if (user != null) {
-//                           return user.destroy().then();
-//                         }
-//                       })
-//                       .then(() => {
-//                         return Usuario.create(objRes.usuario).then(
-//                           response => {
-//                             res({
-//                               token: objRes.token,
-//                               usuario: response
-//                             });
-//                           }
-//                         );
-//                       })
-//                       .catch(err => {
-//                         console.log(err);
-//                       });
-//                   }
-//                   i++;
-//                 })
-//                 .catch(err => {
-//                   console.log(err);
-//                 });
-//             })
-//             .catch(err => {
-//               console.log(err);
-//             });
-//         }
-//       }
-//     })
-//     .catch(err => {
-//       rej(err);
-//     });
-// })
-// .catch(err => {
-//   rej(err);
-//   console.log(err);
-// });
+export function singOauthGitlab(req, res) {
+  let usuarioOauth = req.body.usuarioOauth;
+  let token = req.body.token;
+  Usuario.findOne({
+    where: {
+      id_gitlab: usuarioOauth.id
+    }
+  })
+    .then(user => {
+      if (user !== null) {
+        //eliminar password
+        res.json({ token: token, usuario: user });
+      } else {
+        nuevoUsuario(usuarioOauth, token)
+          .then(result => {
+            res.json({ usuario: result, token: token });
+          })
+          .catch(err => {
+            res.send(err);
+          });
+      }
+    })
+    .catch(err => {
+      res.send(err);
+    });
+}
 
 export function authGitlab(req, res) {
   authenticateGitlab(req.params.code)
@@ -255,8 +217,7 @@ export function getMembers(req, res) {
     .then(response => {
       res.send(response);
     })
-    .catch(err => {
-    });
+    .catch(err => {});
 }
 
 var asyncLoop = function(o) {
