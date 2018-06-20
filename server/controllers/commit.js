@@ -13,6 +13,7 @@
 import jsonpatch from "fast-json-patch";
 import { Commit } from "../sqldb";
 import https from "https";
+import TokenController from "./token";
 var fetch = require("node-fetch");
 
 const agent = new https.Agent({
@@ -73,9 +74,20 @@ function handleError(res, statusCode) {
     res.status(statusCode).send(err);
   };
 }
+function crearCommit(objCommit) {
+  return Commit.findOne({
+    where: {
+      sha: objCommit.sha,
+      fk_repositorio: objCommit.fk_repositorio
+    }
+  }).then(respCommit => {
+    if (respCommit === null) {
+      return Commit.create(objCommit);
+    }
+  });
+}
 
 async function addCommitsGithub(commits, repo) {
-  console.log("res", commits.length);
   for (const commit of commits) {
     let objCommit = {
       sha: commit.sha,
@@ -84,15 +96,36 @@ async function addCommitsGithub(commits, repo) {
       fecha: commit.commit.author.date,
       fk_repositorio: repo._id
     };
-    await Commit.create(objCommit)
-      .then(resp => {
-        console.log("res", resp);
-      })
-      .catch(err => {
-        console.log(err);
-      });
+    await crearCommit(objCommit);
   }
-  console.log("---finalize");
+  return true;
+}
+async function addCommitsGitlab(commits, repo) {
+  for (const commit of commits) {
+    console.log("res", commit);
+    let objCommit = {
+      sha: commit.id,
+      autor: commit.author_name,
+      mensaje: commit.message,
+      fecha: commit.committed_date,
+      fk_repositorio: repo._id
+    };
+    await crearCommit(objCommit);
+  }
+  return true;
+}
+async function addCommitsBitbucket(commits, repo) {
+  for (const commit of commits) {
+    let objCommit = {
+      sha: commit.hash,
+      autor: commit.author.user.username,
+      mensaje: commit.message,
+      fecha: commit.date,
+      fk_repositorio: repo._id
+    };
+    await crearCommit(objCommit);
+  }
+  return true;
 }
 
 export function index(req, res) {
@@ -112,26 +145,69 @@ export function show(req, res) {
     .then(respondWithResult(res))
     .catch(handleError(res));
 }
-
+async function getToken(tipo, id) {
+  let token;
+  await TokenController.getToken(tipo, id).then(resp => {
+    token = resp;
+  });
+  return token;
+}
 // Creates a new Commit in the DB
 export function create(req, res) {
   let repo = req.body;
   let url = req.body.commits;
   let tipo = req.body.tipo;
-  // console.log("url", req.body.commits);
+  TokenController.getToken("bitbucket", repo.fk_usuario).then(result => {
+    let token = result;
+    console.log("token", token);
+  });
+  // let token = getToken("gitlab", repo.fk_usuario);
+  // console.log("token", token);
   fetch(url, {
     agent,
     strictSSL: false
   })
     .then(getJson())
     .then(commits => {
+      console.log("commits", commits);
       switch (tipo) {
         case "github":
-          addCommitsGithub(commits, repo);
+          if (addCommitsGithub(commits, repo)) {
+            res.json({ respuesta: "Se actualizaron correctamente!" });
+          } else {
+            res
+              .status(500)
+              .json({ error: "Problema en actualizacion" })
+              .end();
+          }
 
           break;
-
+        case "gitlab":
+          //necesita token
+          if (addCommitsGitlab(commits, repo)) {
+            res.json({ respuesta: "Se actualizaron correctamente!" });
+          } else {
+            res
+              .status(500)
+              .json({ error: "Problema en actualizacion" })
+              .end();
+          }
+          break;
+        case "bitbucket":
+          if (addCommitsBitbucket(commits.values, repo)) {
+            res.json({ respuesta: "Se actualizaron correctamente!" });
+          } else {
+            res
+              .status(500)
+              .json({ error: "Problema en actualizacion" })
+              .end();
+          }
+          break;
         default:
+          res
+            .status(500)
+            .json({ error: "Problema en actualizacion" })
+            .end();
           break;
       }
       // console.log("comm", commits);
@@ -139,9 +215,6 @@ export function create(req, res) {
     .catch(err => {
       console.log(err);
     });
-  return Commit.create(req.body)
-    .then(respondWithResult(res, 201))
-    .catch(handleError(res));
 }
 
 // Upserts the given Commit in the DB at the specified ID

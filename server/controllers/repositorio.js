@@ -109,11 +109,11 @@ function creaAdiciona(usuario) {
           fk_usuario: usuario._id
         }
       })
-        .then(user => {
-          if (user !== null) {
+        .then(repo => {
+          if (repo !== null) {
             return Repositorio.update(objRepositorio, {
               where: {
-                _id: user._id
+                _id: repo._id
               }
             });
           } else {
@@ -180,7 +180,11 @@ function creaGitlab(usuario) {
         lenguajes:
           config.gitlabGeo.api_url + "projects/" + repo.id + "/languages" || "",
         star: repo.star_count,
-        commits: config.gitlabGeo.api_url + "projects/" + repo.id + "/repository/commits",
+        commits:
+          config.gitlabGeo.api_url +
+          "projects/" +
+          repo.id +
+          "/repository/commits",
         downloads: "",
         fk_usuario: usuario._id
       };
@@ -191,11 +195,11 @@ function creaGitlab(usuario) {
           fk_usuario: usuario._id
         }
       })
-        .then(user => {
-          if (user !== null) {
+        .then(repo => {
+          if (repo !== null) {
             return Repositorio.update(objRepositorio, {
               where: {
-                _id: user._id
+                _id: repo._id
               }
             });
           } else {
@@ -276,11 +280,11 @@ function creaBitbucket(usuario) {
           fk_usuario: usuario._id
         }
       })
-        .then(user => {
-          if (user !== null) {
+        .then(repo => {
+          if (repo !== null) {
             return Repositorio.update(objRepositorio, {
               where: {
-                _id: user._id
+                _id: repo._id
               }
             });
           } else {

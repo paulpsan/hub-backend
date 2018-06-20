@@ -2,7 +2,7 @@
 import { Usuario } from "../sqldb";
 import { Repositorio } from "../sqldb";
 import { Commit } from "../sqldb";
-import SequelizeHelper from "../components/sequelize-helper";
+import TokenController from "./token";
 import config from "../config/environment";
 import qs from "querystringify";
 import request from "request";
@@ -124,6 +124,7 @@ function nuevoUsuario(usuarioOauth) {
     objGithub.id_github = usuarioOauth.id;
     Usuario.create(objGithub)
       .then(respUsuario => {
+
         resolver(respUsuario);
       })
       .catch(err => {
@@ -267,10 +268,13 @@ export function singOauthGithub(req, res) {
     .then(user => {
       if (user !== null) {
         //eliminar password
+        //update token
+        TokenController.updateToken("github", result, token);
         res.json({ token: token, usuario: user });
       } else {
         nuevoUsuario(usuarioOauth, token)
           .then(result => {
+            TokenController.createToken("github",result,token)
             res.json({ usuario: result, token: token });
           })
           .catch(err => {

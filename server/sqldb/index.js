@@ -8,6 +8,7 @@ let db = {
 };
 db.Usuario = db.sequelize.import("../models/usuario");
 db.Commit = db.sequelize.import("../models/commit");
+db.Token = db.sequelize.import("../models/token");
 db.Repositorio = db.sequelize.import("../models/repositorio");
 db.Proyecto = db.sequelize.import("../models/proyecto");
 
@@ -38,8 +39,6 @@ db.Repositorio.belongsTo(db.Usuario, {
     allowNull: false
   }
 });
-
-
 db.Repositorio.hasMany(db.Proyecto, {
   foreignKey: {
     name: "fk_repositorio",
@@ -60,7 +59,12 @@ db.Repositorio.hasMany(db.Commit, {
     allowNull: false
   }
 });
-
+db.Token.belongsTo(db.Usuario, {
+  foreignKey: {
+    name: "fk_usuario",
+    allowNull: false
+  }
+});
 db.Commit.belongsTo(db.Repositorio, {
   foreignKey: {
     name: "fk_repositorio",

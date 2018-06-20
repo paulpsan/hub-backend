@@ -5,6 +5,7 @@ import { Repositorio } from "../sqldb";
 import { Commit } from "../sqldb";
 import SequelizeHelper from "../components/sequelize-helper";
 import config from "../config/environment";
+import TokenController from "./token";
 import qs from "querystringify";
 import https from "https";
 import request from "request";
@@ -166,10 +167,12 @@ export function singOauthGitlab(req, res) {
     .then(user => {
       if (user !== null) {
         //eliminar password
+        TokenController.updateToken("gitlab", result, token);
         res.json({ token: token, usuario: user });
       } else {
         nuevoUsuario(usuarioOauth, token)
           .then(result => {
+            TokenController.createToken("gitlab", result, token);
             res.json({ usuario: result, token: token });
           })
           .catch(err => {

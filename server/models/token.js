@@ -2,7 +2,7 @@
 
 export default function(sequelize, DataTypes) {
   return sequelize.define(
-    "Commit",
+    "Token",
     {
       _id: {
         type: DataTypes.INTEGER,
@@ -10,13 +10,11 @@ export default function(sequelize, DataTypes) {
         primaryKey: true,
         autoIncrement: true
       },
-      sha: DataTypes.TEXT,
-      autor: DataTypes.TEXT,
-      mensaje: DataTypes.TEXT,
-      fecha: DataTypes.DATE
+      token: DataTypes.TEXT,
+      tipo: DataTypes.TEXT,
     },
     {
-      tableName: "commit",
+      tableName: "token",
       createdAt: "fecha_creacion",
       updatedAt: "fecha_modificacion"
     }
