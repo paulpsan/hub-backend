@@ -167,20 +167,22 @@ export function singOauthGitlab(req, res) {
     .then(user => {
       if (user !== null) {
         //eliminar password
-        TokenController.updateToken("gitlab", result, token);
+        TokenController.updateCreateToken("gitlab", user, token);
         res.json({ token: token, usuario: user });
       } else {
         nuevoUsuario(usuarioOauth, token)
-          .then(result => {
-            TokenController.createToken("gitlab", result, token);
-            res.json({ usuario: result, token: token });
+          .then(user => {
+            TokenController.updateCreateToken("gitlab", user, token);
+            res.json({ usuario: user, token: token });
           })
           .catch(err => {
+            console.log(err);
             res.send(err);
           });
       }
     })
     .catch(err => {
+      console.log(err);
       res.send(err);
     });
 }

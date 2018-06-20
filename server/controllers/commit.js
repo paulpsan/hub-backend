@@ -157,64 +157,78 @@ export function create(req, res) {
   let repo = req.body;
   let url = req.body.commits;
   let tipo = req.body.tipo;
-  TokenController.getToken("bitbucket", repo.fk_usuario).then(result => {
-    let token = result;
-    console.log("token", token);
-  });
-  // let token = getToken("gitlab", repo.fk_usuario);
-  // console.log("token", token);
-  fetch(url, {
-    agent,
-    strictSSL: false
-  })
-    .then(getJson())
-    .then(commits => {
-      console.log("commits", commits);
-      switch (tipo) {
-        case "github":
-          if (addCommitsGithub(commits, repo)) {
-            res.json({ respuesta: "Se actualizaron correctamente!" });
-          } else {
-            res
-              .status(500)
-              .json({ error: "Problema en actualizacion" })
-              .end();
-          }
+  let tokenGitlab;
+  TokenController.getToken("gitlab", repo.fk_usuario).then(result => {
+    tokenGitlab = result;
+    console.log("token", tokenGitlab);
+    switch (tipo) {
+      case "github":
+        fetch(url, {
+          agent,
+          strictSSL: false
+        })
+          .then(getJson())
+          .then(commits => {
+            if (addCommitsGithub(commits, repo)) {
+              res.json({ respuesta: "Se actualizaron correctamente!" });
+            } else {
+              res
+                .status(500)
+                .json({ error: "Problema en actualizacion" })
+                .end();
+            }
+          });
 
-          break;
-        case "gitlab":
-          //necesita token
-          if (addCommitsGitlab(commits, repo)) {
-            res.json({ respuesta: "Se actualizaron correctamente!" });
-          } else {
-            res
-              .status(500)
-              .json({ error: "Problema en actualizacion" })
-              .end();
-          }
-          break;
-        case "bitbucket":
-          if (addCommitsBitbucket(commits.values, repo)) {
-            res.json({ respuesta: "Se actualizaron correctamente!" });
-          } else {
-            res
-              .status(500)
-              .json({ error: "Problema en actualizacion" })
-              .end();
-          }
-          break;
-        default:
-          res
-            .status(500)
-            .json({ error: "Problema en actualizacion" })
-            .end();
-          break;
-      }
-      // console.log("comm", commits);
-    })
-    .catch(err => {
-      console.log(err);
-    });
+        break;
+      case "gitlab":
+        if (tokenGitlab) {
+          fetch(url + "?access_token=" + tokenGitlab, {
+            agent,
+            strictSSL: false
+          })
+            .then(getJson())
+            .then(commits => {
+              if (addCommitsGitlab(commits, repo)) {
+                res.json({ respuesta: "Se actualizaron correctamente!" });
+              } else {
+                res
+                  .status(500)
+                  .json({ error: "Problema en actualizacion" })
+                  .end();
+              }
+            });
+        } else {
+          console.log("-----------errr token--------------");
+        }
+        //necesita token
+        break;
+      case "bitbucket":
+        fetch(url, {
+          agent,
+          strictSSL: false
+        })
+          .then(getJson())
+          .then(commits => {
+            if (addCommitsBitbucket(commits.values, repo)) {
+              res.json({ respuesta: "Se actualizaron correctamente!" });
+            } else {
+              res
+                .status(500)
+                .json({ error: "Problema en actualizacion" })
+                .end();
+            }
+          });
+
+        break;
+      default:
+        res
+          .status(500)
+          .json({ error: "Problema en actualizacion" })
+          .end();
+        break;
+    }
+  });
+  // console.log("comm", commits);
 }
 
 // Upserts the given Commit in the DB at the specified ID

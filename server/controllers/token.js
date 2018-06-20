@@ -1,7 +1,5 @@
 "use strict";
 import { Token } from "../sqldb";
-import SequelizeHelper from "../components/sequelize-helper";
-import { isNull } from "util";
 
 class TokenController {
   static getToken(tipo, id_usuario) {
@@ -23,32 +21,31 @@ class TokenController {
           rechazar(err);
         });
     });
-    // let result;
-    // return async function() {
-    //   await Token.findOne({
-    //     where: {
-    //       fk_usuario: id_usuario,
-    //       tipo: tipo
-    //     }
-    //   }).then(res => {
-    //     result = res;
-    //     if (result !== null) return result.token;
-    //     else return null;
-    //   });
-    // };
   }
 
-  static updateToken(tipo, usuario, token) {
+  static updateCreateToken(tipo, usuario, token) {
     let objToken = {};
     objToken.token = token;
     objToken.tipo = tipo;
     objToken.fk_usuario = usuario._id;
-    Token.update(objToken, {
+    Token.findOne({
       where: {
-        fk_usuario: usuario._id
+        fk_usuario: usuario._id,
+        tipo: objToken.tipo
+      }
+    }).then(respToken => {
+      if (respToken !== null) {
+        Token.update(objToken, {
+          where: {
+            fk_usuario: usuario._id
+          }
+        });
+      } else {
+        Token.create(objToken);
       }
     });
   }
+
   static createToken(tipo, usuario, token) {
     let objToken = {};
     objToken.token = token;
