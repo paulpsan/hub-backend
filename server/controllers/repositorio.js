@@ -88,7 +88,8 @@ function creaAdiciona(usuario) {
         descripcion: repo.description || "",
         avatar: "",
         tipo: "github",
-        estado: false,
+        visibilidad: false,
+        estado: true,
         html_url: repo.html_url,
         git_url: repo.git_url,
         api_url: repo.url,
@@ -164,7 +165,8 @@ function creaGitlab(usuario) {
         descripcion: repo.description || " ",
         avatar: repo.avatar_url,
         tipo: "gitlab",
-        estado: false,
+        visibilidad: false,
+        estado: true,
         html_url: repo.web_url,
         git_url: repo.ssh_url_to_repo,
         api_url: config.gitlabGeo.api_url + "projects/",
@@ -254,7 +256,8 @@ function creaBitbucket(usuario) {
         descripcion: repo.description,
         avatar: repo.links.avatar.href,
         tipo: "bitbucket",
-        estado: false,
+        visibilidad: false,
+        estado: true,
         html_url: repo.links.html.href,
         git_url: repo.links.clone[1].href,
         api_url: repo.links.self.href,
@@ -349,7 +352,8 @@ export function show(req, res) {
   return Repositorio.find({
     // include: [{ all: true }],
     where: {
-      _id: req.params.id
+      _id: req.params.id,
+      estado: true
     }
   })
     .then(handleEntityNotFound(res))
@@ -451,7 +455,52 @@ export function patch(req, res) {
     .then(respondWithResult(res))
     .catch(handleError(res));
 }
+function updateRepo(object) {
+  return Repositorio.find({
+    where: {
+      _id: object._id
+    }
+  })
+    .then(saveUpdates(object))
+    .catch(err => {
+      console.log(err);
+    });
+}
 
+async function desvincularRepos(repos) {
+  for (const repo of repos) {
+    let objrepo = {
+      _id:repo._id,
+      estado: false,
+      fk_repositorio: repo.fk_repositorio
+    };
+    await updateRepo(objrepo);
+  }
+  return true;
+}
+
+//Desvincula
+export function desvincular(req, res) {
+  let usuario = req.body;
+  return Repositorio.findAll({
+    where: {
+      _id: usuario._id
+    }
+  })
+    .then(resp => {
+      if (desvincularRepos(resp)) {
+        res.json({ respuesta: "Se actualizaron correctamente!" });
+      } else {
+        res
+          .status(500)
+          .json({ error: "Problema en actualizacion" })
+          .end();
+      }
+    })
+    .then(saveUpdates(req.body))
+    .then(respondWithResult(res))
+    .catch(handleError(res));
+}
 // Deletes a Repositorio from the DB
 export function destroy(req, res) {
   return Repositorio.find({

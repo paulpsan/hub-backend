@@ -101,8 +101,8 @@ async function addCommitsGithub(commits, repo) {
       fecha: commit.commit.author.date,
       id_usuario: repo.fk_usuario,
       estado: true,
-      avatar_autor: commits.committer.avatar_url,
-      web_url_autor: commits.committer.url,
+      avatar_autor: commit.committer.avatar_url,
+      web_url_autor: commit.committer.html_url,
       fk_repositorio: repo._id
     };
     await crearCommit(objCommit);
@@ -273,8 +273,8 @@ async function updateCommits(commits) {
       fecha: commit.fecha,
       id_usuario: commit.id_usuario,
       estado: false,
-      //avatar_autor: commits.committer.avatar_url,
-      //web_url_autor: commits.committer.url,
+      // avatar_autor: commit.committer.avatar_url,
+      // web_url_autor: commit.committer.html_url,
       fk_repositorio: commit.fk_repositorio
     };
     await updateCommit(objCommit);

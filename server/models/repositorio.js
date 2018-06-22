@@ -15,14 +15,18 @@ export default function(sequelize, DataTypes) {
       descripcion: DataTypes.TEXT,
       avatar: DataTypes.TEXT,
       html_url: DataTypes.TEXT,
+      visibilidad: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true
+      },
       estado: {
         type: DataTypes.BOOLEAN,
         defaultValue: false
       },
-      tipo:DataTypes.STRING,
+      tipo: DataTypes.STRING,
       git_url: DataTypes.STRING,
-      api_url:DataTypes.STRING,
-      star:DataTypes.STRING,
+      api_url: DataTypes.STRING,
+      star: DataTypes.STRING,
       fork: { type: DataTypes.JSONB },
       hooks: { type: DataTypes.JSONB },
       tags: { type: DataTypes.JSONB },

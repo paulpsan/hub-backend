@@ -272,6 +272,7 @@ function saveUpdates(updates) {
         return updated;
       })
       .catch(err => {
+        console.log(err);
         return err;
       });
   };
