@@ -338,7 +338,8 @@ export function indexUser(req, res) {
   return Repositorio.findAndCountAll({
     // include: [{ all: true }],
     where: {
-      fk_usuario: req.params.id
+      fk_usuario: req.params.id,
+      estado: true
     }
   })
     .then(datos => {
@@ -352,8 +353,7 @@ export function show(req, res) {
   return Repositorio.find({
     // include: [{ all: true }],
     where: {
-      _id: req.params.id,
-      estado: true
+      _id: req.params.id
     }
   })
     .then(handleEntityNotFound(res))
@@ -453,7 +453,9 @@ export function patch(req, res) {
     .then(handleEntityNotFound(res))
     .then(saveUpdates(req.body))
     .then(respondWithResult(res))
-    .catch(handleError(res));
+    .catch(err => {
+      console.log(err);
+    });
 }
 function updateRepo(object) {
   return Repositorio.find({
@@ -469,9 +471,28 @@ function updateRepo(object) {
 
 async function desvincularRepos(repos) {
   for (const repo of repos) {
+    console.log("----------", repo.nombre);
     let objrepo = {
-      _id:repo._id,
+      _id: repo._id,
+      id_repositorio: repo.id_repositorio,
       estado: false,
+      // nombre: repo.nombre,
+      // descripcion: repo.descripcion,
+      // avatar: repo.avatar,
+      // html_url: repo.html_url,
+      // visibilidad: repo.visibilidad,
+      // tipo: repo.tipo,
+      // git_url: repo.git_url,
+      // api_url: repo.api_url,
+      // star: repo.star,
+      // fork: repo.fork,
+      // hooks: repo.hooks,
+      // tags: repo.tags,
+      // issues: repo.issues,
+      // branches: repo.branches,
+      // lenguajes: repo.lenguajes,
+      // commits: repo.commits,
+      // downloads: repo.downloads,
       fk_repositorio: repo.fk_repositorio
     };
     await updateRepo(objrepo);
@@ -484,7 +505,7 @@ export function desvincular(req, res) {
   let usuario = req.body;
   return Repositorio.findAll({
     where: {
-      _id: usuario._id
+      fk_usuario: usuario._id
     }
   })
     .then(resp => {
@@ -496,9 +517,8 @@ export function desvincular(req, res) {
           .json({ error: "Problema en actualizacion" })
           .end();
       }
+      return null;
     })
-    .then(saveUpdates(req.body))
-    .then(respondWithResult(res))
     .catch(handleError(res));
 }
 // Deletes a Repositorio from the DB
