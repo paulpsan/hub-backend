@@ -280,10 +280,21 @@ function saveUpdates(updates) {
 
 function removeEntity(res) {
   return function(entity) {
+    let usuario = {};
+    usuario._id = entity._id;
+    usuario.email = entity.email;
+    usuario.estado = false;
     if (entity) {
-      return entity.destroy().then(() => {
-        res.status(204).end();
-      });
+      return entity
+        .updateAttributes(usuario)
+        .then(updated => {
+          console.log("--------", updated);
+          return updated;
+        })
+        .catch(err => {
+          console.log(err);
+          return err;
+        });
     }
   };
 }
@@ -314,6 +325,7 @@ export function index(req, res) {
       offset: req.opciones.offset,
       limit: req.opciones.limit,
       where: {
+        estado: true,
         nombre: {
           [Op.iLike]: "%" + req.query.buscar + "%"
         }
@@ -327,6 +339,9 @@ export function index(req, res) {
   } else {
     return Usuario.findAndCountAll({
       include: [{ all: true }],
+      where: {
+        estado: true
+      },
       // order: [["clasificacion", "desc"]],
       offset: req.opciones.offset,
       limit: req.opciones.limit
@@ -457,6 +472,7 @@ export function destroy(req, res) {
   })
     .then(handleEntityNotFound(res))
     .then(removeEntity(res))
+    .then(respondWithResult(res))
     .catch(handleError(res));
 }
 

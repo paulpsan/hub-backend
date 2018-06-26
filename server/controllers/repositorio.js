@@ -36,7 +36,84 @@ function respondWithResult(res, statusCode) {
     return null;
   };
 }
+function setCommits(usuario) {
+  return function(entity) {
+    return fetch(entity.commits.url)
+      .then(getJson())
+      .then(respuesta => {
+        usuario.commits.total = respuesta.length;
+        return entity;
+      })
+      .catch(err => {
+        return err;
+      });
+  };
+}
 
+function setIssues(usuario) {
+  return function(entity) {
+    return fetch(entity.issues.url)
+      .then(getJson())
+      .then(respuesta => {
+        usuario.issues.total = respuesta.length;
+        return entity;
+      })
+      .catch(err => {
+        return err;
+      });
+  };
+}
+
+function setForks(usuario) {
+  return function(entity) {
+    if (entity.forks.url !== "") {
+      return fetch(entity.forks.url)
+        .then(getJson())
+        .then(respuesta => {
+          usuario.forks.total = respuesta.length;
+          return entity;
+        })
+        .catch(err => {
+          return err;
+        });
+    }
+    return entity;
+  };
+}
+
+function setStars(usuario) {
+  return function(entity) {
+    if (entity.stars.url !== "") {
+      return fetch(entity.stars.url)
+        .then(getJson())
+        .then(respuesta => {
+          usuario.stars.total = respuesta.length;
+          return entity;
+        })
+        .catch(err => {
+          return err;
+        });
+    }
+    return entity;
+  };
+}
+
+function setDownloads(usuario) {
+  return function(entity) {
+    if (entity.downloads.url !== "") {
+      return fetch(entity.downloads.url)
+        .then(getJson())
+        .then(respuesta => {
+          usuario.downloads.total = respuesta.length;
+          return entity;
+        })
+        .catch(err => {
+          return err;
+        });
+    }
+    return entity;
+  };
+}
 function saveUpdates(updates) {
   return function(entity) {
     // console.log("--------", entity, updates);
@@ -93,15 +170,30 @@ function creaAdiciona(usuario) {
         html_url: repo.html_url,
         git_url: repo.git_url,
         api_url: repo.url,
-        fork: repo.forks_url,
+        forks: {
+          url: repo.forks_url,
+          total: 0
+        },
         hooks: repo.hooks_url,
         tags: repo.tags_url,
-        issues: repo.url + "/issues",
+        issues: {
+          url: repo.url + "/issues",
+          total: 0
+        },
         branches: repo.url + "/branches",
         lenguajes: repo.languages_url,
-        star: repo.stargazers_count,
-        commits: repo.url + "/commits",
-        downloads: repo.stargazers_count,
+        stars: {
+          url: "",
+          total: repo.stargazers_count
+        },
+        commits: {
+          url: repo.url + "/commits",
+          total: 0
+        },
+        downloads: {
+          url: repo.url + "/downloads",
+          total: 0
+        },
         fk_usuario: usuario._id
       };
       await Repositorio.findOne({
@@ -157,7 +249,6 @@ function adicionaGithub(token, usuario) {
 
 function creaGitlab(usuario) {
   return async function(repositorios) {
-    console.log("repos", repositorios);
     for (const repo of repositorios) {
       let objRepositorio = {
         id_repositorio: repo.id,
@@ -170,10 +261,17 @@ function creaGitlab(usuario) {
         html_url: repo.web_url,
         git_url: repo.ssh_url_to_repo,
         api_url: config.gitlabGeo.api_url + "projects/",
-        fork: config.gitlabGeo.api_url + "projects/" + repo.id + "/forks",
+        forks: {
+          url: config.gitlabGeo.api_url + "projects/" + repo.id + "/forks",
+          total: 0
+        },
         hooks: config.gitlabGeo.api_url + "projects/" + repo.id + "/hooks",
         tags: repo.tag_list || " ",
-        issues: config.gitlabGeo.api_url + "projects/" + repo.id + "/issues",
+        issues: {
+          url: config.gitlabGeo.api_url + "projects/" + repo.id + "/issues",
+          total: 0
+        },
+
         branches:
           config.gitlabGeo.api_url +
           "projects/" +
@@ -181,13 +279,23 @@ function creaGitlab(usuario) {
           "/repository/branches",
         lenguajes:
           config.gitlabGeo.api_url + "projects/" + repo.id + "/languages" || "",
-        star: repo.star_count,
-        commits:
-          config.gitlabGeo.api_url +
-          "projects/" +
-          repo.id +
-          "/repository/commits",
-        downloads: "",
+        stars: {
+          url: "",
+          total: repo.star_count
+        },
+        commits: {
+          url:
+            config.gitlabGeo.api_url +
+            "projects/" +
+            repo.id +
+            "/repository/commits",
+          total: 0
+        },
+
+        downloads: {
+          url: "",
+          total: 0
+        },
         fk_usuario: usuario._id
       };
 
@@ -249,7 +357,6 @@ function creaBitbucket(usuario) {
   return async function(repositorios) {
     let i = 0;
     for (const repo of repositorios.values) {
-      console.log("repos", repo);
       let objRepositorio = {
         id_repositorio: i,
         nombre: repo.name,
@@ -261,19 +368,35 @@ function creaBitbucket(usuario) {
         html_url: repo.links.html.href,
         git_url: repo.links.clone[1].href,
         api_url: repo.links.self.href,
-        fork: repo.links.forks.href,
+        forks: {
+          url: repo.links.forks.href,
+          total: 0
+        },
         hooks: repo.links.hooks.href,
         tags: repo.links.tags.href,
-        issues:
-          config.bitbucket.api_url +
-          "repositories/" +
-          repo.full_name +
-          "/issues",
+        issues: {
+          url:
+            config.bitbucket.api_url +
+            "repositories/" +
+            repo.full_name +
+            "/issues",
+          total: 0
+        },
+
         branches: repo.links.branches.href,
         lenguajes: repo.language,
-        star: "",
-        commits: repo.links.commits.href,
-        downloads: repo.links.downloads.href,
+        stars: {
+          url: "",
+          total: 0
+        },
+        commits: {
+          url: repo.links.commits.href,
+          total: 0
+        },
+        downloads: {
+          url: repo.links.downloads.href,
+          total: 0
+        },
         fk_usuario: usuario._id
       };
 
@@ -371,7 +494,6 @@ export function proyectos(req, res) {
 
 // Creates a new Repositorio in the DB
 export function create(req, res) {
-  console.log(req.body);
   return Repositorio.create(req.body)
     .then(respondWithResult(res, 201))
     .catch(handleError(res));
@@ -457,6 +579,7 @@ export function patch(req, res) {
       console.log(err);
     });
 }
+
 function updateRepo(object) {
   return Repositorio.find({
     where: {
@@ -469,33 +592,18 @@ function updateRepo(object) {
     });
 }
 
-async function desvincularRepos(repos) {
+async function desvincularRepos(repos, tipo) {
   for (const repo of repos) {
-    console.log("----------", repo.nombre);
-    let objrepo = {
-      _id: repo._id,
-      id_repositorio: repo.id_repositorio,
-      estado: false,
-      // nombre: repo.nombre,
-      // descripcion: repo.descripcion,
-      // avatar: repo.avatar,
-      // html_url: repo.html_url,
-      // visibilidad: repo.visibilidad,
-      // tipo: repo.tipo,
-      // git_url: repo.git_url,
-      // api_url: repo.api_url,
-      // star: repo.star,
-      // fork: repo.fork,
-      // hooks: repo.hooks,
-      // tags: repo.tags,
-      // issues: repo.issues,
-      // branches: repo.branches,
-      // lenguajes: repo.lenguajes,
-      // commits: repo.commits,
-      // downloads: repo.downloads,
-      fk_repositorio: repo.fk_repositorio
-    };
-    await updateRepo(objrepo);
+    console.log("----------", repo.nombre,tipo);
+    if (repo.tipo == tipo) {
+      let objrepo = {
+        _id: repo._id,
+        id_repositorio: repo.id_repositorio,
+        estado: false,
+        fk_repositorio: repo.fk_repositorio
+      };
+      await updateRepo(objrepo);
+    }
   }
   return true;
 }
@@ -509,7 +617,7 @@ export function desvincular(req, res) {
     }
   })
     .then(resp => {
-      if (desvincularRepos(resp)) {
+      if (desvincularRepos(resp, req.params.tipo)) {
         res.json({ respuesta: "Se actualizaron correctamente!" });
       } else {
         res
@@ -534,13 +642,28 @@ export function destroy(req, res) {
 }
 // devuelve list de lenguajes
 export function lenguajes(req, res) {
-  // console.log("object", req.body);
-
   fetch(req.body.url)
     .then(getJson())
     .then(respuesta => {
-      // console.log(respuesta);
       res.send(respuesta);
     })
     .catch();
+}
+//implementar usando tokens
+export function setDatos(req, res) {
+  let usuario = req.body;
+  return Repositorio.find({
+    where: {
+      _id: usuario._id
+    }
+  })
+    .then(handleEntityNotFound(res))
+    .then(setCommits(usuario))
+    .then(setIssues(usuario))
+    .then(setForks(usuario))
+    .then(setStars(usuario))
+    .then(setDownloads(usuario))
+    .then(saveUpdates(usuario))
+    .then(respondWithResult(res))
+    .catch(handleError(res));
 }

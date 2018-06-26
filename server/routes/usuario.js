@@ -161,22 +161,23 @@ router.post(
   controllerBitbucket.singOauthBitbucket
 );
 
-router.post(
-  "/datosgithub",
-  autenticacion.isAuthenticated(),
-  controllerGithub.datosGithub
-);
+// router.post(
+//   "/datosgithub",
+//   autenticacion.isAuthenticated(),
+//   controllerGithub.datosGithub
+// );
 
-router.post(
-  "/datosgitlab",
-  autenticacion.isAuthenticated(),
-  controllerGitLab.datosGitlab
-);
-router.post(
-  "/datosbitbucket",
-  autenticacion.isAuthenticated(),
-  controllerBitbucket.datosBitbucket
-);
+// router.post(
+//   "/datosgitlab",
+//   autenticacion.isAuthenticated(),
+//   controllerGitLab.datosGitlab
+// );
+
+// router.post(
+//   "/datosbitbucket",
+//   autenticacion.isAuthenticated(),
+//   controllerBitbucket.datosBitbucket
+// );
 
 router.post(
   "/commits/:id/github",

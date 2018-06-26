@@ -108,8 +108,14 @@ router.get("/:id", generarOpciones, controller.show);
  */
 router.post("/", controller.create);
 router.post("/oauth", controller.addOauth);
+//Obtiene los lenguajes
 router.post("/lenguajes", controller.lenguajes);
+//carga los datos de issues,forks,downloads
+router.post("/datos", controller.setDatos);
+
+//desvincula una cuenta colocando estado=false en todos sus repositorios de un tipo
 router.post("/desvincular/:tipo", controller.desvincular);
+
 router.put("/:id", controller.upsert);
 router.patch("/:id", controller.patch);
 /**

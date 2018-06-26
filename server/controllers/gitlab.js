@@ -8,6 +8,7 @@ import config from "../config/environment";
 import TokenController from "./token";
 import qs from "querystringify";
 import https from "https";
+import Sequelize from "sequelize";
 import request from "request";
 // import { fetch } from "node-fetch";
 var fetch = require("node-fetch");
@@ -30,47 +31,7 @@ function handleError(res, statusCode) {
   };
 }
 
-function crearActualizarUsuario(response) {
-  return function(responseGitlab) {
-    return Usuario.findOne({
-      where: {
-        login: responseGitlab.username,
-        tipo: "gitlab"
-      }
-    })
-      .then(user => {
-        if (user !== null) {
-          //colocar modelo de usuario
-          usuarioGitlab._id = user._id;
-          return Usuario.update(usuarioGitlab, {
-            where: {
-              _id: user._id
-            }
-          })
-            .then(resp => {
-              return responseGitlab;
-            })
-            .catch(err => {
-              return response.send(err);
-            });
-        } else {
-          return Usuario.create(usuarioGitlab)
-            .then(resp => {
-              usuarioGitlab._id = resp._id;
-              return responseGitlab;
-            })
-            .catch(err => {
-              return response.send(err);
-            });
-        }
-      })
-      .catch(err => {
-        return response.send(err);
-      });
-  };
-}
-
-function authenticateGitlab(code, response) {
+function authenticateGitlab(code) {
   return new Promise((resolver, rechazar) => {
     let objRes = {};
     require("ssl-root-cas").inject();
@@ -103,25 +64,7 @@ function authenticateGitlab(code, response) {
               token: objRes.token,
               usuario: responseGitlab
             });
-            // usuarioGitlab.nombre = responseGitlab.name;
-            // usuarioGitlab.email = responseGitlab.email;
-            // usuarioGitlab.password = "gitlab";
-            // usuarioGitlab.tipo = "gitlab";
-            // usuarioGitlab.role = "usuario";
-            // usuarioGitlab.login = responseGitlab.username;
-            // usuarioGitlab.avatar = responseGitlab.avatar_url;
-            // usuarioGitlab.url = responseGitlab.web_url;
-            // usuarioGitlab.token = objRes.token;
-            // return responseGitlab;
           })
-          // .then(crearActualizarUsuario(response))
-          // .then(responseGitlab => {
-          //   delete usuarioGitlab.password;
-          //   resolver({
-          //     token: objRes.token,
-          //     usuario: usuarioGitlab
-          //   });
-          // })
           .catch(err => {
             rechazar(err);
           });
@@ -155,20 +98,46 @@ function nuevoUsuario(usuarioOauth) {
       });
   });
 }
+function actualizaUsuario(user, usuarioOauth) {
+  return new Promise((resolver, rechazar) => {
+    let objGitlab = {};
+    objGitlab.login = usuarioOauth.login;
+    objGitlab.avatar = usuarioOauth.avatar_url;
+    objGitlab.url = usuarioOauth.html_url;
+    objGitlab.gitlab = true;
+    objGitlab.id_gitlab = usuarioOauth.id;
+    user
+      .update(objGitlab)
+      .then(respUsuario => {
+        resolver(respUsuario);
+      })
+      .catch(err => {
+        rechazar(err);
+      });
+  });
+}
 
 export function singOauthGitlab(req, res) {
   let usuarioOauth = req.body.usuarioOauth;
   let token = req.body.token;
+  const Op = Sequelize.Op;
   Usuario.findOne({
     where: {
-      id_gitlab: usuarioOauth.id
+      [Op.or]: [{ id_gitlab: usuarioOauth.id }, { email: usuarioOauth.email }]
     }
   })
     .then(user => {
       if (user !== null) {
         //eliminar password
         TokenController.updateCreateToken("gitlab", user, token);
-        res.json({ token: token, usuario: user });
+        //actualizar usuario
+        actualizaUsuario(user, usuarioOauth, token)
+          .then(resUsuario => {
+            res.json({ token: token, usuario: resUsuario });
+          })
+          .catch(err => {
+            res.send(err);
+          });
       } else {
         nuevoUsuario(usuarioOauth, token)
           .then(user => {

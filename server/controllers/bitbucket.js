@@ -239,7 +239,7 @@ function nuevoUsuario(usuarioOauth, token) {
     objBitbucket.nombre = usuarioOauth.display_name;
     objBitbucket.email = "";
     objBitbucket.password = "";
-    objBitbucket.tipo = "gitlab";
+    objBitbucket.tipo = "bitbucket";
     objBitbucket.role = "usuario";
     objBitbucket.login = usuarioOauth.username;
     objBitbucket.cuentas = ["local", "bitbucket"];

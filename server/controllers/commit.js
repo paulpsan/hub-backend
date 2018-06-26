@@ -111,7 +111,6 @@ async function addCommitsGithub(commits, repo) {
 }
 async function addCommitsGitlab(commits, repo) {
   for (const commit of commits) {
-    console.log("res", commit);
     let objCommit = {
       sha: commit.id,
       autor: commit.author_name,
@@ -159,12 +158,11 @@ export function show(req, res) {
 // Creates a new Commit in the DB
 export function create(req, res) {
   let repo = req.body;
-  let url = req.body.commits;
+  let url = req.body.commits.url;
   let tipo = req.body.tipo;
   let tokenGitlab;
   TokenController.getToken("gitlab", repo.fk_usuario).then(result => {
     tokenGitlab = result;
-    console.log("token", tokenGitlab);
     switch (tipo) {
       case "github":
         fetch(url, {
@@ -174,7 +172,6 @@ export function create(req, res) {
           .then(getJson())
           .then(commits => {
             //validar
-            console.log("object", commits);
             if (addCommitsGithub(commits, repo)) {
               res.json({ respuesta: "Se actualizaron correctamente!" });
             } else {
@@ -283,14 +280,12 @@ async function updateCommits(commits) {
 }
 // Updates an existing Commit in the DB
 export function patch(req, res) {
-  console.log("-------------------ss");
   return Commit.findAll({
     where: {
       fk_repositorio: req.params.id
     }
   })
     .then(commits => {
-      console.log("asd", commits.length);
       if (updateCommits(commits)) {
         res.json({ respuesta: "Se actualizaron correctamente!" });
       } else {
@@ -331,6 +326,7 @@ export function totalCommit(req, res) {
 export function graficaCommits(req, res) {
   return Commit.findAll({
     where: {
+      id_usuario:req.params.id,
       estado: true
     }
   })
@@ -343,7 +339,6 @@ export function graficaCommits(req, res) {
       for (const commit of commits) {
         if (commit.estado) {
           fecha = new Date(commit.fecha);
-          console.log(fecha.getFullYear());
           if (años.indexOf(fecha.getFullYear()) < 0) {
             años.push(fecha.getFullYear());
           }
