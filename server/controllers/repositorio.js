@@ -11,6 +11,7 @@
 "use strict";
 
 import { Repositorio } from "../sqldb";
+import TokenController from "./token";
 import Gitlab from "../components/repository-proxy/repositories/gitlab";
 import SequelizeHelper from "../components/sequelize-helper";
 import config from "../config/environment";
@@ -34,84 +35,6 @@ function respondWithResult(res, statusCode) {
       return res.status(statusCode).json(entity);
     }
     return null;
-  };
-}
-function setCommits(usuario) {
-  return function(entity) {
-    return fetch(entity.commits.url)
-      .then(getJson())
-      .then(respuesta => {
-        usuario.commits.total = respuesta.length;
-        return entity;
-      })
-      .catch(err => {
-        return err;
-      });
-  };
-}
-
-function setIssues(usuario) {
-  return function(entity) {
-    return fetch(entity.issues.url)
-      .then(getJson())
-      .then(respuesta => {
-        usuario.issues.total = respuesta.length;
-        return entity;
-      })
-      .catch(err => {
-        return err;
-      });
-  };
-}
-
-function setForks(usuario) {
-  return function(entity) {
-    if (entity.forks.url !== "") {
-      return fetch(entity.forks.url)
-        .then(getJson())
-        .then(respuesta => {
-          usuario.forks.total = respuesta.length;
-          return entity;
-        })
-        .catch(err => {
-          return err;
-        });
-    }
-    return entity;
-  };
-}
-
-function setStars(usuario) {
-  return function(entity) {
-    if (entity.stars.url !== "") {
-      return fetch(entity.stars.url)
-        .then(getJson())
-        .then(respuesta => {
-          usuario.stars.total = respuesta.length;
-          return entity;
-        })
-        .catch(err => {
-          return err;
-        });
-    }
-    return entity;
-  };
-}
-
-function setDownloads(usuario) {
-  return function(entity) {
-    if (entity.downloads.url !== "") {
-      return fetch(entity.downloads.url)
-        .then(getJson())
-        .then(respuesta => {
-          usuario.downloads.total = respuesta.length;
-          return entity;
-        })
-        .catch(err => {
-          return err;
-        });
-    }
-    return entity;
   };
 }
 function saveUpdates(updates) {
@@ -153,6 +76,116 @@ function handleError(res, statusCode) {
   return function(err) {
     console.log(err);
     res.status(statusCode).send(err);
+  };
+}
+
+async function getToken(repo) {
+  let token = await TokenController.getToken(repo.tipo, repo.fk_usuario);
+  return token;
+}
+
+function setCommits(repo, token) {
+  return function(entity) {
+    return fetch(entity.commits.url + "?access_token=" + token, {
+      agent,
+      strictSSL: false
+    })
+      .then(getJson())
+      .then(respuesta => {
+        console.log("commits", respuesta);
+        repo.commits.total = respuesta.length;
+        return entity;
+      })
+      .catch(err => {
+        console.log(err);
+        return err;
+      });
+  };
+}
+
+function setIssues(repo, token) {
+  return function(entity) {
+    return fetch(entity.issues.url + "?access_token=" + token, {
+      agent,
+      strictSSL: false
+    })
+      .then(getJson())
+      .then(respuesta => {
+        console.log("issues", respuesta);
+
+        repo.issues.total = respuesta.length;
+        return entity;
+      })
+      .catch(err => {
+        return err;
+      });
+  };
+}
+
+function setForks(repo, token) {
+  return function(entity) {
+    if (entity.forks.url !== "") {
+      return fetch(entity.forks.url + "?access_token=" + token, {
+        agent,
+        strictSSL: false
+      })
+        .then(getJson())
+        .then(respuesta => {
+          console.log("forks", respuesta);
+          if (!respuesta.error) {
+            repo.forks.total = respuesta.length;
+          }
+          return entity;
+        })
+        .catch(err => {
+          return err;
+        });
+    }
+    return entity;
+  };
+}
+
+function setStars(repo, token) {
+  return function(entity) {
+    if (entity.stars.url !== "") {
+      return fetch(entity.stars.url + "?access_token=" + token, {
+        agent,
+        strictSSL: false
+      })
+        .then(getJson())
+        .then(respuesta => {
+          console.log("stars", respuesta);
+
+          repo.stars.total = respuesta.length;
+          return entity;
+        })
+        .catch(err => {
+          return err;
+        });
+    }
+    return entity;
+  };
+}
+
+function setDownloads(repo, token) {
+  return function(entity) {
+    if (entity.downloads.url !== "") {
+      return fetch(entity.downloads.url + "?access_token=" + token, {
+        agent,
+        strictSSL: false
+      })
+        .then(getJson())
+        .then(respuesta => {
+          console.log("downloads", respuesta);
+
+          repo.downloads.total = respuesta.length;
+          return entity;
+        })
+        .catch(err => {
+          return err;
+        });
+    }
+    return entity;
   };
 }
 
@@ -594,7 +627,7 @@ function updateRepo(object) {
 
 async function desvincularRepos(repos, tipo) {
   for (const repo of repos) {
-    console.log("----------", repo.nombre,tipo);
+    console.log("----------", repo.nombre, tipo);
     if (repo.tipo == tipo) {
       let objrepo = {
         _id: repo._id,
@@ -649,21 +682,22 @@ export function lenguajes(req, res) {
     })
     .catch();
 }
-//implementar usando tokens
-export function setDatos(req, res) {
-  let usuario = req.body;
+
+export async function setDatos(req, res) {
+  let repo = req.body;
+  let token = await getToken(repo);
   return Repositorio.find({
     where: {
-      _id: usuario._id
+      _id: repo._id
     }
   })
     .then(handleEntityNotFound(res))
-    .then(setCommits(usuario))
-    .then(setIssues(usuario))
-    .then(setForks(usuario))
-    .then(setStars(usuario))
-    .then(setDownloads(usuario))
-    .then(saveUpdates(usuario))
+    .then(setCommits(repo, token))
+    .then(setIssues(repo, token))
+    .then(setForks(repo, token))
+    .then(setStars(repo, token))
+    .then(setDownloads(repo, token))
+    .then(saveUpdates(repo, token))
     .then(respondWithResult(res))
     .catch(handleError(res));
 }

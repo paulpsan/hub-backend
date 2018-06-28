@@ -386,11 +386,11 @@ export function create(req, res) {
           .then(respondWithResult(res, 201))
           .catch(handleError(res));
       } else {
-        res.status(400).send({ message: "rellena todos los datos" });
+        res.status(400).send({ mensaje: "rellena todos los datos" });
       }
     });
   } else {
-    res.status(500).send({ message: "introduce la contraseña" });
+    res.status(500).send({ mensaje: "introduce la contraseña" });
   }
   // return Usuario.create(obj)
   // .then(respondWithResult(res, 201))
@@ -418,18 +418,18 @@ export function login(req, res) {
               usuario: user
             });
           } else {
-            res.status(404).send({ message: "Contraseña incorrecta" });
+            res.status(404).send({ mensaje: "Contraseña incorrecta" });
           }
         });
       } else {
         res
           .status(404)
-          .send({ message: "No existe el usuario o contraseña incorrecta " });
+          .send({ mensaje: "No existe el usuario o contraseña incorrecta " });
       }
 
       // respondWithResult(res, 201)
     });
-  // .catch(res.status(404).send({ message: "No existe el usuario o contraseña incorrecta " }));
+  // .catch(res.status(404).send({ mensaje: "No existe el usuario o contraseña incorrecta " }));
 }
 
 // Upserts the given Usuario in the DB at the specified ID

@@ -28,18 +28,6 @@ function respondWithResult(res, statusCode) {
   };
 }
 
-function patchUpdates(patches) {
-  return function(entity) {
-    try {
-      jsonpatch.apply(entity, patches, /*validate*/ true);
-    } catch (err) {
-      return Promise.reject(err);
-    }
-
-    return entity.save();
-  };
-}
-
 function removeEntity(res) {
   return function(entity) {
     if (entity) {
@@ -131,7 +119,8 @@ function setDatos(proyectoData, res) {
             proyectoData.datos.commits.values[
               proyectoData.datos.commits.values.length - 1
             ].date;
-          proyectoObj.ultimaActividad = proyectoData.datos.commits.values[0].date;
+          proyectoObj.ultimaActividad =
+            proyectoData.datos.commits.values[0].date;
 
           break;
 
@@ -145,44 +134,42 @@ function setDatos(proyectoData, res) {
   };
 }
 
-function createEntity(res) {
+function createEntity(res, proyecto) {
   return function(entity) {
-    if (entity) {
-      return Proyecto.create(entity)
+    if (!entity) {
+      return Proyecto.create(proyecto)
         .then(response => {
           res.status(201).send(response);
         })
         .catch(err => {
+          console.log(err);
           res.send(err);
         });
     } else {
-      res.send({ message: entity.urlRepositorio + " ya existe" });
+      res.send({ mensaje: entity.nombre + " ya existe" });
     }
     return entity;
   };
 }
 
-function updateEntity(req, res) {
+function saveUpdates(updates) {
   return function(entity) {
-    if (entity) {
-      return entity
-        .update(req)
-        .then(response => {
-          res.status(200).send(response);
-        })
-        .catch(err => {
-          res.send(err);
-        });
-    }
-    res.send({ message: req.urlRepositorio + " No existe" });
-    return entity;
+    return entity
+      .updateAttributes(updates)
+      .then(updated => {
+        return updated;
+      })
+      .catch(err => {
+        console.log(err);
+        return err;
+      });
   };
 }
 
 function handleEntityNotFound(res) {
   return function(entity) {
     if (!entity) {
-      res.status(404).send({ message: "no se encuentra lo requerido" });
+      res.status(404).send({ mensaje: "no se encuentra lo requerido" });
       return null;
     }
     return entity;
@@ -192,6 +179,7 @@ function handleEntityNotFound(res) {
 function handleError(res, statusCode) {
   statusCode = statusCode || 500;
   return function(err) {
+    console.log(err);
     res.status(statusCode).send(err);
   };
 }
@@ -357,19 +345,24 @@ export function show(req, res) {
 // Creates a new Proyecto in the DB
 //parsear datos
 export function create(req, res) {
-  // console.log("body:", req.body, "params:", req.params);
+  console.log("body:", req.body, "params:", req.params);
   return (
     Proyecto.find({
       where: {
-        urlRepositorio: req.body.urlRepositorio
+        nombre: req.body.nombre
       }
     })
-      .then(setDatos(req.body))
       //actualizar
-      .then(createEntity(res))
+      .then(createEntity(res, req.body))
       .catch(handleError(res))
   );
 }
+
+// export function create(req, res) {
+//   return Proyecto.create(req.body)
+//     .then(respondWithResult(res, 201))
+//     .catch(handleError(res));
+// }
 
 // export function create(req, res) {
 //   let proxyService;
@@ -396,16 +389,12 @@ export function create(req, res) {
 
 // Upserts the given Proyecto in the DB at the specified ID
 export function upsert(req, res) {
-  if (req.body._id) {
-    delete req.body._id;
-  }
-  return Proyecto.find({
+  return Proyecto.upsert(req.body, {
     where: {
       _id: req.params.id
     }
   })
-    .then(handleEntityNotFound(res))
-    .then(updateEntity(req.body, res))
+    .then(respondWithResult(res))
     .catch(handleError(res));
 }
 
@@ -420,7 +409,7 @@ export function patch(req, res) {
     }
   })
     .then(handleEntityNotFound(res))
-    .then(patchUpdates(req.body))
+    .then(saveUpdates(req.body))
     .then(respondWithResult(res))
     .catch(handleError(res));
 }

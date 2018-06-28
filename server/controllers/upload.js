@@ -34,7 +34,7 @@ export function uploadFile(req, res) {
   if (!req.files) {
     return res.status(400).json({
       mensaje: "No selecciono nada",
-      errors: { message: "Debe de seleccionar una imagen" }
+      errors: { mensaje: "Debe de seleccionar una imagen" }
     });
   }
   // Obtener nombre del archivo
@@ -49,7 +49,7 @@ export function uploadFile(req, res) {
     return res.status(400).json({
       mensaje: "Extension no válida",
       errors: {
-        message: "Las extensiones válidas son " + extensionesValidas.join(", ")
+        mensaje: "Las extensiones válidas son " + extensionesValidas.join(", ")
       }
     });
   }
@@ -87,7 +87,7 @@ function subirPorTipo(tipo, id, nombreArchivo, res) {
         if (!usuario) {
           return res.status(400).json({
             mensaje: "Usuario no existe",
-            errors: { message: "Usuario no existe" }
+            errors: { mensaje: "Usuario no existe" }
           });
         }
         var pathViejo = "./server/uploads/usuarios/" + usuario.avatar;
@@ -124,7 +124,7 @@ function subirPorTipo(tipo, id, nombreArchivo, res) {
         if (!repositorio) {
           return res.status(400).json({
             mensaje: "repositorio no existe",
-            errors: { message: "repositorio no existe" }
+            errors: { mensaje: "repositorio no existe" }
           });
         }
         var pathViejo = "./server/uploads/repositorios/" + repositorio.avatar;
@@ -161,7 +161,7 @@ function subirPorTipo(tipo, id, nombreArchivo, res) {
         if (!proyecto) {
           return res.status(400).json({
             mensaje: "proyecto no existe",
-            errors: { message: "proyecto no existe" }
+            errors: { mensaje: "proyecto no existe" }
           });
         }
 

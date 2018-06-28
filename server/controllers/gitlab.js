@@ -307,7 +307,7 @@ export function datosGitlab(req, res) {
                               //   let objCommit = {
                               //     sha: commit.sha,
                               //     autor: commit.commit.author.name,
-                              //     mensaje: commit.commit.message,
+                              //     mensaje: commit.commit.mensaje,
                               //     fecha: commit.commit.author.date,
                               //     fk_repositorio: resultRepo._id
                               //   };
@@ -327,7 +327,7 @@ export function datosGitlab(req, res) {
                               //   let objCommit = {
                               //     sha: commit.sha,
                               //     autor: commit.commit.author.name,
-                              //     mensaje: commit.commit.message,
+                              //     mensaje: commit.commit.mensaje,
                               //     fecha: commit.commit.author.date,
                               //     fk_repositorio: resultRepo._id
                               //   };

@@ -47,7 +47,7 @@ export default function(sequelize, DataTypes) {
         type: DataTypes.JSONB
       },
       commits: {
-        type: DataTypes.TEXT
+        type: DataTypes.JSONB
       },
       fechaCreacion: {
         type: DataTypes.DATE
