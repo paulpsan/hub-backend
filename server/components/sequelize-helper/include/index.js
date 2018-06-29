@@ -1,16 +1,16 @@
-'use strict';
+"use strict";
 
-import {
-  inclusiones
-} from '../../../sqldb';
+import { inclusiones } from "../../../sqldb";
 
 function obtenerInclusiones(modeloRaw, atributos) {
-  let indice = modeloRaw.indexOf('.');
+  let indice = modeloRaw.indexOf(".");
   let modelo = indice !== -1 ? modeloRaw.substring(0, indice) : modeloRaw;
-  let includes = [{
-    model: inclusiones[modelo],
-    as: modelo
-  }];
+  let includes = [
+    {
+      model: inclusiones[modelo],
+      as: modelo
+    }
+  ];
   if (indice !== -1) {
     let subInclusion = modeloRaw.substring(indice + 1);
     includes[0].includes = obtenerInclusiones(subInclusion, atributos);
@@ -26,11 +26,11 @@ function asignarAtributos(inclusion, atributos) {
   return;
 }
 
-function obtenerAtributos(modelo = '', atributosRaw) {
+function obtenerAtributos(modelo = "", atributosRaw) {
   let atributos = [];
   if (atributosRaw !== null) {
-    if (modelo == '') {
-      atributos = atributosRaw.filter(atributo => !atributo.includes('.'));
+    if (modelo == "") {
+      atributos = atributosRaw.filter(atributo => !atributo.includes("."));
     } else {
       atributosRaw
         .filter(atributo => atributo.startsWith(modelo))
@@ -41,10 +41,9 @@ function obtenerAtributos(modelo = '', atributosRaw) {
 }
 
 class Inclusor {
-
-  static incluirSequelize(incluir = '', atributos = '') {
-    let modelosRaw = incluir == '' ? [] : incluir.split(',');
-    let atributosRaw = atributos == '' ? null : atributos.split(',');
+  static incluirSequelize(incluir = "", atributos = "") {
+    let modelosRaw = incluir == "" ? [] : incluir.split(",");
+    let atributosRaw = atributos == "" ? null : atributos.split(",");
     let includes = [];
     modelosRaw.forEach(modeloRaw => {
       let atributosIncluir = obtenerAtributos(modeloRaw, atributosRaw);
@@ -58,12 +57,14 @@ class Inclusor {
     return includes;
   }
 
-  static obtnerAtributos(atributos = '') {
-    let atributosRaw = atributos == '' ? null : atributos.split(',');
-    let atributosIncluir = obtenerAtributos('', atributosRaw);
-    return atributosIncluir.length > 0 ? {
-      attributes: obtenerAtributos('', atributosRaw)
-    } : null;
+  static obtnerAtributos(atributos = "") {
+    let atributosRaw = atributos == "" ? null : atributos.split(",");
+    let atributosIncluir = obtenerAtributos("", atributosRaw);
+    return atributosIncluir.length > 0
+      ? {
+          attributes: obtenerAtributos("", atributosRaw)
+        }
+      : null;
   }
 }
 

@@ -128,7 +128,6 @@ function subirPorTipo(tipo, id, nombreArchivo, res) {
           });
         }
         var pathViejo = "./server/uploads/repositorios/" + repositorio.avatar;
-
         // Si existe, elimina la imagen anterior
         if (fs.existsSync(pathViejo) && repositorio.avatar != "") {
           fs.unlink(pathViejo);

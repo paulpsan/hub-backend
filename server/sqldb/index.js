@@ -12,20 +12,23 @@ db.Token = db.sequelize.import("../models/token");
 db.Repositorio = db.sequelize.import("../models/repositorio");
 db.Proyecto = db.sequelize.import("../models/proyecto");
 
+
+db.inclusiones = {};
+
 //aqui agregamos inclusiones
 /**
  * variable que ayuda con las inclusiones
  * se deben agregar las inclusiones con sus respectivos modelos al nombre de la inclusion
  * esto se usa para los query strings
  */
-db.Usuario.belongsToMany(db.Proyecto, {
-  through: "UsuarioProyecto",
-  foreignKey: "fk_proyecto"
-});
-db.Proyecto.belongsToMany(db.Usuario, {
-  through: "UsuarioProyecto",
-  foreignKey: "fk_usuario"
-});
+// db.Usuario.belongsToMany(db.Proyecto, {
+//   through: "UsuarioProyecto",
+//   foreignKey: "fk_proyecto"
+// });
+// db.Proyecto.belongsToMany(db.Usuario, {
+//   through: "UsuarioProyecto",
+//   foreignKey: "fk_usuario"
+// });
 
 db.Usuario.hasMany(db.Repositorio, {
   foreignKey: {
@@ -53,6 +56,13 @@ db.Proyecto.belongsTo(db.Repositorio, {
   }
 });
 
+db.Proyecto.belongsTo(db.Usuario, {
+  foreignKey: {
+    name: "fk_usuario",
+    allowNull: false
+  }
+});
+
 db.Repositorio.hasMany(db.Commit, {
   foreignKey: {
     name: "fk_repositorio",
@@ -65,6 +75,7 @@ db.Token.belongsTo(db.Usuario, {
     allowNull: false
   }
 });
+
 db.Commit.belongsTo(db.Repositorio, {
   foreignKey: {
     name: "fk_repositorio",

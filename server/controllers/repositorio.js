@@ -492,7 +492,7 @@ export function index(req, res) {
 export function indexUser(req, res) {
   // console.log(req.params.id);
   return Repositorio.findAndCountAll({
-    // include: [{ all: true }],
+    include: [{ all: true }],
     where: {
       fk_usuario: req.params.id,
       estado: true
@@ -507,7 +507,7 @@ export function indexUser(req, res) {
 // Gets a single Repositorio from the DB
 export function show(req, res) {
   return Repositorio.find({
-    // include: [{ all: true }],
+    include: [{ all: true }],
     where: {
       _id: req.params.id
     }
@@ -537,6 +537,7 @@ export function addOauth(req, res) {
   // let usuarioOauth = req.body.usuarioOauth;
   let token = req.body.token;
   let tipo = req.body.tipo;
+  TokenController.createToken(tipo, usuario, token);
   switch (tipo) {
     case "github":
       adicionaGithub(token, usuario)
@@ -608,9 +609,7 @@ export function patch(req, res) {
     .then(handleEntityNotFound(res))
     .then(saveUpdates(req.body))
     .then(respondWithResult(res))
-    .catch(err => {
-      console.log(err);
-    });
+    .catch(handleError(res));
 }
 
 function updateRepo(object) {
@@ -686,6 +685,7 @@ export function lenguajes(req, res) {
 export async function setDatos(req, res) {
   let repo = req.body;
   let token = await getToken(repo);
+  console.log("****token******", repo, token);
   return Repositorio.find({
     where: {
       _id: repo._id

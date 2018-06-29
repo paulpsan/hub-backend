@@ -169,6 +169,7 @@ export default function seedDatabaseIfNeeded() {
               fechaCreacion: "2018-05-05",
               ultimaActividad: "2018-05-05",
               datos: "",
+              fk_usuario: usuarios[0]._id,
               fk_repositorio: repositorios[0]._id
             },
             {
@@ -189,6 +190,7 @@ export default function seedDatabaseIfNeeded() {
               fechaCreacion: "2018-05-05",
               ultimaActividad: "2018-05-05",
               datos: "",
+              fk_usuario: usuarios[1]._id,
               fk_repositorio: repositorios[1]._id
             },
             {
@@ -208,6 +210,7 @@ export default function seedDatabaseIfNeeded() {
               fechaCreacion: "2018-05-05",
               ultimaActividad: "2018-05-05",
               datos: "",
+              fk_usuario: usuarios[2]._id,
               fk_repositorio: repositorios[2]._id
             }
           ],

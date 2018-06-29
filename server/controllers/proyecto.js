@@ -10,7 +10,7 @@
 
 "use strict";
 import jsonpatch from "fast-json-patch";
-import { Proyecto, Repositorio, Usuario, UsuarioRepositorio } from "../sqldb";
+import { Proyecto, Repositorio, Usuario, Commit } from "../sqldb";
 import SequelizeHelper from "../components/sequelize-helper";
 import ProxyService from "../components/repository-proxy/proxy-service";
 import GitLab from "../components/repository-proxy/repositories/gitlab";
@@ -37,100 +37,55 @@ function removeEntity(res) {
     }
   };
 }
-function setDatos(proyectoData, res) {
-  return function(entity) {
-    if (!entity) {
-      let proyectoObj = proyectoData;
-      let usuarios = [];
-      switch (proyectoData.tipo) {
-        case "github":
-          proyectoObj.avatar = "assets/images/github.png";
-          proyectoObj.commits = proyectoData.datos.commits.length;
-          for (const commit of proyectoData.datos.commits) {
-            if (commit.committer) {
-              usuarios.push({
-                nombre: commit.commit.author.name,
-                avatar_url: commit.committer.avatar_url,
-                web_url: commit.committer.html_url
-              });
-            } else {
-              usuarios.push({
-                nombre: commit.commit.author.name,
-                avatar_url: proyectoData.datos.repo.owner.avatar_url,
-                web_url: proyectoData.datos.repo.owner.html_url
-              });
-            }
-          }
-          //elimina repetidos
-          var newArray = [];
-          var lookupObject = {};
-          for (var i in usuarios) {
-            lookupObject[usuarios[i]["nombre"]] = usuarios[i];
-          }
-          for (i in lookupObject) {
-            newArray.push(lookupObject[i]);
-          }
-          proyectoObj.usuarios = newArray;
-          proyectoObj.fechaCreacion =
-            proyectoData.datos.commits[
-              proyectoObj.commits - 1
-            ].commit.author.date;
-          proyectoObj.ultimaActividad =
-            proyectoData.datos.commits[0].commit.author.date;
 
-          break;
-        case "gitlab":
-          proyectoObj.avatar = "assets/images/gitlab.png";
-          // for (const commit of proyectoData.datos.members) {
-          //   usuarios.push({
-          //     nombre: commit.name,
-          //     avatar_url: commit.avatar_url,
-          //     web_url: commit.web_url
-          //   });
-          // }
-          // proyectoObj.usuarios = usuarios;
-          proyectoObj.commits = proyectoData.datos.commits.length;
-          proyectoObj.fechaCreacion =
-            proyectoData.datos.commits[
-              proyectoData.datos.commits.length - 1
-            ].committed_date;
-          proyectoObj.ultimaActividad =
-            proyectoData.datos.commits[0].committed_date;
-          break;
-        case "bitbucket":
-          let datos = [];
-          for (let commits of proyectoData.datos.commits.values) {
-            datos.push({
-              nombre: commits.author.user.display_name,
-              avatar_url: commits.author.user.links.avatar.href,
-              web_url: commits.author.user.links.html.href
-            });
+function setCommits(proyecto) {
+  return function(repo) {
+    return (
+      Commit.findAll({
+        where: {
+          fk_repositorio: repo._id
+        }
+      })
+        //devuelve array de commits
+        .then(commits => {
+          let datos = {
+            issues: repo.issues,
+            stars: repo.stars,
+            forks: repo.forks,
+            downloads: repo.downloads,
+            lenguajes: repo.lenguajes
+          };
+          proyecto.datos = datos;
+          proyecto.fechaCreacion = commits[commits.length - 1].fecha;
+          proyecto.ultimaActividad = commits[0].fecha;
+          proyecto.commits = commits;
+          let usuarios = [];
+          for (const commit of commits) {
+            usuarios.push(commit.autor);
           }
-          //elimina repetidos de datos
-          var hash = {};
-          datos = datos.filter(function(current) {
-            var exists = !hash[current.nombre] || false;
-            hash[current.nombre] = true;
-            return exists;
-          });
-          proyectoObj.usuarios = datos;
-          proyectoObj.commits = proyectoData.datos.commits.length;
-          proyectoObj.fechaCreacion =
-            proyectoData.datos.commits.values[
-              proyectoData.datos.commits.values.length - 1
-            ].date;
-          proyectoObj.ultimaActividad =
-            proyectoData.datos.commits.values[0].date;
+          proyecto.usuarios = _.uniq(usuarios);
+          proyecto.save();
+          return proyecto;
+        })
+        .catch(err => {
+          return err;
+        })
+    );
+  };
+}
 
-          break;
-
-        default:
-          //proyectos de usuarios locales
-          break;
+function setDatosRepo() {
+  return function(proyecto) {
+    return Repositorio.findOne({
+      where: {
+        _id: proyecto.fk_repositorio
       }
-      return proyectoObj;
-    }
-    return entity;
+    })
+      .then(setCommits(proyecto))
+      .catch(err => {
+        console.log("_______", err);
+        return err;
+      });
   };
 }
 
@@ -138,8 +93,9 @@ function createEntity(res, proyecto) {
   return function(entity) {
     if (!entity) {
       return Proyecto.create(proyecto)
+        .then(setDatosRepo())
         .then(response => {
-          res.status(201).send(response);
+          res.status(201).json({ proyecto: response });
         })
         .catch(err => {
           console.log(err);
@@ -423,5 +379,15 @@ export function destroy(req, res) {
   })
     .then(handleEntityNotFound(res))
     .then(removeEntity(res))
+    .catch(handleError(res));
+}
+
+export function setDatos(req, res) {
+  return Proyecto.findOne({
+    where: {
+      _id: req.params.id
+    }
+  })
+    .then(setDatosRepo(res))
     .catch(handleError(res));
 }

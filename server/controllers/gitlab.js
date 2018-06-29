@@ -141,7 +141,7 @@ export function singOauthGitlab(req, res) {
       } else {
         nuevoUsuario(usuarioOauth, token)
           .then(user => {
-            TokenController.updateCreateToken("gitlab", user, token);
+            TokenController.createToken("gitlab", user, token);
             res.json({ usuario: user, token: token });
           })
           .catch(err => {

@@ -35,7 +35,7 @@ class TokenController {
       }
     }).then(respToken => {
       if (respToken !== null) {
-        Token.update(objToken, {
+        respToken.update(objToken, {
           where: {
             fk_usuario: usuario._id
           }

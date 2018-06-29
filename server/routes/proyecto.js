@@ -152,6 +152,7 @@ router.get('/:id',autenticacion.isAuthenticated(), controller.show);
     "fk_repositorio": 4
   }
  */
+router.get('/:id/repositorio', controller.setDatos);
 router.post('/',autenticacion.isAuthenticated(), controller.create);
 router.put('/:id',autenticacion.isAuthenticated(), controller.upsert);
 router.patch('/:id',autenticacion.isAuthenticated(), controller.patch);

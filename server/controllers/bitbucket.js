@@ -277,7 +277,7 @@ export function singOauthBitbucket(req, res) {
     .then(user => {
       if (user !== null) {
         //eliminar password
-        TokenController.updateToken("bitbucket", result, token);
+        TokenController.updateCreateToken("bitbucket", result, token);
         res.json({ token: token, usuario: user });
       } else {
         nuevoUsuario(usuarioOauth, token)

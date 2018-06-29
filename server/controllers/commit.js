@@ -39,10 +39,10 @@ function respondWithResult(res, statusCode) {
   };
 }
 
-function saveUpdates() {
+function saveUpdates(updates) {
   return function(entity) {
     return entity
-      .updateAttributes({ estado: false })
+      .updateAttributes(updates)
       .then(updated => {
         return updated;
       })
@@ -84,13 +84,22 @@ function crearCommit(objCommit) {
       sha: objCommit.sha,
       fk_repositorio: objCommit.fk_repositorio
     }
-  }).then(respCommit => {
-    if (respCommit === null) {
-      return Commit.create(objCommit);
-    } else {
-      return Commit.update(objCommit);
-    }
-  });
+  })
+    .then(respCommit => {
+      console.log("respCommit", respCommit);
+      if (respCommit === null) {
+        return Commit.create(objCommit).catch(err => {
+          console.log(err);
+        });
+      } else {
+        return respCommit.update(objCommit).catch(err => {
+          console.log(err);
+        });
+      }
+    })
+    .catch(err => {
+      console.log(err);
+    });
 }
 async function addCommitsGithub(commits, repo) {
   for (const commit of commits) {
@@ -100,11 +109,13 @@ async function addCommitsGithub(commits, repo) {
       mensaje: commit.commit.message,
       fecha: commit.commit.author.date,
       id_usuario: repo.fk_usuario,
-      estado: true,
-      avatar_autor: commit.committer.avatar_url,
-      web_url_autor: commit.committer.html_url,
+      estado: repo.visibilidad && repo.estado,
+      avatar_autor:
+        commit.committer !== null ? commit.committer.avatar_url : "",
+      web_url_autor: commit.committer !== null ? commit.committer.html_url : "",
       fk_repositorio: repo._id
     };
+    console.log("commm", objCommit.estado);
     await crearCommit(objCommit);
   }
   return true;
@@ -116,7 +127,7 @@ async function addCommitsGitlab(commits, repo) {
       autor: commit.author_name,
       mensaje: commit.message,
       fecha: commit.committed_date,
-      estado: true,
+      estado: repo.visibilidad && repo.estado,
       id_usuario: repo.fk_usuario,
       fk_repositorio: repo._id
     };
@@ -131,7 +142,7 @@ async function addCommitsBitbucket(commits, repo) {
       autor: commit.author.user.username,
       mensaje: commit.message,
       fecha: commit.date,
-      estado: true,
+      estado: repo.visibilidad && repo.estado,
       avatar_autor: commit.author.user.links.avatar.href,
       web_url_autor: commit.author.user.links.html.href,
       id_usuario: repo.fk_usuario,
@@ -150,29 +161,57 @@ export function index(req, res) {
 
 // Gets a single Commit from the DB
 export function show(req, res) {
-  return Commit.findAll({ where: { fk_repositorio: req.params.id } })
+  return Commit.findAll({
+    where: { fk_repositorio: req.params.id },
+    order: [["fecha", "desc"]]
+  })
     .then(handleEntityNotFound(res))
     .then(respondWithResult(res))
     .catch(handleError(res));
 }
+
+async function getToken(repo) {
+  let token = await TokenController.getToken(repo.tipo, repo.fk_usuario);
+  return token;
+}
+
 // Creates a new Commit in the DB
-export function create(req, res) {
+export async function create(req, res) {
   let repo = req.body;
   let url = req.body.commits.url;
   let tipo = req.body.tipo;
-  let tokenGitlab;
-  TokenController.getToken("gitlab", repo.fk_usuario).then(result => {
-    tokenGitlab = result;
-    switch (tipo) {
-      case "github":
-        fetch(url, {
+  let token = await getToken(repo);
+
+  console.log("*****token commit *****", token);
+  switch (tipo) {
+    case "github":
+      fetch(url + "?access_token=" + token, {
+        agent,
+        strictSSL: false
+      })
+        .then(getJson())
+        .then(commits => {
+          //validar
+          if (addCommitsGithub(commits, repo)) {
+            res.json({ respuesta: "Se actualizaron correctamente!" });
+          } else {
+            res
+              .status(500)
+              .json({ error: "Problema en actualizacion" })
+              .end();
+          }
+        });
+
+      break;
+    case "gitlab":
+      if (token) {
+        fetch(url + "?access_token=" + token, {
           agent,
           strictSSL: false
         })
           .then(getJson())
           .then(commits => {
-            //validar
-            if (addCommitsGithub(commits, repo)) {
+            if (addCommitsGitlab(commits, repo)) {
               res.json({ respuesta: "Se actualizaron correctamente!" });
             } else {
               res
@@ -181,56 +220,36 @@ export function create(req, res) {
                 .end();
             }
           });
+      } else {
+        console.log("-----------errr token--------------");
+      }
+      //necesita token
+      break;
+    case "bitbucket":
+      fetch(url + "?access_token=" + token, {
+        agent,
+        strictSSL: false
+      })
+        .then(getJson())
+        .then(commits => {
+          if (addCommitsBitbucket(commits.values, repo)) {
+            res.json({ respuesta: "Se actualizaron correctamente!" });
+          } else {
+            res
+              .status(500)
+              .json({ error: "Problema en actualizacion" })
+              .end();
+          }
+        });
 
-        break;
-      case "gitlab":
-        if (tokenGitlab) {
-          fetch(url + "?access_token=" + tokenGitlab, {
-            agent,
-            strictSSL: false
-          })
-            .then(getJson())
-            .then(commits => {
-              if (addCommitsGitlab(commits, repo)) {
-                res.json({ respuesta: "Se actualizaron correctamente!" });
-              } else {
-                res
-                  .status(500)
-                  .json({ error: "Problema en actualizacion" })
-                  .end();
-              }
-            });
-        } else {
-          console.log("-----------errr token--------------");
-        }
-        //necesita token
-        break;
-      case "bitbucket":
-        fetch(url, {
-          agent,
-          strictSSL: false
-        })
-          .then(getJson())
-          .then(commits => {
-            if (addCommitsBitbucket(commits.values, repo)) {
-              res.json({ respuesta: "Se actualizaron correctamente!" });
-            } else {
-              res
-                .status(500)
-                .json({ error: "Problema en actualizacion" })
-                .end();
-            }
-          });
-
-        break;
-      default:
-        res
-          .status(500)
-          .json({ error: "Problema en actualizacion" })
-          .end();
-        break;
-    }
-  });
+      break;
+    default:
+      res
+        .status(500)
+        .json({ error: "Problema en actualizacion" })
+        .end();
+      break;
+  }
   // console.log("comm", commits);
 }
 
@@ -260,24 +279,6 @@ function updateCommit(object) {
     });
 }
 
-async function updateCommits(commits) {
-  for (const commit of commits) {
-    let objCommit = {
-      _id: commit._id,
-      sha: commit.sha,
-      autor: commit.autor,
-      mensaje: commit.mensaje,
-      fecha: commit.fecha,
-      id_usuario: commit.id_usuario,
-      estado: false,
-      // avatar_autor: commit.committer.avatar_url,
-      // web_url_autor: commit.committer.html_url,
-      fk_repositorio: commit.fk_repositorio
-    };
-    await updateCommit(objCommit);
-  }
-  return true;
-}
 // Updates an existing Commit in the DB
 export function patch(req, res) {
   return Commit.findAll({
@@ -285,17 +286,22 @@ export function patch(req, res) {
       fk_repositorio: req.params.id
     }
   })
-    .then(commits => {
-      if (updateCommits(commits)) {
-        res.json({ respuesta: "Se actualizaron correctamente!" });
-      } else {
-        res
-          .status(500)
-          .json({ error: "Problema en actualizacion" })
-          .end();
-      }
-    })
+    .then(handleEntityNotFound(res))
+    .then(saveUpdates(req.body))
+    .then(respondWithResult(res))
     .catch(handleError(res));
+
+  // .then(commits => {
+  //   if (updateCommits(commits)) {
+  //     res.json({ respuesta: "Se actualizaron correctamente!" });
+  //   } else {
+  //     res
+  //       .status(500)
+  //       .json({ error: "Problema en actualizacion" })
+  //       .end();
+  //   }
+  // })
+  // .catch(handleError(res));
 }
 
 // Deletes a Commit from the DB
@@ -326,7 +332,7 @@ export function totalCommit(req, res) {
 export function graficaCommits(req, res) {
   return Commit.findAll({
     where: {
-      id_usuario:req.params.id,
+      id_usuario: req.params.id,
       estado: true
     }
   })

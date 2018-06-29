@@ -8,7 +8,6 @@ import Inclusor from './include';
 class SequelizeHelper {
 
   static generarOpciones(query) {
-    console.log("query",query);
     let opciones = {};
     //orden
     if (query.ordenar) {
@@ -24,7 +23,7 @@ class SequelizeHelper {
     if (atributosImplicitos !== null) {
       opciones = Object.assign(opciones, atributosImplicitos);
     }
-    console.log("opciones:",opciones);
+    console.log("________opciones:",opciones);
     return opciones;
   }
 
