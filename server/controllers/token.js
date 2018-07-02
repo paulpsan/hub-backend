@@ -34,14 +34,15 @@ class TokenController {
         tipo: objToken.tipo
       }
     }).then(respToken => {
+      console.log("respToken_____", respToken);
       if (respToken !== null) {
-        respToken.update(objToken, {
+        return respToken.update(objToken, {
           where: {
             fk_usuario: usuario._id
           }
         });
       } else {
-        Token.create(objToken);
+        return Token.create(objToken);
       }
     });
   }

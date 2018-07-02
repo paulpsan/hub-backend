@@ -537,7 +537,7 @@ export function addOauth(req, res) {
   // let usuarioOauth = req.body.usuarioOauth;
   let token = req.body.token;
   let tipo = req.body.tipo;
-  TokenController.createToken(tipo, usuario, token);
+  TokenController.updateCreateToken(tipo, usuario, token);
   switch (tipo) {
     case "github":
       adicionaGithub(token, usuario)

@@ -88,6 +88,7 @@ function authenticateGithub(code, response) {
       })
       .then(token => {
         objRes.token = qs.parse(token).access_token;
+        console.log("objRes",objRes);
         if (objRes.token) {
           fetch("https://api.github.com/user?access_token=" + objRes.token)
             .then(getJson())
@@ -122,14 +123,16 @@ function nuevoUsuario(usuarioOauth) {
     objGithub.url = usuarioOauth.html_url;
     objGithub.github = true;
     objGithub.id_github = usuarioOauth.id;
-    console.log("--------------", usuarioOauth);
-    Usuario.create(objGithub)
+    console.log("-----usuarioOauth---------", usuarioOauth);
+    return Usuario.create(objGithub)
       .then(respUsuario => {
-        resolver(respUsuario);
+         resolver(respUsuario);
+         return;
       })
       .catch(err => {
         console.log(err);
-        rechazar(err);
+         rechazar(err);
+         return
       });
   });
 }
@@ -273,9 +276,10 @@ export function singOauthGithub(req, res) {
         //update token
         TokenController.updateCreateToken("github", user, token);
         res.json({ token: token, usuario: user });
+        return
       } else {
-        console.log("--------------", usuarioOauth);
-        nuevoUsuario(usuarioOauth, token)
+        console.log("------usuarioOauth--------", usuarioOauth);
+        return nuevoUsuario(usuarioOauth, token)
           .then(result => {
             TokenController.createToken("github", result, token);
             res.json({ usuario: result, token: token });
