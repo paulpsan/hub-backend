@@ -84,6 +84,25 @@ async function getToken(repo) {
   return token;
 }
 
+function setLenguajes(repo, token) {
+  return function(entity) {
+    return fetch(entity.lenguajes.url + "?access_token=" + token, {
+      agent,
+      strictSSL: false
+    })
+      .then(getJson())
+      .then(respuesta => {
+        console.log("lenguajes", respuesta);
+        repo.lenguajes.datos = respuesta;
+        return entity;
+      })
+      .catch(err => {
+        console.log(err);
+        return err;
+      });
+  };
+}
+
 function setCommits(repo, token) {
   return function(entity) {
     return fetch(entity.commits.url + "?access_token=" + token, {
@@ -214,7 +233,10 @@ function creaAdiciona(usuario) {
           total: 0
         },
         branches: repo.url + "/branches",
-        lenguajes: repo.languages_url,
+        lenguajes: {
+          url: repo.languages_url,
+          datos: ""
+        },
         stars: {
           url: "",
           total: repo.stargazers_count
@@ -310,8 +332,12 @@ function creaGitlab(usuario) {
           "projects/" +
           repo.id +
           "/repository/branches",
-        lenguajes:
-          config.gitlabGeo.api_url + "projects/" + repo.id + "/languages" || "",
+        lenguajes: {
+          url:
+            config.gitlabGeo.api_url + "projects/" + repo.id + "/languages" ||
+            "",
+          datos: ""
+        },
         stars: {
           url: "",
           total: repo.star_count
@@ -417,7 +443,10 @@ function creaBitbucket(usuario) {
         },
 
         branches: repo.links.branches.href,
-        lenguajes: repo.language,
+        lenguajes:{
+          url:repo.language,
+          datos:""
+        },
         stars: {
           url: "",
           total: 0
@@ -692,6 +721,7 @@ export async function setDatos(req, res) {
     }
   })
     .then(handleEntityNotFound(res))
+    .then(setLenguajes(repo, token))
     .then(setCommits(repo, token))
     .then(setIssues(repo, token))
     .then(setForks(repo, token))

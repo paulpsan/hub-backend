@@ -203,6 +203,35 @@ function authenticateBitbucket(code, response) {
     );
   });
 }
+export function singOauthBitbucket(req, res) {
+  let usuarioOauth = req.body.usuarioOauth;
+  let token = req.body.token;
+  Usuario.findOne({
+    where: {
+      id_bitbucket: usuarioOauth.account_id
+    }
+  })
+    .then(user => {
+      if (user !== null) {
+        //eliminar password
+        TokenController.updateCreateToken("bitbucket", result, token);
+        res.json({ token: token, usuario: user });
+      } else {
+        nuevoUsuario(usuarioOauth, token)
+          .then(result => {
+            TokenController.createToken("bitbucket", result, token);
+            res.json({ usuario: result, token: token });
+          })
+          .catch(err => {
+            res.send(err);
+          });
+      }
+    })
+    .catch(err => {
+      console.log(err);
+      res.send(err);
+    });
+}
 
 export function authBitbucket(req, res) {
   authenticateBitbucket(req.params.code, res)
@@ -215,6 +244,48 @@ export function authBitbucket(req, res) {
       }
     )
     .catch(err => {
+      res.send(err);
+    });
+}
+
+function refreshToken(code, usuario) {
+  return new Promise((resolver, rechazar) => {
+    request.post(
+      `https://bitbucket.org/site/oauth2/access_token`,
+      {
+        auth: {
+          username: config.bitbucket.clientId,
+          password: config.bitbucket.clientSecret
+        },
+        form: {
+          grant_type: "authorization_code",
+          code: code,
+          redirect_uri: config.bitbucket.callback
+        }
+      },
+      (err, resp, body) => {
+        const data = JSON.parse(body);
+        let token = data.access_token;
+        TokenController.updateCreateToken("bitbucket", usuario, token);
+        resolver(token);
+      }
+    );
+  });
+}
+
+export function refreshBitbucket(req, res) {
+  refreshToken(req.body.code, req.body.usuario)
+    .then(
+      token => {
+        res.json({ token, usuario: req.body.usuario });
+      },
+      error => {
+        console.log("error", error);
+        res.send(error);
+      }
+    )
+    .catch(err => {
+      console.log("err:", err);
       res.send(err);
     });
 }
@@ -264,36 +335,6 @@ function nuevoUsuario(usuarioOauth, token) {
         rechazar(err);
       });
   });
-}
-
-export function singOauthBitbucket(req, res) {
-  let usuarioOauth = req.body.usuarioOauth;
-  let token = req.body.token;
-  Usuario.findOne({
-    where: {
-      id_bitbucket: usuarioOauth.account_id
-    }
-  })
-    .then(user => {
-      if (user !== null) {
-        //eliminar password
-        TokenController.updateCreateToken("bitbucket", result, token);
-        res.json({ token: token, usuario: user });
-      } else {
-        nuevoUsuario(usuarioOauth, token)
-          .then(result => {
-            TokenController.createToken("bitbucket", result, token);
-            res.json({ usuario: result, token: token });
-          })
-          .catch(err => {
-            res.send(err);
-          });
-      }
-    })
-    .catch(err => {
-      console.log(err);
-      res.send(err);
-    });
 }
 
 export function datosBitbucket(req, res) {

@@ -15,6 +15,12 @@ router.get("/gitlab/:code", controllerGitLab.authGitlab);
 
 router.get("/bitbucket/:code", controllerBitbucket.authBitbucket);
 
+router.post("/refresh/github", controllerGithub.refreshGithub);
+
+router.post("/refresh/gitlab", controllerGitLab.refreshGitlab);
+
+router.post("/refresh/bitbucket", controllerBitbucket.refreshBitbucket);
+
 router.use("/local", (req, res, next) => {
    
   require("../auth/local/passport").setup(Usuario);

@@ -171,6 +171,52 @@ export function authGitlab(req, res) {
     });
 }
 
+function refreshGitlab(code, usuario) {
+  return new Promise((resolver, rechazar) => {
+    require("ssl-root-cas").inject();
+    let data = qs.stringify({
+      client_id: config.gitlabGeo.clientId,
+      client_secret: config.gitlabGeo.clientSecret,
+      code: code,
+      grant_type: "authorization_code",
+      redirect_uri: config.gitlabGeo.callback
+    });
+    fetch("https://gitlab.geo.gob.bo/oauth/token", {
+      // fetch("https://gitlab.com/oauth/token", {
+      method: "POST",
+      agent,
+      strictSSL: false,
+      body: data
+    })
+      .then(getJson())
+      .then(resp => {
+        let token = resp.access_token;
+        TokenController.updateCreateToken("gitlab", usuario, token);
+        resolver(token);
+      })
+      .catch(err => {
+        rechazar(err);
+      });
+  });
+}
+
+export function refreshGitlab(req, res) {
+  refreshToken(req.body.code, req.body.usuario)
+    .then(
+      token => {
+        res.json({ token, usuario: req.body.usuario });
+      },
+      error => {
+        console.log("error", error);
+        res.send(error);
+      }
+    )
+    .catch(err => {
+      console.log("err:", err);
+      res.send(err);
+    });
+}
+
 export function getMembers(req, res) {
   const agent = new https.Agent({
     rejectUnauthorized: false

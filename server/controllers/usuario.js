@@ -28,227 +28,227 @@ function getJson() {
   };
 }
 
-function generaCommitsGitlab(res) {
-  return function(entity) {
-    let nombreRepo = [];
-    let barChartData = [];
-    let commitsArray = [];
-    let años = [];
-    let datosArray = [];
-    for (const repositorio of entity.datos) {
-      nombreRepo.push(repositorio.repo.name);
-      let añoCommit = [];
+// function generaCommitsGitlab(res) {
+//   return function(entity) {
+//     let nombreRepo = [];
+//     let barChartData = [];
+//     let commitsArray = [];
+//     let años = [];
+//     let datosArray = [];
+//     for (const repositorio of entity.datos) {
+//       nombreRepo.push(repositorio.repo.name);
+//       let añoCommit = [];
 
-      let año = 0;
-      let commitTotal = 1;
-      let sw = true;
+//       let año = 0;
+//       let commitTotal = 1;
+//       let sw = true;
 
-      for (const commits of repositorio.commits) {
-        let fecha = new Date(commits.committed_date);
-        if (año != fecha.getFullYear() && sw) {
-          año = fecha.getFullYear();
-          sw = false;
-        } else {
-          if (año == fecha.getFullYear()) {
-            commitTotal++;
-          } else {
-            añoCommit.push({
-              año: año,
-              commit: commitTotal,
-              nombre: repositorio.repo.name
-            });
-            datosArray.push(añoCommit);
-            año = fecha.getFullYear();
-            commitTotal = 1;
-          }
-        }
-        años.push(fecha.getFullYear());
-      }
-      if (commitTotal != 0) {
-        añoCommit.push({
-          año: año,
-          commit: commitTotal,
-          nombre: repositorio.repo.name
-        });
-        datosArray.push(añoCommit);
-      }
-    }
-    años = _.uniq(años);
-    //ordena ascendentemente
-    años = _.orderBy(años, o => {
-      return o * -1;
-    });
-    datosArray = _.uniqWith(datosArray, _.isEqual);
-    for (const datos of datosArray) {
-      let dataCommit = [];
-      let i = 0;
-      for (let index = 0; index < años.length; index++) {
-        if (años[index] != datos[i].año) {
-          dataCommit.push(0);
-        } else {
-          dataCommit.push(datos[i].commit);
-          if (i < datos.length - 1) {
-            i++;
-          }
-        }
-      }
-      barChartData.push({
-        data: dataCommit,
-        label: datos[0].nombre
-      });
-    }
-    años.reverse();
-    return res.status(200).json({ barChartData, años });
-  };
-}
+//       for (const commits of repositorio.commits) {
+//         let fecha = new Date(commits.committed_date);
+//         if (año != fecha.getFullYear() && sw) {
+//           año = fecha.getFullYear();
+//           sw = false;
+//         } else {
+//           if (año == fecha.getFullYear()) {
+//             commitTotal++;
+//           } else {
+//             añoCommit.push({
+//               año: año,
+//               commit: commitTotal,
+//               nombre: repositorio.repo.name
+//             });
+//             datosArray.push(añoCommit);
+//             año = fecha.getFullYear();
+//             commitTotal = 1;
+//           }
+//         }
+//         años.push(fecha.getFullYear());
+//       }
+//       if (commitTotal != 0) {
+//         añoCommit.push({
+//           año: año,
+//           commit: commitTotal,
+//           nombre: repositorio.repo.name
+//         });
+//         datosArray.push(añoCommit);
+//       }
+//     }
+//     años = _.uniq(años);
+//     //ordena ascendentemente
+//     años = _.orderBy(años, o => {
+//       return o * -1;
+//     });
+//     datosArray = _.uniqWith(datosArray, _.isEqual);
+//     for (const datos of datosArray) {
+//       let dataCommit = [];
+//       let i = 0;
+//       for (let index = 0; index < años.length; index++) {
+//         if (años[index] != datos[i].año) {
+//           dataCommit.push(0);
+//         } else {
+//           dataCommit.push(datos[i].commit);
+//           if (i < datos.length - 1) {
+//             i++;
+//           }
+//         }
+//       }
+//       barChartData.push({
+//         data: dataCommit,
+//         label: datos[0].nombre
+//       });
+//     }
+//     años.reverse();
+//     return res.status(200).json({ barChartData, años });
+//   };
+// }
 
-function generaCommits(res) {
-  return function(entity) {
-    let nombreRepo = [];
-    let barChartData = [];
-    let commitsArray = [];
-    let años = [];
-    let datosArray = [];
-    for (const repositorio of entity.datos) {
-      nombreRepo.push(repositorio.repo.name);
-      let añoCommit = [];
+// function generaCommits(res) {
+//   return function(entity) {
+//     let nombreRepo = [];
+//     let barChartData = [];
+//     let commitsArray = [];
+//     let años = [];
+//     let datosArray = [];
+//     for (const repositorio of entity.datos) {
+//       nombreRepo.push(repositorio.repo.name);
+//       let añoCommit = [];
 
-      let año = 0;
-      let commitTotal = 1;
-      let sw = true;
+//       let año = 0;
+//       let commitTotal = 1;
+//       let sw = true;
 
-      for (const commits of repositorio.commits) {
-        let fecha = new Date(commits.commit.author.date);
-        if (año != fecha.getFullYear() && sw) {
-          año = fecha.getFullYear();
-          sw = false;
-          // console.log("entro", año);
-        } else {
-          if (año == fecha.getFullYear()) {
-            commitTotal++;
-          } else {
-            añoCommit.push({
-              año: año,
-              commit: commitTotal,
-              nombre: repositorio.repo.name
-            });
-            datosArray.push(añoCommit);
-            año = fecha.getFullYear();
-            commitTotal = 1;
-          }
-        }
-        años.push(fecha.getFullYear());
-      }
-      if (commitTotal != 0) {
-        añoCommit.push({
-          año: año,
-          commit: commitTotal,
-          nombre: repositorio.repo.name
-        });
-        datosArray.push(añoCommit);
-      }
-    }
-    años = _.uniq(años);
-    //ordena ascendentemente
-    años = _.orderBy(años, o => {
-      return o * -1;
-    });
-    datosArray = _.uniqWith(datosArray, _.isEqual);
-    for (const datos of datosArray) {
-      let dataCommit = [];
-      let i = 0;
-      for (let index = 0; index < años.length; index++) {
-        if (años[index] != datos[i].año) {
-          dataCommit.push(0);
-        } else {
-          dataCommit.push(datos[i].commit);
-          if (i < datos.length - 1) {
-            i++;
-          }
-        }
-      }
-      barChartData.push({
-        data: dataCommit,
-        label: datos[0].nombre
-      });
-    }
-    años.reverse();
-    return res.status(200).json({ barChartData, años });
-  };
-}
-function generaDatos(res) {
-  return function(entity) {
-    // console.log("dd:", entity);
-    let nombreRepo = [];
-    let barChartData = [];
-    let commitsArray = [];
-    let años = [];
-    let datosArray = [];
-    for (const repositorio of entity.datos) {
-      nombreRepo.push(repositorio.repo.name);
-      let añoCommit = [];
+//       for (const commits of repositorio.commits) {
+//         let fecha = new Date(commits.commit.author.date);
+//         if (año != fecha.getFullYear() && sw) {
+//           año = fecha.getFullYear();
+//           sw = false;
+//           // console.log("entro", año);
+//         } else {
+//           if (año == fecha.getFullYear()) {
+//             commitTotal++;
+//           } else {
+//             añoCommit.push({
+//               año: año,
+//               commit: commitTotal,
+//               nombre: repositorio.repo.name
+//             });
+//             datosArray.push(añoCommit);
+//             año = fecha.getFullYear();
+//             commitTotal = 1;
+//           }
+//         }
+//         años.push(fecha.getFullYear());
+//       }
+//       if (commitTotal != 0) {
+//         añoCommit.push({
+//           año: año,
+//           commit: commitTotal,
+//           nombre: repositorio.repo.name
+//         });
+//         datosArray.push(añoCommit);
+//       }
+//     }
+//     años = _.uniq(años);
+//     //ordena ascendentemente
+//     años = _.orderBy(años, o => {
+//       return o * -1;
+//     });
+//     datosArray = _.uniqWith(datosArray, _.isEqual);
+//     for (const datos of datosArray) {
+//       let dataCommit = [];
+//       let i = 0;
+//       for (let index = 0; index < años.length; index++) {
+//         if (años[index] != datos[i].año) {
+//           dataCommit.push(0);
+//         } else {
+//           dataCommit.push(datos[i].commit);
+//           if (i < datos.length - 1) {
+//             i++;
+//           }
+//         }
+//       }
+//       barChartData.push({
+//         data: dataCommit,
+//         label: datos[0].nombre
+//       });
+//     }
+//     años.reverse();
+//     return res.status(200).json({ barChartData, años });
+//   };
+// }
+// function generaDatos(res) {
+//   return function(entity) {
+//     // console.log("dd:", entity);
+//     let nombreRepo = [];
+//     let barChartData = [];
+//     let commitsArray = [];
+//     let años = [];
+//     let datosArray = [];
+//     for (const repositorio of entity.datos) {
+//       nombreRepo.push(repositorio.repo.name);
+//       let añoCommit = [];
 
-      let año = 0;
-      let commitTotal = 0;
-      let sw = true;
+//       let año = 0;
+//       let commitTotal = 0;
+//       let sw = true;
 
-      for (const commits of repositorio.commits) {
-        let fecha = new Date(commits.commit.author.date);
-        if (año != fecha.getFullYear() && sw) {
-          año = fecha.getFullYear();
-          sw = false;
-          // console.log("entro", año);
-        }
-        if (año == fecha.getFullYear()) {
-          commitTotal++;
-        } else {
-          añoCommit.push({
-            año: año,
-            commit: commitTotal,
-            nombre: repositorio.repo.name
-          });
-          datosArray.push(añoCommit);
-          año = fecha.getFullYear();
-          commitTotal = 0;
-        }
-        años.push(fecha.getFullYear());
-      }
-      if (commitTotal != 0) {
-        añoCommit.push({
-          año: año,
-          commit: commitTotal,
-          nombre: repositorio.repo.name
-        });
-        datosArray.push(añoCommit);
-      }
-    }
-    años = _.uniq(años);
-    //ordena ascendentemente
-    años = _.orderBy(años, o => {
-      return o * -1;
-    });
-    datosArray = _.uniqWith(datosArray, _.isEqual);
-    for (const datos of datosArray) {
-      let dataCommit = [];
-      let i = 0;
-      for (let index = 0; index < años.length; index++) {
-        if (años[index] != datos[i].año) {
-          dataCommit.push(0);
-        } else {
-          dataCommit.push(datos[i].commit);
-          if (i < datos.length - 1) {
-            i++;
-          }
-        }
-      }
-      barChartData.push({
-        data: dataCommit,
-        label: datos[0].nombre
-      });
-    }
-    return res.status(200).json(barChartData);
-  };
-}
+//       for (const commits of repositorio.commits) {
+//         let fecha = new Date(commits.commit.author.date);
+//         if (año != fecha.getFullYear() && sw) {
+//           año = fecha.getFullYear();
+//           sw = false;
+//           // console.log("entro", año);
+//         }
+//         if (año == fecha.getFullYear()) {
+//           commitTotal++;
+//         } else {
+//           añoCommit.push({
+//             año: año,
+//             commit: commitTotal,
+//             nombre: repositorio.repo.name
+//           });
+//           datosArray.push(añoCommit);
+//           año = fecha.getFullYear();
+//           commitTotal = 0;
+//         }
+//         años.push(fecha.getFullYear());
+//       }
+//       if (commitTotal != 0) {
+//         añoCommit.push({
+//           año: año,
+//           commit: commitTotal,
+//           nombre: repositorio.repo.name
+//         });
+//         datosArray.push(añoCommit);
+//       }
+//     }
+//     años = _.uniq(años);
+//     //ordena ascendentemente
+//     años = _.orderBy(años, o => {
+//       return o * -1;
+//     });
+//     datosArray = _.uniqWith(datosArray, _.isEqual);
+//     for (const datos of datosArray) {
+//       let dataCommit = [];
+//       let i = 0;
+//       for (let index = 0; index < años.length; index++) {
+//         if (años[index] != datos[i].año) {
+//           dataCommit.push(0);
+//         } else {
+//           dataCommit.push(datos[i].commit);
+//           if (i < datos.length - 1) {
+//             i++;
+//           }
+//         }
+//       }
+//       barChartData.push({
+//         data: dataCommit,
+//         label: datos[0].nombre
+//       });
+//     }
+//     return res.status(200).json(barChartData);
+//   };
+// }
 
 function respondWithResult(res, statusCode) {
   statusCode = statusCode || 200;
@@ -505,4 +505,32 @@ export function commitsGitlab(req, res) {
   })
     .then(generaCommitsGitlab(res))
     .catch(handleError(res));
+}
+function getToken(params, usuario) {
+  return new Promise((resolver, rechazar) => {
+    switch (params.state) {
+      case "github":
+        let data = qs.stringify({
+          client_id: config.github.clientId,
+          client_secret: config.github.clientSecret,
+          code: code
+        });
+        break;
+      case "gitlab":
+        break;
+      case "bitbucket":
+        break;
+      default:
+        break;
+    }
+  });
+}
+export function refreshToken(req, res) {
+  getToken(req.params.params, req.params.usuario)
+    .then(result => {
+      res.send("exito!!");
+    })
+    .catch(err => {
+      res.send(err);
+    });
 }
