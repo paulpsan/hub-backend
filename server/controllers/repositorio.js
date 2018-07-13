@@ -86,20 +86,27 @@ async function getToken(repo) {
 
 function setLenguajes(repo, token) {
   return function(entity) {
-    return fetch(entity.lenguajes.url + "?access_token=" + token, {
-      agent,
-      strictSSL: false
-    })
-      .then(getJson())
-      .then(respuesta => {
-        console.log("lenguajes", respuesta);
-        repo.lenguajes.datos = respuesta;
-        return entity;
+    if (entity.lenguajes.url !== "") {
+      return fetch(entity.lenguajes.url + "?access_token=" + token, {
+        agent,
+        strictSSL: false
       })
-      .catch(err => {
-        console.log(err);
-        return err;
-      });
+        .then(getJson())
+        .then(respuesta => {
+          console.log("lenguajes", respuesta);
+          if (Array.isArray(respuesta)) {
+            repo.lenguajes.datos = respuesta;
+          } else {
+            repo.lenguajes.datos = !respuesta.error ? respuesta : "";
+          }
+          return entity;
+        })
+        .catch(err => {
+          console.log(err);
+          return err;
+        });
+    }
+    return entity;
   };
 }
 
@@ -112,7 +119,11 @@ function setCommits(repo, token) {
       .then(getJson())
       .then(respuesta => {
         console.log("commits", respuesta);
-        repo.commits.total = respuesta.length;
+        if (Array.isArray(respuesta)) {
+          repo.commits.total = respuesta.length;
+        } else {
+          repo.commits.total = !respuesta.error ? respuesta.values.length : 0;
+        }
         return entity;
       })
       .catch(err => {
@@ -130,9 +141,12 @@ function setIssues(repo, token) {
     })
       .then(getJson())
       .then(respuesta => {
+        if (Array.isArray(respuesta)) {
+          repo.issues.total = respuesta.length;
+        } else {
+          repo.issues.total = !respuesta.error ? respuesta.values.length : 0;
+        }
         console.log("issues", respuesta);
-
-        repo.issues.total = respuesta.length;
         return entity;
       })
       .catch(err => {
@@ -151,8 +165,10 @@ function setForks(repo, token) {
         .then(getJson())
         .then(respuesta => {
           console.log("forks", respuesta);
-          if (!respuesta.error) {
+          if (Array.isArray(respuesta)) {
             repo.forks.total = respuesta.length;
+          } else {
+            repo.forks.total = !respuesta.error ? respuesta.values.length : 0;
           }
           return entity;
         })
@@ -196,8 +212,13 @@ function setDownloads(repo, token) {
         .then(getJson())
         .then(respuesta => {
           console.log("downloads", respuesta);
-
-          repo.downloads.total = respuesta.length;
+          if (Array.isArray(respuesta)) {
+            repo.downloads.total = respuesta.length;
+          } else {
+            repo.downloads.total = !respuesta.error
+              ? respuesta.values.length
+              : 0;
+          }
           return entity;
         })
         .catch(err => {
@@ -443,9 +464,9 @@ function creaBitbucket(usuario) {
         },
 
         branches: repo.links.branches.href,
-        lenguajes:{
-          url:repo.language,
-          datos:""
+        lenguajes: {
+          url: "",
+          datos: repo.language
         },
         stars: {
           url: "",

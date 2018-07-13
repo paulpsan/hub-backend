@@ -18,7 +18,20 @@ import { Sequelize } from "sequelize";
 import _ from "lodash";
 
 var fetch = require("node-fetch");
-
+var meses = [
+  "enero",
+  "febrero",
+  "marzo",
+  "abril",
+  "mayo",
+  "junio",
+  "julio",
+  "agosto",
+  "septiembre",
+  "octubre",
+  "noviembre",
+  "diciembre"
+];
 const agent = new https.Agent({
   rejectUnauthorized: false
 });
@@ -181,8 +194,6 @@ export async function create(req, res) {
   let url = req.body.commits.url;
   let tipo = req.body.tipo;
   let token = await getToken(repo);
-
-  console.log("*****token commit *****", token);
   switch (tipo) {
     case "github":
       fetch(url + "?access_token=" + token, {
@@ -250,7 +261,6 @@ export async function create(req, res) {
         .end();
       break;
   }
-  // console.log("comm", commits);
 }
 
 // Upserts the given Commit in the DB at the specified ID
@@ -267,17 +277,6 @@ export function upsert(req, res) {
     .then(respondWithResult(res))
     .catch(handleError(res));
 }
-function updateCommit(object) {
-  return Commit.find({
-    where: {
-      _id: object._id
-    }
-  })
-    .then(saveUpdates(object))
-    .catch(err => {
-      console.log(err);
-    });
-}
 
 // Updates an existing Commit in the DB
 export function patch(req, res) {
@@ -290,18 +289,6 @@ export function patch(req, res) {
     .then(saveUpdates(req.body))
     .then(respondWithResult(res))
     .catch(handleError(res));
-
-  // .then(commits => {
-  //   if (updateCommits(commits)) {
-  //     res.json({ respuesta: "Se actualizaron correctamente!" });
-  //   } else {
-  //     res
-  //       .status(500)
-  //       .json({ error: "Problema en actualizacion" })
-  //       .end();
-  //   }
-  // })
-  // .catch(handleError(res));
 }
 
 // Deletes a Commit from the DB
@@ -351,16 +338,18 @@ export function graficaCommits(req, res) {
         }
       }
       años = _.sortBy(años);
+
       for (const año of años) {
         let contador = 0;
         for (const commit of commits) {
           fecha = new Date(commit.fecha);
-          if (año === fecha.getFullYear()) {
+          if (año === fecha.getMonth()) {
             contador += 1;
           }
         }
         datosArray.push(contador);
       }
+
       barChartData.push({
         data: datosArray,
         label: "Commits"

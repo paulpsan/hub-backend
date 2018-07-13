@@ -59,6 +59,7 @@ function setCommits(proyecto) {
           proyecto.fechaCreacion = commits[commits.length - 1].fecha;
           proyecto.ultimaActividad = commits[0].fecha;
           proyecto.commits = commits;
+          //carga los usuarios que hicieron commits
           let usuarios = [];
           for (const commit of commits) {
             usuarios.push(commit.autor);
