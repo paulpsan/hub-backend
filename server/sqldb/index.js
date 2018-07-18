@@ -8,6 +8,7 @@ let db = {
 };
 db.Usuario = db.sequelize.import("../models/usuario");
 db.Commit = db.sequelize.import("../models/commit");
+db.Rating = db.sequelize.import("../models/rating");
 db.Token = db.sequelize.import("../models/token");
 db.Repositorio = db.sequelize.import("../models/repositorio");
 db.Proyecto = db.sequelize.import("../models/proyecto");

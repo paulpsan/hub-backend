@@ -167,7 +167,9 @@ async function addCommitsBitbucket(commits, repo) {
 }
 
 export function index(req, res) {
-  return Commit.findAll()
+  return Commit.findAll({
+    order: [["fecha", "desc"]]
+  })
     .then(respondWithResult(res))
     .catch(handleError(res));
 }
@@ -321,14 +323,50 @@ export function graficaCommits(req, res) {
     where: {
       id_usuario: req.params.id,
       estado: true
-    }
+    },
+    order: [["fecha", "asc"]]
   })
     .then(response => {
       let barChartData = [];
       let años = [];
       let datosArray = [];
+      let datosMes = [];
       let commits = response;
       let fecha;
+      let count_month = 0;
+      let dateAux;
+      for (const key in commits) {
+        fecha = new Date(commits[key].fecha);
+        console.log(fecha);
+        if (key == 0) {
+          dateAux = new Date(fecha);
+        }
+        if (
+          fecha.getMonth() === dateAux.getMonth() &&
+          fecha.getFullYear() === dateAux.getFullYear()
+        ) {
+          count_month++;
+          // console.log(fecha, meses[fecha.getMonth()]);
+        } else {
+          datosMes.push({
+            año: dateAux.getFullYear(),
+            mes: meses[dateAux.getMonth()],
+            date: new Date(dateAux.getFullYear(), dateAux.getMonth()),
+            total: count_month
+          });
+          count_month = 1;
+          dateAux = new Date(fecha);
+        }
+      }
+      datosMes.push({
+        año: dateAux.getFullYear(),
+        mes: meses[dateAux.getMonth()],
+        date: new Date(dateAux.getFullYear(), dateAux.getMonth()),
+        total: count_month
+      });
+      // datosMes = datosMes.reverse();
+      console.log("+++++", datosMes);
+
       for (const commit of commits) {
         if (commit.estado) {
           fecha = new Date(commit.fecha);
@@ -338,23 +376,106 @@ export function graficaCommits(req, res) {
         }
       }
       años = _.sortBy(años);
-
       for (const año of años) {
-        let contador = 0;
+        let count_year = 0;
         for (const commit of commits) {
           fecha = new Date(commit.fecha);
-          if (año === fecha.getMonth()) {
-            contador += 1;
+          if (año === fecha.getFullYear()) {
+            count_year += 1;
           }
         }
-        datosArray.push(contador);
+        datosArray.push(count_year);
       }
 
       barChartData.push({
         data: datosArray,
         label: "Commits"
       });
-      return res.status(200).json({ barChartData, años });
+      return res
+        .status(200)
+        .json({ años: { barChartData, años }, mes: datosMes });
+    })
+    .catch(err => {
+      console.log(err);
+    });
+}
+
+export function graficaRepositorio(req, res) {
+  return Commit.findAll({
+    where: {
+      fk_repositorio: req.params.id,
+      estado: true
+    },
+    order: [["fecha", "asc"]]
+  })
+    .then(response => {
+      let barChartData = [];
+      let años = [];
+      let datosArray = [];
+      let datosMes = [];
+      let commits = response;
+      let fecha;
+      let count_month = 0;
+      let dateAux;
+      for (const key in commits) {
+        fecha = new Date(commits[key].fecha);
+        console.log(fecha);
+        if (key == 0) {
+          dateAux = new Date(fecha);
+        }
+        if (
+          fecha.getMonth() === dateAux.getMonth() &&
+          fecha.getFullYear() === dateAux.getFullYear()
+        ) {
+          count_month++;
+          // console.log(fecha, meses[fecha.getMonth()]);
+        } else {
+          datosMes.push({
+            año: dateAux.getFullYear(),
+            mes: meses[dateAux.getMonth()],
+            date: new Date(dateAux.getFullYear(), dateAux.getMonth()),
+            total: count_month
+          });
+          count_month = 1;
+          dateAux = new Date(fecha);
+        }
+      }
+      datosMes.push({
+        año: dateAux.getFullYear(),
+        mes: meses[dateAux.getMonth()],
+        date: new Date(dateAux.getFullYear(), dateAux.getMonth()),
+        total: count_month
+      });
+      // datosMes = datosMes.reverse();
+      console.log("+++++", datosMes);
+
+      for (const commit of commits) {
+        if (commit.estado) {
+          fecha = new Date(commit.fecha);
+          if (años.indexOf(fecha.getFullYear()) < 0) {
+            años.push(fecha.getFullYear());
+          }
+        }
+      }
+      años = _.sortBy(años);
+      for (const año of años) {
+        let count_year = 0;
+        for (const commit of commits) {
+          fecha = new Date(commit.fecha);
+          if (año === fecha.getFullYear()) {
+            count_year += 1;
+          }
+        }
+        datosArray.push(count_year);
+      }
+
+      barChartData.push({
+        data: datosArray,
+        label: "Commits"
+      });
+      return res
+        .status(200)
+        .json({ años: { barChartData, años }, mes: datosMes });
     })
     .catch(err => {
       console.log(err);

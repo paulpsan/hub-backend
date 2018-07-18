@@ -2,7 +2,7 @@
 
 export default function(sequelize, DataTypes) {
   return sequelize.define(
-    "RatingProyectos",
+    "Rating",
     {
       _id: {
         type: DataTypes.INTEGER,
@@ -16,7 +16,7 @@ export default function(sequelize, DataTypes) {
       votaciones: DataTypes.INTEGER
     },
     {
-      tableName: "rating_proyecto",
+      tableName: "rating",
       createdAt: "fecha_creacion",
       updatedAt: "fecha_modificacion"
     }
