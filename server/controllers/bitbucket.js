@@ -1,7 +1,7 @@
 "use strict";
 
-import { Usuario } from "../sqldb";
-import { Repositorio } from "../sqldb";
+import { Usuario, Repositorio } from "../sqldb";
+import Sequelize from "sequelize";
 import TokenController from "./token";
 import config from "../config/environment";
 import request from "request";
@@ -203,6 +203,45 @@ function authenticateBitbucket(code, response) {
     );
   });
 }
+function createUpdateUser() {
+  return function(response) {
+    console.log("response",response);
+    let usuarioOauth = response.usuario;
+    let token = response.token;
+    //obtener email
+    const Op = Sequelize.Op;
+    return Usuario.findOne({
+      where: {
+        id_bitbucket: usuarioOauth.account_id
+      }
+    })
+      .then(user => {
+        if (user !== null) {
+          //eliminar password
+          TokenController.updateCreateToken("bitbucket", result, token);
+          user.bitbucket = true;
+          user.id_bitbucket = usuarioOauth.account_id;
+          user.save();
+          return user;
+        } else {
+         return nuevoUsuario(usuarioOauth, token)
+            .then(user => {
+              TokenController.createToken("bitbucket", user, token);
+              return user;
+            })
+            .catch(err => {
+              console.log(err);
+              return err;
+            });
+        }
+      })
+      .catch(err => {
+        console.log(err);
+        return err;
+      });
+  };
+}
+
 export function singOauthBitbucket(req, res) {
   let usuarioOauth = req.body.usuarioOauth;
   let token = req.body.token;
@@ -217,7 +256,7 @@ export function singOauthBitbucket(req, res) {
         TokenController.updateCreateToken("bitbucket", result, token);
         res.json({ token: token, usuario: user });
       } else {
-        nuevoUsuario(usuarioOauth, token)
+        return nuevoUsuario(usuarioOauth, token)
           .then(result => {
             TokenController.createToken("bitbucket", result, token);
             res.json({ usuario: result, token: token });
@@ -233,7 +272,18 @@ export function singOauthBitbucket(req, res) {
     });
 }
 
-export function authBitbucket(req, res) {
+export function authLoginBitbucket(req, res) {
+  authenticateBitbucket(req.params.code, res)
+    .then(createUpdateUser())
+    .then(result => {
+      res.json({ usuario: result });
+    })
+    .catch(err => {
+      res.send(err);
+    });
+}
+
+export function authAddBitbucket(req, res) {
   authenticateBitbucket(req.params.code, res)
     .then(
       result => {
@@ -321,7 +371,6 @@ function nuevoUsuario(usuarioOauth, token) {
     fetch("https://api.bitbucket.org/2.0/user/emails?access_token=" + token)
       .then(getJson())
       .then(result => {
-        console.log(result);
         objBitbucket.email = result.values[0].email;
         Usuario.create(objBitbucket)
           .then(respUsuario => {

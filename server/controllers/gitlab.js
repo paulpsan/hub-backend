@@ -98,23 +98,44 @@ function nuevoUsuario(usuarioOauth) {
       });
   });
 }
-function actualizaUsuario(user, usuarioOauth) {
-  return new Promise((resolver, rechazar) => {
-    let objGitlab = {};
-    objGitlab.login = usuarioOauth.login;
-    objGitlab.avatar = usuarioOauth.avatar_url;
-    objGitlab.url = usuarioOauth.html_url;
-    objGitlab.gitlab = true;
-    objGitlab.id_gitlab = usuarioOauth.id;
-    user
-      .update(objGitlab)
-      .then(respUsuario => {
-        resolver(respUsuario);
+
+function createUpdateUser() {
+  return function(response) {
+    console.log(response);
+    let usuarioOauth = response.usuario;
+    let token = response.token;
+    const Op = Sequelize.Op;
+    return Usuario.findOne({
+      where: {
+        [Op.or]: [{ id_gitlab: usuarioOauth.id }, { email: usuarioOauth.email }]
+      }
+    })
+      .then(user => {
+        console.log(user);
+        if (user !== null) {
+          TokenController.updateCreateToken("gitlab", user, token);
+          //actualizar usuario
+          user.gitlab = true;
+          user.id_gitlab = usuarioOauth.id;
+          user.save();
+          return user;
+        } else {
+          return nuevoUsuario(usuarioOauth, token)
+            .then(user => {
+              TokenController.createToken("gitlab", user, token);
+              return user;
+            })
+            .catch(err => {
+              console.log(err);
+              return err;
+            });
+        }
       })
       .catch(err => {
-        rechazar(err);
+        console.log(err);
+        return err;
       });
-  });
+  };
 }
 
 export function singOauthGitlab(req, res) {
@@ -156,16 +177,23 @@ export function singOauthGitlab(req, res) {
     });
 }
 
-export function authGitlab(req, res) {
+export function authLoginGitlab(req, res) {
   authenticateGitlab(req.params.code)
-    .then(
-      result => {
-        res.json(result);
-      },
-      error => {
-        res.send(error);
-      }
-    )
+    .then(createUpdateUser())
+    .then(result => {
+      res.json({ usuario: result });
+    })
+    .catch(err => {
+      res.send(err);
+    });
+}
+
+export function authAddGitlab(req, res) {
+  authenticateGitlab(req.params.code)
+    .then(createUpdateUser())
+    .then(result => {
+      res.json({ usuario: result });
+    })
     .catch(err => {
       res.send(err);
     });

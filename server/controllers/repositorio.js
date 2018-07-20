@@ -39,7 +39,7 @@ function respondWithResult(res, statusCode) {
 }
 function saveUpdates(updates) {
   return function(entity) {
-    // console.log("--------", entity, updates);
+    console.log("--------", entity, updates);
     return entity
       .updateAttributes(updates)
       .then(updated => {
@@ -78,14 +78,14 @@ function handleError(res, statusCode) {
     res.status(statusCode).send(err);
   };
 }
-
-async function getToken(repo) {
-  let token = await TokenController.getToken(repo.tipo, repo.fk_usuario);
+async function getToken(tipo,id) {
+  let token = await TokenController.getToken(tipo, id);
   return token;
 }
 
 function setLenguajes(repo, token) {
   return function(entity) {
+    console.log("agent______", agent);
     if (entity.lenguajes.url !== "") {
       return fetch(entity.lenguajes.url + "?access_token=" + token, {
         agent,
@@ -118,7 +118,7 @@ function setCommits(repo, token) {
     })
       .then(getJson())
       .then(respuesta => {
-        console.log("commits", respuesta);
+        // console.log("commits", respuesta);
         if (Array.isArray(respuesta)) {
           repo.commits.total = respuesta.length;
         } else {
@@ -127,7 +127,7 @@ function setCommits(repo, token) {
         return entity;
       })
       .catch(err => {
-        console.log(err);
+        console.log("errr*****", err);
         return err;
       });
   };
@@ -150,6 +150,8 @@ function setIssues(repo, token) {
         return entity;
       })
       .catch(err => {
+        console.log(err);
+
         return err;
       });
   };
@@ -173,6 +175,7 @@ function setForks(repo, token) {
           return entity;
         })
         .catch(err => {
+          console.log(err);
           return err;
         });
     }
@@ -195,6 +198,8 @@ function setStars(repo, token) {
           return entity;
         })
         .catch(err => {
+          console.log(err);
+
           return err;
         });
     }
@@ -222,6 +227,7 @@ function setDownloads(repo, token) {
           return entity;
         })
         .catch(err => {
+          console.log(err);
           return err;
         });
     }
@@ -581,13 +587,16 @@ export function create(req, res) {
     .then(respondWithResult(res, 201))
     .catch(handleError(res));
 }
+async function getToken(tipo,id) {
+  let token = await TokenController.getToken(tipo, id);
+  return token;
+}
 
-export function addOauth(req, res) {
+export async function addOauth(req, res) {
   let usuario = req.body.usuario;
   // let usuarioOauth = req.body.usuarioOauth;
-  let token = req.body.token;
   let tipo = req.body.tipo;
-  TokenController.updateCreateToken(tipo, usuario, token);
+  let token = await getToken(usuario.tipo,usuario._id);
   switch (tipo) {
     case "github":
       adicionaGithub(token, usuario)
@@ -734,7 +743,7 @@ export function lenguajes(req, res) {
 
 export async function setDatos(req, res) {
   let repo = req.body;
-  let token = await getToken(repo);
+  let token = await getToken(repo.tipo,repo.fk_usuario);
   console.log("****token******", repo, token);
   return Repositorio.find({
     where: {

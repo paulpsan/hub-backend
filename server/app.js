@@ -14,7 +14,7 @@ require("./config/express").default(app);
 require("./routes").default(app);
 
 sqldb.sequelize
-  .sync({ force: false })
+  .sync({ force: true })
   .then(seedDatabaseIfNeeded)
   .then(() => {
     app.listen(config.port, () => {

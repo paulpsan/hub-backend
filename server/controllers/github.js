@@ -1,7 +1,6 @@
 "use strict";
-import { Usuario } from "../sqldb";
-import { Repositorio } from "../sqldb";
-import { Commit } from "../sqldb";
+import { Usuario, Repositorio } from "../sqldb";
+import Sequelize from "sequelize";
 import TokenController from "./token";
 import config from "../config/environment";
 import qs from "querystringify";
@@ -48,7 +47,6 @@ function authenticateGithub(code, response) {
       })
       .then(token => {
         objRes.token = qs.parse(token).access_token;
-        console.log("objRes", objRes);
         if (objRes.token) {
           fetch("https://api.github.com/user?access_token=" + objRes.token)
             .then(getJson())
@@ -83,73 +81,94 @@ function nuevoUsuario(usuarioOauth) {
     objGithub.url = usuarioOauth.html_url;
     objGithub.github = true;
     objGithub.id_github = usuarioOauth.id;
-    console.log("-----usuarioOauth---------", usuarioOauth);
-    return Usuario.create(objGithub)
+    Usuario.create(objGithub)
       .then(respUsuario => {
         resolver(respUsuario);
-        return;
       })
       .catch(err => {
         console.log(err);
         rechazar(err);
-        return;
       });
   });
 }
 
-export function singOauthGithub(req, res) {
-  let usuarioOauth = req.body.usuarioOauth;
-  let token = req.body.token;
-  Usuario.findOne({
-    where: {
-      id_github: usuarioOauth.id
-    }
-  })
-    .then(user => {
-      // console.log(user);
-      if (user !== null) {
-        //eliminar password
-        //update token
-        TokenController.updateCreateToken("github", user, token);
-        res.json({ token: token, usuario: user });
-        return;
-      } else {
-        console.log("------usuarioOauth--------", usuarioOauth);
-        return nuevoUsuario(usuarioOauth, token)
-          .then(result => {
-            TokenController.createToken("github", result, token);
-            res.json({ usuario: result, token: token });
-          })
-          .catch(err => {
-            console.log(err);
-            res
-              .status(500)
-              .json(err)
-              .end();
-          });
-      }
-    })
-    .catch(err => {
-      res
-        .status(500)
-        .json(err)
-        .end();
-    });
+function actualizaUsuario(user, usuarioOauth) {
+  return new Promise((resolver, rechazar) => {
+    let objGitlab = {};
+    objGitlab.login = usuarioOauth.login;
+    objGitlab.avatar = usuarioOauth.avatar_url;
+    objGitlab.url = usuarioOauth.html_url;
+    objGitlab.gitlab = true;
+    objGitlab.id_gitlab = usuarioOauth.id;
+    user
+      .update(objGitlab)
+      .then(respUsuario => {
+        resolver(respUsuario);
+      })
+      .catch(err => {
+        rechazar(err);
+      });
+  });
 }
 
-export function authGithub(req, res) {
-  authenticateGithub(req.params.code, res)
-    .then(
-      result => {
-        res.json({ token: result.token, usuario: result.usuario });
-      },
-      error => {
-        res.send(error);
+function createUpdateUser() {
+  return function(response) {
+    let usuarioOauth = response.usuario;
+    let token = response.token;
+    const Op = Sequelize.Op;
+    return Usuario.findOne({
+      where: {
+        [Op.or]: [{ id_github: usuarioOauth.id }, { email: usuarioOauth.email }]
       }
-    )
-    .catch(err => {
-      res.send(err);
-    });
+    })
+      .then(user => {
+        console.log("object", user);
+        if (user !== null) {
+          TokenController.updateCreateToken("github", user, token);
+          //actualizar usuario
+          user.github = true;
+          user.id_github = usuarioOauth.id;
+          user.save();
+          return user;
+        } else {
+          return nuevoUsuario(usuarioOauth, token)
+            .then(user => {
+              console.log(user);
+              TokenController.createToken("github", user, token);
+              return user;
+            })
+            .catch(err => {
+              console.log(err);
+              return err;
+            });
+        }
+      })
+      .catch(err => {
+        console.log(err);
+        return err;
+      });
+  };
+}
+
+function addUser(usuario) {
+  return function(userOauth) {
+    return Usuario.findOne({
+      where: {
+        _id: usuario._id
+      }
+    })
+      .then(user => {
+        console.log("object", user);
+        user.id_github = userOauth.id;
+        user.github = true;
+        user.save();
+        return user;
+      })
+      .catch(err => {
+        console.log("err", err);
+        return err;
+      });
+  };
 }
 
 function refreshToken(code, usuario) {
@@ -176,6 +195,29 @@ function refreshToken(code, usuario) {
         rechazar(err);
       });
   });
+}
+//obtiene usuarioOauth de github
+export function authLoginGithub(req, res) {
+  authenticateGithub(req.params.code, res)
+    .then(createUpdateUser())
+    .then(result => {
+      res.json({ usuario: result });
+    })
+    .catch(err => {
+      res.send(err);
+    });
+}
+
+export function authAddGithub(req, res) {
+  let usuario = req.body.usuario;
+  authenticateGithub(req.params.code, res)
+    .then(addUser(usuario))
+    .then(result => {
+      res.json({ usuario: result });
+    })
+    .catch(err => {
+      res.send(err);
+    });
 }
 
 export function refreshGithub(req, res) {
@@ -207,7 +249,6 @@ var asyncLoop = function(o) {
   };
   loop(); //init
 };
-
 export function datosGithub(req, res) {
   let headersClient = qs.stringify(
     {

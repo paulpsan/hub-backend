@@ -44,7 +44,11 @@ export default function(sequelize, DataTypes) {
         type: DataTypes.JSONB
       },
       usuarios: {
-        type: DataTypes.JSONB
+        type: DataTypes.JSONB,
+        defaultValue: {
+          datos: [],
+          valor: 0
+        }
       },
       commits: {
         type: DataTypes.JSONB

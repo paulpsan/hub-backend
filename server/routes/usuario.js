@@ -144,12 +144,6 @@ router.post("/", autenticacion.isAuthenticated(), controller.create);
 router.post("/login", autenticacion.isAuthenticated(), controller.login);
 
 router.post(
-  "/oauth/github",
-  autenticacion.isAuthenticated(),
-  controllerGithub.singOauthGithub
-);
-
-router.post(
   "/oauth/gitlab",
   autenticacion.isAuthenticated(),
   controllerGitLab.singOauthGitlab

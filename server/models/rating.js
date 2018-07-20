@@ -10,9 +10,11 @@ export default function(sequelize, DataTypes) {
         primaryKey: true,
         autoIncrement: true
       },
+      downloads: DataTypes.INTEGER,
       issues: DataTypes.INTEGER,
       stars: DataTypes.INTEGER,
       forks: DataTypes.INTEGER,
+      commits: DataTypes.INTEGER,
       votaciones: DataTypes.INTEGER
     },
     {
