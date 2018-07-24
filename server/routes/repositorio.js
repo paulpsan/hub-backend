@@ -66,7 +66,6 @@ var router = express.Router();
 */
 router.get("/", generarOpciones, controller.index);
 router.get("/:id/usuarios", generarOpciones, controller.indexUser);
-router.get("/:id/proyectos", controller.proyectos);
 /**
  * @api {get} /repositorios/:id Obtener un repositorio por id
  * @apiName Repositorio

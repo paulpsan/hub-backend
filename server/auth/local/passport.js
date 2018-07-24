@@ -3,7 +3,6 @@ import bcrypt from "bcrypt-nodejs";
 import { Strategy as LocalStrategy } from "passport-local";
 
 function localAuthenticate(User, email, password, done) {
-  console.log("logg..", email);
   User.findOne({
     where: {
       email: email.toLowerCase(),
@@ -12,7 +11,6 @@ function localAuthenticate(User, email, password, done) {
   })
     .then(user => {
       if (user != null) {
-        console.log(user);
         bcrypt.compare(password, user.password, (err, check) => {
           if (check) {
             return done(null, user);
@@ -30,7 +28,6 @@ function localAuthenticate(User, email, password, done) {
 }
 
 export function setup(User) {
-  console.log("log.",User);
   passport.use(
     new LocalStrategy(
       {

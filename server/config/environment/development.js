@@ -19,8 +19,18 @@ module.exports = {
     clientSecret: "10fe3d839e76615964b8d52ebfe7219169825f57",
     callback: "http://localhost:4200/inicio"
   },
+  gitlab: {
+    api_url: "https://gitlab.com/api/v4/",
+    token_url:"https://gitlab.com/oauth/token",
+    clientId:
+      "68b23d8cc8bdf2e9414f2b486456596bbd23e9d44e1c56c16e91298747b94485",
+    clientSecret:
+      "99cca0cab45bf79a844763ec81db38e34915cbb8e8a5f6006a097707c4278d5b",
+    callback: "http://localhost:4200/inicio"
+  },
   gitlabGeo: {
     api_url: "https://gitlab.geo.gob.bo/api/v4/",
+    token_url:"https://gitlab.geo.gob.bo/oauth/token",
     clientId:
       "800b8fdad978c3f6bdd3e6e4ad535748cb38d24863e65218b2b2256e40ef9139",
     clientSecret:

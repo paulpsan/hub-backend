@@ -9,15 +9,11 @@
  */
 
 "use strict";
-import jsonpatch from "fast-json-patch";
 import { Proyecto, Repositorio, Usuario, Commit, Rating } from "../sqldb";
 import config from "../config/environment";
 import SequelizeHelper from "../components/sequelize-helper";
-import ProxyService from "../components/repository-proxy/proxy-service";
-import GitLab from "../components/repository-proxy/repositories/gitlab";
 import _ from "lodash";
 import Sequelize from "sequelize";
-import { createSecureContext } from "tls";
 
 function respondWithResult(res, statusCode) {
   statusCode = statusCode || 200;

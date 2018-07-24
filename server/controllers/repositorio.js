@@ -12,9 +12,11 @@
 
 import { Repositorio } from "../sqldb";
 import TokenController from "./token";
-import Gitlab from "../components/repository-proxy/repositories/gitlab";
 import SequelizeHelper from "../components/sequelize-helper";
 import config from "../config/environment";
+import * as github from "./github";
+import * as gitlab from "./gitlab";
+import * as bitbucket from "./bitbucket";
 import https from "https";
 var fetch = require("node-fetch");
 
@@ -39,7 +41,6 @@ function respondWithResult(res, statusCode) {
 }
 function saveUpdates(updates) {
   return function(entity) {
-    console.log("--------", entity, updates);
     return entity
       .updateAttributes(updates)
       .then(updated => {
@@ -78,14 +79,13 @@ function handleError(res, statusCode) {
     res.status(statusCode).send(err);
   };
 }
-async function getToken(tipo,id) {
+async function getToken(tipo, id) {
   let token = await TokenController.getToken(tipo, id);
   return token;
 }
 
 function setLenguajes(repo, token) {
   return function(entity) {
-    console.log("agent______", agent);
     if (entity.lenguajes.url !== "") {
       return fetch(entity.lenguajes.url + "?access_token=" + token, {
         agent,
@@ -235,306 +235,6 @@ function setDownloads(repo, token) {
   };
 }
 
-function creaAdiciona(usuario) {
-  return async function(repositorios) {
-    for (const repo of repositorios) {
-      let objRepositorio = {
-        id_repositorio: repo.id,
-        nombre: repo.name,
-        descripcion: repo.description || "",
-        avatar: "",
-        tipo: "github",
-        visibilidad: false,
-        estado: true,
-        html_url: repo.html_url,
-        git_url: repo.git_url,
-        api_url: repo.url,
-        forks: {
-          url: repo.forks_url,
-          total: 0
-        },
-        hooks: repo.hooks_url,
-        tags: repo.tags_url,
-        issues: {
-          url: repo.url + "/issues",
-          total: 0
-        },
-        branches: repo.url + "/branches",
-        lenguajes: {
-          url: repo.languages_url,
-          datos: ""
-        },
-        stars: {
-          url: "",
-          total: repo.stargazers_count
-        },
-        commits: {
-          url: repo.url + "/commits",
-          total: 0
-        },
-        downloads: {
-          url: repo.url + "/downloads",
-          total: 0
-        },
-        fk_usuario: usuario._id
-      };
-      await Repositorio.findOne({
-        where: {
-          id_repositorio: objRepositorio.id_repositorio,
-          fk_usuario: usuario._id
-        }
-      })
-        .then(repo => {
-          if (repo !== null) {
-            return Repositorio.update(objRepositorio, {
-              where: {
-                _id: repo._id
-              }
-            });
-          } else {
-            // console.log("objRepositorio", objRepositorio);
-            return Repositorio.create(objRepositorio);
-          }
-        })
-        .catch();
-    }
-    return;
-  };
-}
-
-function adicionaGithub(token, usuario) {
-  return new Promise((resolver, rechazar) => {
-    fetch("https://api.github.com/user?access_token=" + token)
-      .then(getJson())
-      .then(responseGithub => {
-        fetch(
-          "https://api.github.com/users/" +
-            responseGithub.login +
-            "/repos" +
-            "?access_token=" +
-            token
-        )
-          .then(getJson())
-          .then(creaAdiciona(usuario))
-          .then(resp => {
-            resolver("se agrego correctamente los repositorios");
-          })
-          .catch(err => {
-            rechazar(err);
-          });
-      })
-      .catch(err => {
-        rechazar(err);
-      });
-  });
-}
-
-function creaGitlab(usuario) {
-  return async function(repositorios) {
-    for (const repo of repositorios) {
-      let objRepositorio = {
-        id_repositorio: repo.id,
-        nombre: repo.name,
-        descripcion: repo.description || " ",
-        avatar: repo.avatar_url,
-        tipo: "gitlab",
-        visibilidad: false,
-        estado: true,
-        html_url: repo.web_url,
-        git_url: repo.ssh_url_to_repo,
-        api_url: config.gitlabGeo.api_url + "projects/",
-        forks: {
-          url: config.gitlabGeo.api_url + "projects/" + repo.id + "/forks",
-          total: 0
-        },
-        hooks: config.gitlabGeo.api_url + "projects/" + repo.id + "/hooks",
-        tags: repo.tag_list || " ",
-        issues: {
-          url: config.gitlabGeo.api_url + "projects/" + repo.id + "/issues",
-          total: 0
-        },
-
-        branches:
-          config.gitlabGeo.api_url +
-          "projects/" +
-          repo.id +
-          "/repository/branches",
-        lenguajes: {
-          url:
-            config.gitlabGeo.api_url + "projects/" + repo.id + "/languages" ||
-            "",
-          datos: ""
-        },
-        stars: {
-          url: "",
-          total: repo.star_count
-        },
-        commits: {
-          url:
-            config.gitlabGeo.api_url +
-            "projects/" +
-            repo.id +
-            "/repository/commits",
-          total: 0
-        },
-
-        downloads: {
-          url: "",
-          total: 0
-        },
-        fk_usuario: usuario._id
-      };
-
-      await Repositorio.findOne({
-        where: {
-          id_repositorio: objRepositorio.id_repositorio,
-          fk_usuario: usuario._id
-        }
-      })
-        .then(repo => {
-          if (repo !== null) {
-            return Repositorio.update(objRepositorio, {
-              where: {
-                _id: repo._id
-              }
-            });
-          } else {
-            // console.log("objRepositorio", objRepositorio);
-            return Repositorio.create(objRepositorio);
-          }
-        })
-        .catch();
-    }
-    return;
-  };
-}
-
-function adicionaGitlab(token, usuario) {
-  return new Promise((resolver, rechazar) => {
-    fetch("https://gitlab.geo.gob.bo/api/v4/user?access_token=" + token, {
-      agent,
-      strictSSL: false
-    })
-      .then(getJson())
-      .then(responseGitlab => {
-        fetch(
-          "https://gitlab.geo.gob.bo/api/v4/users/" +
-            responseGitlab.id +
-            "/projects" +
-            "?access_token=" +
-            token,
-          { agent, strictSSL: false }
-        )
-          .then(getJson())
-          .then(creaGitlab(usuario))
-          .then(resp => {
-            resolver("se agrego correctamente los repositorios");
-          })
-          .catch(err => {
-            rechazar(err);
-          });
-      })
-      .catch(err => {
-        rechazar(err);
-      });
-  });
-}
-function creaBitbucket(usuario) {
-  return async function(repositorios) {
-    let i = 0;
-    for (const repo of repositorios.values) {
-      let objRepositorio = {
-        id_repositorio: i,
-        nombre: repo.name,
-        descripcion: repo.description,
-        avatar: repo.links.avatar.href,
-        tipo: "bitbucket",
-        visibilidad: false,
-        estado: true,
-        html_url: repo.links.html.href,
-        git_url: repo.links.clone[1].href,
-        api_url: repo.links.self.href,
-        forks: {
-          url: repo.links.forks.href,
-          total: 0
-        },
-        hooks: repo.links.hooks.href,
-        tags: repo.links.tags.href,
-        issues: {
-          url:
-            config.bitbucket.api_url +
-            "repositories/" +
-            repo.full_name +
-            "/issues",
-          total: 0
-        },
-
-        branches: repo.links.branches.href,
-        lenguajes: {
-          url: "",
-          datos: repo.language
-        },
-        stars: {
-          url: "",
-          total: 0
-        },
-        commits: {
-          url: repo.links.commits.href,
-          total: 0
-        },
-        downloads: {
-          url: repo.links.downloads.href,
-          total: 0
-        },
-        fk_usuario: usuario._id
-      };
-
-      await Repositorio.findOne({
-        where: {
-          id_repositorio: objRepositorio.id_repositorio,
-          fk_usuario: usuario._id
-        }
-      })
-        .then(repo => {
-          if (repo !== null) {
-            return Repositorio.update(objRepositorio, {
-              where: {
-                _id: repo._id
-              }
-            });
-          } else {
-            // console.log("objRepositorio", objRepositorio);
-            return Repositorio.create(objRepositorio);
-          }
-        })
-        .catch();
-      i++;
-    }
-    return;
-  };
-}
-
-function adicionaBitbucket(token, usuario) {
-  return new Promise((resolver, rechazar) => {
-    fetch("https://api.bitbucket.org/2.0/user?access_token=" + token)
-      .then(getJson())
-      .then(responseGitlab => {
-        fetch(responseGitlab.links.repositories.href + "?access_token=" + token)
-          .then(getJson())
-          .then(creaBitbucket(usuario))
-          .then(resp => {
-            resolver("se agrego correctamente los repositorios");
-          })
-          .catch(err => {
-            rechazar(err);
-          });
-      })
-      .catch(err => {
-        rechazar(err);
-      });
-  });
-}
-
 // Gets a list of Repositorios
 export function index(req, res) {
   return Repositorio.findAndCountAll(req.opciones)
@@ -573,21 +273,13 @@ export function show(req, res) {
     .catch(handleError(res));
 }
 
-export function proyectos(req, res) {
-  //esto se debe cambiar al proxy de repositorios
-  let gitlab = new Gitlab("https://gitlab.geo.gob.bo", "7-VmBEpTd33s28N5dHvy");
-  gitlab.proyectos().then(resultado => {
-    res.send(resultado);
-  });
-}
-
 // Creates a new Repositorio in the DB
 export function create(req, res) {
   return Repositorio.create(req.body)
     .then(respondWithResult(res, 201))
     .catch(handleError(res));
 }
-async function getToken(tipo,id) {
+async function getToken(tipo, id) {
   let token = await TokenController.getToken(tipo, id);
   return token;
 }
@@ -596,23 +288,12 @@ export async function addOauth(req, res) {
   let usuario = req.body.usuario;
   // let usuarioOauth = req.body.usuarioOauth;
   let tipo = req.body.tipo;
-  let token = await getToken(usuario.tipo,usuario._id);
+  let token;
+  token = await getToken(tipo, usuario._id);
   switch (tipo) {
     case "github":
-      adicionaGithub(token, usuario)
-        .then(resp => {
-          res.json({ respuesta: resp });
-        })
-        .catch(err => {
-          console.log(err);
-          res
-            .status(500)
-            .json(err)
-            .end();
-        });
-      break;
-    case "gitlab":
-      adicionaGitlab(token, usuario)
+      github
+        .adicionaGithub(token, usuario, tipo)
         .then(resp => {
           res.json({ respuesta: resp });
         })
@@ -625,7 +306,8 @@ export async function addOauth(req, res) {
         });
       break;
     case "bitbucket":
-      adicionaBitbucket(token, usuario)
+      bitbucket
+        .adicionaBitbucket(token, usuario)
         .then(resp => {
           res.json({ respuesta: resp });
         })
@@ -639,6 +321,18 @@ export async function addOauth(req, res) {
       break;
 
     default:
+      gitlab
+        .adicionaGitlab(token, usuario, tipo)
+        .then(resp => {
+          res.json({ respuesta: resp });
+        })
+        .catch(err => {
+          console.log(err);
+          res
+            .status(500)
+            .json({ mensaje: err.message })
+            .end();
+        });
       break;
   }
 }
@@ -685,7 +379,6 @@ function updateRepo(object) {
 
 async function desvincularRepos(repos, tipo) {
   for (const repo of repos) {
-    console.log("----------", repo.nombre, tipo);
     if (repo.tipo == tipo) {
       let objrepo = {
         _id: repo._id,
@@ -699,8 +392,9 @@ async function desvincularRepos(repos, tipo) {
   return true;
 }
 
-//Desvincula
+//Desvincula repositorios
 export function desvincular(req, res) {
+  let tipo = req.params.tipo;
   let usuario = req.body;
   return Repositorio.findAll({
     where: {
@@ -708,7 +402,7 @@ export function desvincular(req, res) {
     }
   })
     .then(resp => {
-      if (desvincularRepos(resp, req.params.tipo)) {
+      if (desvincularRepos(resp, tipo)) {
         res.json({ respuesta: "Se actualizaron correctamente!" });
       } else {
         res
@@ -743,8 +437,7 @@ export function lenguajes(req, res) {
 
 export async function setDatos(req, res) {
   let repo = req.body;
-  let token = await getToken(repo.tipo,repo.fk_usuario);
-  console.log("****token******", repo, token);
+  let token = await getToken(repo.tipo, repo.fk_usuario);
   return Repositorio.find({
     where: {
       _id: repo._id

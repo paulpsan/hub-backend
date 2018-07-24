@@ -11,7 +11,7 @@ router.post("/", function(req, res, next) {
     console.log("usuario", user, err, info);
     var error = err || info;
     if (error) {
-      return res.status(401).json(error);
+      return res.status(404).json(error);
     }
     if (!user) {
       return res

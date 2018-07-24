@@ -2,18 +2,13 @@
 
 import { Usuario } from "../sqldb";
 import { Repositorio } from "../sqldb";
-import { Commit } from "../sqldb";
-import SequelizeHelper from "../components/sequelize-helper";
 import config from "../config/environment";
 import TokenController from "./token";
 import qs from "querystringify";
 import https from "https";
 import Sequelize from "sequelize";
-import request from "request";
-// import { fetch } from "node-fetch";
 var fetch = require("node-fetch");
 
-let usuarioGitlab = {};
 const agent = new https.Agent({
   rejectUnauthorized: false
 });
@@ -31,19 +26,21 @@ function handleError(res, statusCode) {
   };
 }
 
-function authenticateGitlab(code) {
+function authenticateGitlab(code, type) {
   return new Promise((resolver, rechazar) => {
     let objRes = {};
     require("ssl-root-cas").inject();
+
+    console.log("______", Object.keys(config[type]));
+
     let data = qs.stringify({
-      client_id: config.gitlabGeo.clientId,
-      client_secret: config.gitlabGeo.clientSecret,
+      client_id: config[type].clientId,
+      client_secret: config[type].clientSecret,
       code: code,
       grant_type: "authorization_code",
-      redirect_uri: config.gitlabGeo.callback
+      redirect_uri: config[type].callback
     });
-    fetch("https://gitlab.geo.gob.bo/oauth/token", {
-      // fetch("https://gitlab.com/oauth/token", {
+    fetch(config[type].token_url, {
       method: "POST",
       agent,
       strictSSL: false,
@@ -53,11 +50,9 @@ function authenticateGitlab(code) {
       .then(token => {
         objRes.token = token.access_token;
         fetch(
-          "https://gitlab.geo.gob.bo/api/v4/user?access_token=" +
-            token.access_token,
+          config[type].api_url + "user?access_token=" + token.access_token,
           { agent, strictSSL: false }
         )
-          // fetch("https://gitlab.com/api/v4/user?access_token=" + token.access_token)
           .then(getJson())
           .then(responseGitlab => {
             resolver({
@@ -99,9 +94,31 @@ function nuevoUsuario(usuarioOauth) {
   });
 }
 
-function createUpdateUser() {
+function addUser(usuario,tipo) {
+  return function(userOauth) {
+    let token = userOauth.token;
+    TokenController.updateCreateToken(tipo, usuario, token)
+    return Usuario.findOne({
+      where: {
+        _id: usuario._id
+      }
+    })
+      .then(user => {
+        user.id_gitlab = userOauth.usuario.id;
+        user.gitlab = true;
+        user.save();
+        console.log("object", user);
+        return user;
+      })
+      .catch(err => {
+        console.log("err", err);
+        return err;
+      });
+  };
+}
+
+function createUpdateUser(type) {
   return function(response) {
-    console.log(response);
     let usuarioOauth = response.usuario;
     let token = response.token;
     const Op = Sequelize.Op;
@@ -111,9 +128,8 @@ function createUpdateUser() {
       }
     })
       .then(user => {
-        console.log(user);
         if (user !== null) {
-          TokenController.updateCreateToken("gitlab", user, token);
+          TokenController.updateCreateToken(type, user, token);
           //actualizar usuario
           user.gitlab = true;
           user.id_gitlab = usuarioOauth.id;
@@ -122,7 +138,7 @@ function createUpdateUser() {
         } else {
           return nuevoUsuario(usuarioOauth, token)
             .then(user => {
-              TokenController.createToken("gitlab", user, token);
+              TokenController.createToken(type, user, token);
               return user;
             })
             .catch(err => {
@@ -149,9 +165,7 @@ export function singOauthGitlab(req, res) {
   })
     .then(user => {
       if (user !== null) {
-        //eliminar password
         TokenController.updateCreateToken("gitlab", user, token);
-        //actualizar usuario
         actualizaUsuario(user, usuarioOauth, token)
           .then(resUsuario => {
             res.json({ token: token, usuario: resUsuario });
@@ -176,10 +190,12 @@ export function singOauthGitlab(req, res) {
       res.send(err);
     });
 }
-
+// login de usuario
 export function authLoginGitlab(req, res) {
-  authenticateGitlab(req.params.code)
-    .then(createUpdateUser())
+  let code = req.body.code;
+  let type = req.body.type;
+  authenticateGitlab(code, type)
+    .then(createUpdateUser(type))
     .then(result => {
       res.json({ usuario: result });
     })
@@ -187,14 +203,18 @@ export function authLoginGitlab(req, res) {
       res.send(err);
     });
 }
-
+// adicciona de usuario
 export function authAddGitlab(req, res) {
-  authenticateGitlab(req.params.code)
-    .then(createUpdateUser())
+  let code = req.body.code;
+  let type = req.body.type;
+  let usuario = req.body.usuario;
+  authenticateGitlab(code, type)
+    .then(addUser(usuario,type))
     .then(result => {
-      res.json({ usuario: result });
+      res.json(result);
     })
     .catch(err => {
+      console.log(err);
       res.send(err);
     });
 }
@@ -210,7 +230,6 @@ function refreshGitlab(code, usuario) {
       redirect_uri: config.gitlabGeo.callback
     });
     fetch("https://gitlab.geo.gob.bo/oauth/token", {
-      // fetch("https://gitlab.com/oauth/token", {
       method: "POST",
       agent,
       strictSSL: false,
@@ -259,194 +278,114 @@ export function getMembers(req, res) {
       token,
     { agent, strictSSL: false }
   )
-    .then(response => {
-      return response.json();
-    })
+    .then(getJson())
     .then(response => {
       res.send(response);
     })
     .catch(err => {});
 }
+function creaGitlab(usuario, tipo) {
+  return async function(repositorios) {
+    for (const repo of repositorios) {
+      let objRepositorio = {
+        id_repositorio: repo.id,
+        nombre: repo.name,
+        descripcion: repo.description || " ",
+        avatar: repo.avatar_url,
+        tipo: "gitlab",
+        estado: true,
+        html_url: repo.web_url,
+        git_url: repo.ssh_url_to_repo,
+        api_url: config[tipo].api_url + "projects/",
+        forks: {
+          url: config[tipo].api_url + "projects/" + repo.id + "/forks",
+          total: 0
+        },
+        hooks: config[tipo].api_url + "projects/" + repo.id + "/hooks",
+        tags: repo.tag_list || " ",
+        issues: {
+          url: config[tipo].api_url + "projects/" + repo.id + "/issues",
+          total: 0
+        },
 
-var asyncLoop = function(o) {
-  var i = -1;
-  var loop = function() {
-    i++;
-    if (i == o.length) {
-      o.callback();
-      return;
-    }
-    o.functionToLoop(loop, i);
-  };
-  loop(); //init
-};
+        branches:
+          config[tipo].api_url + "projects/" + repo.id + "/repository/branches",
+        lenguajes: {
+          url:config[tipo].api_url + "projects/" + repo.id + "/languages" || "",
+          datos: ""
+        },
+        stars: {
+          url: "",
+          total: repo.star_count
+        },
+        commits: {
+          url:
+            config[tipo].api_url +"projects/" +repo.id +"/repository/commits",
+            total: 0
+        },
 
-export function datosGitlab(req, res) {
-  const agent = new https.Agent({
-    rejectUnauthorized: false
-  });
-  let objetoUsuario = req.body.usuario;
-  let token = req.body.token;
-  fetch("https://gitlab.geo.gob.bo/api/v4/user?access_token=" + token, {
-    agent,
-    strictSSL: false
-  })
-    // fetch("https://gitlab.com/api/v4/user?access_token=" + token.access_token)
-    .then(getJson())
-    .then(usuario => {
-      fetch(
-        "https://gitlab.geo.gob.bo/api/v4/users/" +
-          usuario.id +
-          "/projects" +
-          "?access_token=" +
-          token,
-        { agent, strictSSL: false }
-      )
-        .then(getJson())
-        .then(repositorios => {
-          let i = 1;
-          let objDatos = [];
-          if (repositorios.length > 0) {
-            let objCommits = {};
-            asyncLoop({
-              length: repositorios.length,
-              functionToLoop: function(loop, i) {
-                fetch(
-                  "https://gitlab.geo.gob.bo/api/v4/projects/" +
-                    repositorios[i].id +
-                    "/repository/commits?access_token=" +
-                    token,
-                  { agent, strictSSL: false }
-                )
-                  .then(getJson())
-                  .then(commits => {
-                    let objRepositorio = {
-                      id_repositorio: repositorios[i].id,
-                      nombre: repositorios[i].name,
-                      descripcion: repositorios[i].description || " ",
-                      avatar: repositorios[i].avatar_url,
-                      tipo: "gitlab",
-                      estado: true,
-                      html_url: repositorios[i].web_url,
-                      git_url: repositorios[i].ssh_url_to_repo,
-                      api_url: config.gitlabGeo.api_url + "projects/",
-                      fork:
-                        config.gitlabGeo.api_url +
-                        "projects/" +
-                        repositorios[i].id +
-                        "/forks",
-                      hooks:
-                        config.gitlabGeo.api_url +
-                        "projects/" +
-                        repositorios[i].id +
-                        "/hooks",
-                      tags: repositorios[i].tag_list || " ",
-                      issues:
-                        config.gitlabGeo.api_url +
-                        "projects/" +
-                        repositorios[i].id +
-                        "/issues",
-                      branches:
-                        config.gitlabGeo.api_url +
-                        "projects/" +
-                        repositorios[i].id +
-                        "/repository/branches",
-                      lenguajes:
-                        config.gitlabGeo.api_url +
-                          "projects/" +
-                          repositorios[i].id +
-                          "/languages" || "",
-                      star: repositorios[i].star_count,
-                      commits: commits,
-                      downloads: "",
-                      fk_usuario: objetoUsuario._id
-                    };
+        downloads: {
+          url: "",
+          total: 0
+        },
+        fk_usuario: usuario._id
+      };
 
-                    Repositorio.findOne({
-                      where: {
-                        id_repositorio: objRepositorio.id_repositorio,
-                        fk_usuario: objetoUsuario._id
-                      }
-                    })
-                      .then(user => {
-                        if (user !== null) {
-                          Repositorio.update(objRepositorio, {
-                            where: {
-                              _id: user._id
-                            }
-                          })
-                            .then(resultRepo => {
-                              // Crea commits de un repositorio
-                              // for (const commit of commits) {
-                              //   let objCommit = {
-                              //     sha: commit.sha,
-                              //     autor: commit.commit.author.name,
-                              //     mensaje: commit.commit.mensaje,
-                              //     fecha: commit.commit.author.date,
-                              //     fk_repositorio: resultRepo._id
-                              //   };
-                              //   Commit.create(objCommit)
-                              //     .then(resultCommit => {
-                              //       console.log("resul", resultCommit);
-                              //     })
-                              //     .catch(handleError(res));
-                              // }
-                            })
-                            .catch(handleError(res));
-                        } else {
-                          Repositorio.create(objRepositorio)
-                            .then(resultRepo => {
-                              // Crea commits de un repositorio
-                              // for (const commit of commits) {
-                              //   let objCommit = {
-                              //     sha: commit.sha,
-                              //     autor: commit.commit.author.name,
-                              //     mensaje: commit.commit.mensaje,
-                              //     fecha: commit.commit.author.date,
-                              //     fk_repositorio: resultRepo._id
-                              //   };
-                              //   Commit.create(objCommit)
-                              //     .then(resultCommit => {
-                              //       console.log("resul", resultCommit);
-                              //     })
-                              //     .catch(handleError(res));
-                              // }
-                            })
-                            .catch(handleError(res));
-                        }
-                      })
-                      .catch(handleError(res));
-
-                    objDatos.push({
-                      lenguajes: "",
-                      repo: repositorios[i],
-                      commits: commits
-                    });
-
-                    loop();
-                  })
-                  .catch(handleError(res));
-              },
-              callback: function() {
-                objetoUsuario.datos = objDatos;
-                Usuario.update(objetoUsuario, {
-                  where: {
-                    email: req.body.usuario.email.toLowerCase(),
-                    tipo: "gitlab"
-                  }
-                }).then(result => {
-                  result > 0
-                    ? res
-                        .status(200)
-                        .json({ result: "Se realizaron actualizaciones" })
-                    : res
-                        .status(200)
-                        .json({ result: "No tiene actualizaciones" });
-                });
+      await Repositorio.findOne({
+        where: {
+          id_repositorio: objRepositorio.id_repositorio,
+          fk_usuario: usuario._id
+        }
+      })
+        .then(repo => {
+          if (repo !== null) {
+            return Repositorio.update(objRepositorio, {
+              where: {
+                _id: repo._id
               }
             });
+          } else {
+            objRepositorio.visibilidad = false;
+            return Repositorio.create(objRepositorio);
           }
         })
-        .catch(handleError(res));
-    });
+        .catch();
+    }
+    return;
+  };
+}
+
+export function adicionaGitlab(token, usuario, tipo) {
+  return new Promise((resolver, rechazar) => {
+    console.log(config[tipo].api_url, token);
+    fetch(config[tipo].api_url + "user?access_token=" + token, {
+      agent,
+      strictSSL: false
+    })
+      .then(getJson())
+      .then(responseGitlab => {
+        if (responseGitlab.message) rechazar(responseGitlab);
+        fetch(
+          config[tipo].api_url +
+            "users/" +
+            responseGitlab.id +
+            "/projects" +
+            "?access_token=" +
+            token,
+          { agent, strictSSL: false }
+        )
+          .then(getJson())
+          .then(creaGitlab(usuario, tipo))
+          .then(resp => {
+            resolver("se agrego correctamente los repositorios");
+          })
+          .catch(err => {
+            rechazar(err);
+          });
+      })
+      .catch(err => {
+        console.log(err);
+        rechazar(err);
+      });
+  });
 }

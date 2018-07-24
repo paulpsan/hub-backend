@@ -9,17 +9,17 @@ var controllerBitbucket = require("../controllers/bitbucket");
 
 var router = express.Router();
 
-router.get("/login/github/:code", controllerGithub.authLoginGithub);
+router.post("/login/github", controllerGithub.authLoginGithub);
 
-router.get("/login/gitlab/:code", controllerGitLab.authLoginGitlab);
+router.post("/login/gitlab", controllerGitLab.authLoginGitlab);
 
-router.get("/login/bitbucket/:code", controllerBitbucket.authLoginBitbucket);
+router.post("/login/bitbucket", controllerBitbucket.authLoginBitbucket);
 
-router.get("/add/github/:code", controllerGithub.authAddGithub);
+router.post("/add/github", controllerGithub.authAddGithub);
 
-router.get("/add/gitlab/:code", controllerGitLab.authAddGitlab);
+router.post("/add/gitlab", controllerGitLab.authAddGitlab);
 
-router.get("/add/bitbucket/:code", controllerBitbucket.authAddBitbucket);
+router.post("/add/bitbucket", controllerBitbucket.authAddBitbucket);
 
 router.post("/refresh/github", controllerGithub.refreshGithub);
 
