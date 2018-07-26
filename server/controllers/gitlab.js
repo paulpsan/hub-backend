@@ -70,7 +70,7 @@ function authenticateGitlab(code, type) {
   });
 }
 
-function nuevoUsuario(usuarioOauth) {
+function nuevoUsuario(usuarioOauth, tipo) {
   return new Promise((resolver, rechazar) => {
     let objGitlab = {};
     objGitlab.nombre = usuarioOauth.name;
@@ -79,7 +79,7 @@ function nuevoUsuario(usuarioOauth) {
     objGitlab.tipo = "gitlab";
     objGitlab.role = "usuario";
     objGitlab.login = usuarioOauth.login;
-    objGitlab.cuentas = ["local", "gitlab"];
+    objGitlab.cuentas = [tipo];
     objGitlab.avatar = usuarioOauth.avatar_url;
     objGitlab.url = usuarioOauth.html_url;
     objGitlab.gitlab = true;
@@ -94,26 +94,33 @@ function nuevoUsuario(usuarioOauth) {
   });
 }
 
-function addUser(usuario,tipo) {
+function addUser(usuario, tipo) {
   return function(userOauth) {
     let token = userOauth.token;
-    TokenController.updateCreateToken(tipo, usuario, token)
-    return Usuario.findOne({
-      where: {
-        _id: usuario._id
+    let cuenta = [];
+    cuenta = usuario.cuentas;
+    return TokenController.updateCreateToken(tipo, usuario, token).then(
+      resp => {
+        return Usuario.findOne({
+          where: {
+            _id: usuario._id
+          }
+        })
+          .then(user => {
+            cuenta.push(tipo);
+            user.cuentas = cuenta;
+            user.id_gitlab = userOauth.usuario.id;
+            user.gitlab = true;
+            user.save();
+            console.log("object", user);
+            return user;
+          })
+          .catch(err => {
+            console.log("err", err);
+            return err;
+          });
       }
-    })
-      .then(user => {
-        user.id_gitlab = userOauth.usuario.id;
-        user.gitlab = true;
-        user.save();
-        console.log("object", user);
-        return user;
-      })
-      .catch(err => {
-        console.log("err", err);
-        return err;
-      });
+    );
   };
 }
 
@@ -127,19 +134,25 @@ function createUpdateUser(type) {
         [Op.or]: [{ id_gitlab: usuarioOauth.id }, { email: usuarioOauth.email }]
       }
     })
-      .then(user => {
-        if (user !== null) {
-          TokenController.updateCreateToken(type, user, token);
-          //actualizar usuario
-          user.gitlab = true;
-          user.id_gitlab = usuarioOauth.id;
-          user.save();
-          return user;
-        } else {
-          return nuevoUsuario(usuarioOauth, token)
-            .then(user => {
-              TokenController.createToken(type, user, token);
-              return user;
+    .then(user => {
+      if (user !== null) {
+        return TokenController.updateCreateToken(type, user, token).then(
+          resp => {
+            if (resp) {
+              user.github = true;
+              user.id_github = usuarioOauth.id;
+              user.save();
+            }
+            return user;
+          }
+        );
+        //actualizar usuario
+      } else {
+        return nuevoUsuario(usuarioOauth, type)
+        .then(user => {
+              return TokenController.updateCreateToken(type, user, token).then(() => {
+                return user;
+              });
             })
             .catch(err => {
               console.log(err);
@@ -154,42 +167,6 @@ function createUpdateUser(type) {
   };
 }
 
-export function singOauthGitlab(req, res) {
-  let usuarioOauth = req.body.usuarioOauth;
-  let token = req.body.token;
-  const Op = Sequelize.Op;
-  Usuario.findOne({
-    where: {
-      [Op.or]: [{ id_gitlab: usuarioOauth.id }, { email: usuarioOauth.email }]
-    }
-  })
-    .then(user => {
-      if (user !== null) {
-        TokenController.updateCreateToken("gitlab", user, token);
-        actualizaUsuario(user, usuarioOauth, token)
-          .then(resUsuario => {
-            res.json({ token: token, usuario: resUsuario });
-          })
-          .catch(err => {
-            res.send(err);
-          });
-      } else {
-        nuevoUsuario(usuarioOauth, token)
-          .then(user => {
-            TokenController.createToken("gitlab", user, token);
-            res.json({ usuario: user, token: token });
-          })
-          .catch(err => {
-            console.log(err);
-            res.send(err);
-          });
-      }
-    })
-    .catch(err => {
-      console.log(err);
-      res.send(err);
-    });
-}
 // login de usuario
 export function authLoginGitlab(req, res) {
   let code = req.body.code;
@@ -209,7 +186,7 @@ export function authAddGitlab(req, res) {
   let type = req.body.type;
   let usuario = req.body.usuario;
   authenticateGitlab(code, type)
-    .then(addUser(usuario,type))
+    .then(addUser(usuario, type))
     .then(result => {
       res.json(result);
     })
@@ -219,17 +196,17 @@ export function authAddGitlab(req, res) {
     });
 }
 
-function refreshGitlab(code, usuario) {
+function refreshToken(code, usuario, tipo) {
   return new Promise((resolver, rechazar) => {
     require("ssl-root-cas").inject();
     let data = qs.stringify({
-      client_id: config.gitlabGeo.clientId,
-      client_secret: config.gitlabGeo.clientSecret,
+      client_id: config[tipo].clientId,
+      client_secret: config[tipo].clientSecret,
       code: code,
       grant_type: "authorization_code",
-      redirect_uri: config.gitlabGeo.callback
+      redirect_uri: config[tipo].callback
     });
-    fetch("https://gitlab.geo.gob.bo/oauth/token", {
+    fetch(config[tipo].token_url, {
       method: "POST",
       agent,
       strictSSL: false,
@@ -238,8 +215,9 @@ function refreshGitlab(code, usuario) {
       .then(getJson())
       .then(resp => {
         let token = resp.access_token;
-        TokenController.updateCreateToken("gitlab", usuario, token);
-        resolver(token);
+        TokenController.updateCreateToken("gitlab", usuario, token).then(() => {
+          resolver(token);
+        });
       })
       .catch(err => {
         rechazar(err);
@@ -248,7 +226,7 @@ function refreshGitlab(code, usuario) {
 }
 
 export function refreshGitlab(req, res) {
-  refreshToken(req.body.code, req.body.usuario)
+  refreshToken(req.body.code, req.body.usuario, req.body.tipo)
     .then(
       token => {
         res.json({ token, usuario: req.body.usuario });
@@ -311,7 +289,8 @@ function creaGitlab(usuario, tipo) {
         branches:
           config[tipo].api_url + "projects/" + repo.id + "/repository/branches",
         lenguajes: {
-          url:config[tipo].api_url + "projects/" + repo.id + "/languages" || "",
+          url:
+            config[tipo].api_url + "projects/" + repo.id + "/languages" || "",
           datos: ""
         },
         stars: {
@@ -320,8 +299,11 @@ function creaGitlab(usuario, tipo) {
         },
         commits: {
           url:
-            config[tipo].api_url +"projects/" +repo.id +"/repository/commits",
-            total: 0
+            config[tipo].api_url +
+            "projects/" +
+            repo.id +
+            "/repository/commits",
+          total: 0
         },
 
         downloads: {

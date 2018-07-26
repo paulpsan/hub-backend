@@ -96,18 +96,28 @@ function createUpdateUser() {
       .then(user => {
         console.log("object", user);
         if (user !== null) {
-          TokenController.updateCreateToken("github", user, token);
+          return TokenController.updateCreateToken("github", user, token).then(
+            resp => {
+              if (resp) {
+                user.github = true;
+                user.id_github = usuarioOauth.id;
+                user.save();
+              }
+              return user;
+            }
+          );
           //actualizar usuario
-          user.github = true;
-          user.id_github = usuarioOauth.id;
-          user.save();
-          return user;
         } else {
           return nuevoUsuario(usuarioOauth, token)
             .then(user => {
               console.log(user);
-              TokenController.createToken("github", user, token);
-              return user;
+              return TokenController.updateCreateToken(
+                "github",
+                user,
+                token
+              ).then(resp => {
+                return user;
+              });
             })
             .catch(err => {
               console.log(err);
@@ -125,23 +135,30 @@ function createUpdateUser() {
 function addUser(usuario) {
   return function(userOauth) {
     let token = userOauth.token;
-    TokenController.updateCreateToken("github", usuario, token)
-    return Usuario.findOne({
-      where: {
-        _id: usuario._id
+    let cuenta = [];
+    cuenta = usuario.cuentas;
+    return TokenController.updateCreateToken("github", usuario, token).then(
+      resp => {
+        return Usuario.findOne({
+          where: {
+            _id: usuario._id
+          }
+        })
+          .then(user => {
+            cuenta.push(tipo);
+          user.cuentas = cuenta;
+            user.id_github = userOauth.usuario.id;
+            user.github = true;
+            user.save();
+            console.log("object", user);
+            return user;
+          })
+          .catch(err => {
+            console.log("err", err);
+            return err;
+          });
       }
-    })
-      .then(user => {
-        user.id_github = userOauth.usuario.id;
-        user.github = true;
-        user.save();
-        console.log("object", user);
-        return user;
-      })
-      .catch(err => {
-        console.log("err", err);
-        return err;
-      });
+    );
   };
 }
 
@@ -162,8 +179,11 @@ function refreshToken(code, usuario) {
       })
       .then(resp => {
         let token = qs.parse(resp).access_token;
-        TokenController.updateCreateToken("github", usuario, token);
-        resolver(token);
+        return TokenController.updateCreateToken("github", usuario, token).then(
+          result => {
+            resolver(token);
+          }
+        );
       })
       .catch(err => {
         rechazar(err);
@@ -283,6 +303,7 @@ function creaGithub(usuario) {
 }
 export function adicionaGithub(token, usuario) {
   return new Promise((resolver, rechazar) => {
+    console.log(token);
     fetch("https://api.github.com/user?access_token=" + token)
       .then(getJson())
       .then(responseGithub => {
