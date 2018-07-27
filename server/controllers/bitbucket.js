@@ -323,8 +323,8 @@ export function adicionaBitbucket(token, usuario) {
   return new Promise((resolver, rechazar) => {
     fetch("https://api.bitbucket.org/2.0/user?access_token=" + token)
       .then(getJson())
-      .then(responseGitlab => {
-        fetch(responseGitlab.links.repositories.href + "?access_token=" + token)
+      .then(response => {
+        fetch(response.links.repositories.href + "?access_token=" + token)
           .then(getJson())
           .then(creaBitbucket(usuario))
           .then(resp => {

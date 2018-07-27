@@ -139,8 +139,8 @@ function createUpdateUser(type) {
         return TokenController.updateCreateToken(type, user, token).then(
           resp => {
             if (resp) {
-              user.github = true;
-              user.id_github = usuarioOauth.id;
+              user.gitlab = true;
+              user.id_gitlab = usuarioOauth.id;
               user.save();
             }
             return user;
