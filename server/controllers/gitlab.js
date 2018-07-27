@@ -270,7 +270,7 @@ function creaGitlab(usuario, tipo) {
         nombre: repo.name,
         descripcion: repo.description || " ",
         avatar: repo.avatar_url,
-        tipo: "gitlab",
+        tipo: tipo,
         estado: true,
         html_url: repo.web_url,
         git_url: repo.ssh_url_to_repo,

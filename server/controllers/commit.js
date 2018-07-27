@@ -193,12 +193,11 @@ async function getToken(repo) {
 // Creates a new Commit in the DB
 export async function create(req, res) {
   let repo = req.body;
-  let url = req.body.commits.url;
   let tipo = req.body.tipo;
   let token = await getToken(repo);
   switch (tipo) {
     case "github":
-      fetch(url + "?access_token=" + token, {
+      fetch(repo.commits.url + "?access_token=" + token, {
         agent,
         strictSSL: false
       })
@@ -216,30 +215,8 @@ export async function create(req, res) {
         });
 
       break;
-    case "gitlab":
-      if (token) {
-        fetch(url + "?access_token=" + token, {
-          agent,
-          strictSSL: false
-        })
-          .then(getJson())
-          .then(commits => {
-            if (addCommitsGitlab(commits, repo)) {
-              res.json({ respuesta: "Se actualizaron correctamente!" });
-            } else {
-              res
-                .status(500)
-                .json({ error: "Problema en actualizacion" })
-                .end();
-            }
-          });
-      } else {
-        console.log("-----------errr token--------------");
-      }
-      //necesita token
-      break;
     case "bitbucket":
-      fetch(url + "?access_token=" + token, {
+      fetch(repo.commits.url + "?access_token=" + token, {
         agent,
         strictSSL: false
       })
@@ -257,10 +234,29 @@ export async function create(req, res) {
 
       break;
     default:
-      res
-        .status(500)
-        .json({ error: "Problema en actualizacion" })
-        .end();
+      console.log(token);
+      if (token) {
+        fetch(repo.commits.url + "?access_token=" + token, {
+          agent,
+          strictSSL: false
+        })
+          .then(getJson())
+          .then(commits => {
+            if (addCommitsGitlab(commits, repo)) {
+              res.json({ respuesta: "Se actualizaron correctamente!" });
+            } else {
+              res
+                .status(500)
+                .json({ error: "Problema en actualizacion" })
+                .end();
+            }
+          });
+      } else {
+        res
+          .status(500)
+          .json({ error: "Problema en actualizacion" })
+          .end();
+      }
       break;
   }
 }
