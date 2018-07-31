@@ -39,110 +39,110 @@ export default function seedDatabaseIfNeeded() {
           ratings = resultado;
           return Usuario.destroy({ where: {} });
         })
-        // .then(() => {
-        //   return Usuario.bulkCreate(
-        //     [
-        //       {
-        //         nombre: "1D'jalmar Gutierrez1",
-        //         email: "dgutierrez@adsib.gob.bo",
-        //         //con password 123
-        //         password:
-        //           "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
-        //         role: "admin",
-        //         login: "",
-        //         tipo: "local",
-        //         avatar: "",
-        //         descripcion: "",
-        //         clasificacion: {
-        //           datos: [],
-        //           valor: 1
-        //         },
-        //         datos: "",
-        //         url: ""
-        //       },
-        //       {
-        //         nombre: "2Teodoro Nina2",
-        //         email: "tnina@adsib.gob.bo",
-        //         //con password 123
-        //         password:
-        //           "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
-        //         role: "admin",
-        //         login: "",
-        //         tipo: "local",
-        //         avatar: "",
-        //         descripcion: "",
-        //         clasificacion: {
-        //           datos: [],
-        //           valor: 0
-        //         },
-        //         datos: "",
-        //         url: ""
-        //       },
-        //       {
-        //         nombre: "3Edwin Salcedo3",
-        //         email: "esalcedo@adsib.gob.bo",
-        //         //con password 123
-        //         password:
-        //           "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
-        //         role: "admin",
-        //         login: "",
-        //         tipo: "local",
-        //         avatar: "",
-        //         descripcion: "",
-        //         clasificacion: {
-        //           datos: [],
-        //           valor: 2
-        //         },
-        //         datos: "",
-        //         url: ""
-        //       },
-        //       {
-        //         nombre: "4Jhonny Monrroy4",
-        //         email: "jmonrroy@adsib.gob.bo",
-        //         //con password 123
-        //         password:
-        //           "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
-        //         role: "admin",
-        //         login: "",
-        //         tipo: "local",
-        //         avatar: "",
-        //         descripcion: "",
-        //         clasificacion: {
-        //           datos: [],
-        //           valor: 1
-        //         },
-        //         datos: "",
-        //         url: ""
-        //       },
-        //       {
-        //         nombre: "Paul Sanchez",
-        //         email: "psanchez@adsib.gob.bo",
-        //         //con password 123
-        //         password:
-        //           "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
-        //         role: "admin",
-        //         login: "",
-        //         tipo: "local",
-        //         avatar: "",
-        //         descripcion: "",
-        //         clasificacion: {
-        //           datos: [],
-        //           valor: 1
-        //         },
-        //         datos: "",
-        //         url: ""
-        //       }
-        //     ],
-        //     {
-        //       returning: true
-        //     }
-        //   );
-        // })
-        // .then(resultado => {
-        //       usuarios = resultado;
-        //       console.log("Se crearon usuarios de prueba");
-        //       return Repositorio.destroy({ where: {}, cascade: true });
-        //     })
+        .then(() => {
+          return Usuario.bulkCreate(
+            [
+              // {
+              //   nombre: "1D'jalmar Gutierrez1",
+              //   email: "dgutierrez@adsib.gob.bo",
+              //   //con password 123
+              //   password:
+              //     "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
+              //   role: "admin",
+              //   login: "",
+              //   tipo: "local",
+              //   avatar: "",
+              //   descripcion: "",
+              //   clasificacion: {
+              //     datos: [],
+              //     valor: 1
+              //   },
+              //   datos: "",
+              //   url: ""
+              // },
+              // {
+              //   nombre: "2Teodoro Nina2",
+              //   email: "tnina@adsib.gob.bo",
+              //   //con password 123
+              //   password:
+              //     "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
+              //   role: "admin",
+              //   login: "",
+              //   tipo: "local",
+              //   avatar: "",
+              //   descripcion: "",
+              //   clasificacion: {
+              //     datos: [],
+              //     valor: 0
+              //   },
+              //   datos: "",
+              //   url: ""
+              // },
+              // {
+              //   nombre: "3Edwin Salcedo3",
+              //   email: "esalcedo@adsib.gob.bo",
+              //   //con password 123
+              //   password:
+              //     "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
+              //   role: "admin",
+              //   login: "",
+              //   tipo: "local",
+              //   avatar: "",
+              //   descripcion: "",
+              //   clasificacion: {
+              //     datos: [],
+              //     valor: 2
+              //   },
+              //   datos: "",
+              //   url: ""
+              // },
+              // {
+              //   nombre: "4Jhonny Monrroy4",
+              //   email: "jmonrroy@adsib.gob.bo",
+              //   //con password 123
+              //   password:
+              //     "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
+              //   role: "admin",
+              //   login: "",
+              //   tipo: "local",
+              //   avatar: "",
+              //   descripcion: "",
+              //   clasificacion: {
+              //     datos: [],
+              //     valor: 1
+              //   },
+              //   datos: "",
+              //   url: ""
+              // },
+              {
+                nombre: "Paul Sanchez",
+                email: "xd_luap_gg@hotmail.com",
+                //con password 123
+                password:
+                  "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
+                role: "admin",
+                login: "",
+                tipo: "local",
+                avatar: "",
+                descripcion: "",
+                clasificacion: {
+                  datos: [],
+                  valor: 1
+                },
+                datos: "",
+                url: ""
+              }
+            ],
+            {
+              returning: true
+            }
+          );
+        })
+        .then(resultado => {
+              usuarios = resultado;
+              console.log("Se crearon usuarios de prueba");
+              return Repositorio.destroy({ where: {}, cascade: true });
+            })
         //     .then(() => {
         //       return Repositorio.bulkCreate(
         //         [

@@ -96,6 +96,7 @@ function createUpdateUser() {
       .then(user => {
         console.log("object", user);
         if (user !== null) {
+          //actualizar usuario
           return TokenController.updateCreateToken("github", user, token).then(
             resp => {
               if (resp) {
@@ -106,7 +107,6 @@ function createUpdateUser() {
               return user;
             }
           );
-          //actualizar usuario
         } else {
           return nuevoUsuario(usuarioOauth, token)
             .then(user => {
@@ -146,7 +146,7 @@ function addUser(usuario) {
         })
           .then(user => {
             cuenta.push(tipo);
-          user.cuentas = cuenta;
+            user.cuentas = cuenta;
             user.id_github = userOauth.usuario.id;
             user.github = true;
             user.save();
@@ -197,7 +197,8 @@ export function authLoginGithub(req, res) {
   authenticateGithub(code)
     .then(createUpdateUser())
     .then(result => {
-      res.json({ usuario: result });
+      if (!result.errors) res.json({ usuario: result });
+      else res.status(500).send(result.errors);
     })
     .catch(err => {
       res.send(err);

@@ -20,13 +20,7 @@ export default (sequelize, DataTypes) => {
         }
       },
       email: {
-        allowNull: false,
         type: DataTypes.TEXT,
-        validate: {
-          notEmpty: {
-            msg: "Ingrese su correo electrónico"
-          }
-        }
       },
       password: {
         type: DataTypes.TEXT

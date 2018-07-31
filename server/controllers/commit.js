@@ -14,6 +14,7 @@ import jsonpatch from "fast-json-patch";
 import { Commit } from "../sqldb";
 import https from "https";
 import TokenController from "./token";
+import qs from "querystringify";
 import { Sequelize } from "sequelize";
 import _ from "lodash";
 
@@ -118,7 +119,7 @@ async function addCommitsGithub(commits, repo) {
   for (const commit of commits) {
     let objCommit = {
       sha: commit.sha,
-      autor: commit.commit.author.name,
+      autor: commit.commit.author.name || "",
       mensaje: commit.commit.message,
       fecha: commit.commit.author.date,
       id_usuario: repo.fk_usuario,
@@ -137,7 +138,7 @@ async function addCommitsGitlab(commits, repo) {
   for (const commit of commits) {
     let objCommit = {
       sha: commit.id,
-      autor: commit.author_name,
+      autor: commit.author_name || "",
       mensaje: commit.message,
       fecha: commit.committed_date,
       estado: repo.visibilidad && repo.estado,
@@ -150,14 +151,15 @@ async function addCommitsGitlab(commits, repo) {
 }
 async function addCommitsBitbucket(commits, repo) {
   for (const commit of commits) {
+    console.log(commit);
     let objCommit = {
       sha: commit.hash,
-      autor: commit.author.user.username,
+      autor: commit.author.user ? commit.author.user.username : "",
       mensaje: commit.message,
       fecha: commit.date,
       estado: repo.visibilidad && repo.estado,
-      avatar_autor: commit.author.user.links.avatar.href,
-      web_url_autor: commit.author.user.links.html.href,
+      avatar_autor: commit.author.user?commit.author.user.links.avatar.href:"",
+      web_url_autor: commit.author.user?commit.author.user.links.html.href:"",
       id_usuario: repo.fk_usuario,
       fk_repositorio: repo._id
     };
@@ -194,10 +196,16 @@ async function getToken(repo) {
 export async function create(req, res) {
   let repo = req.body;
   let tipo = req.body.tipo;
+  let options =
+    "&" +
+    qs.stringify({
+      page: 1,
+      per_page: 100
+    });
   let token = await getToken(repo);
   switch (tipo) {
     case "github":
-      fetch(repo.commits.url + "?access_token=" + token, {
+      fetch(repo.commits.url + "?access_token=" + token + options, {
         agent,
         strictSSL: false
       })
@@ -216,12 +224,14 @@ export async function create(req, res) {
 
       break;
     case "bitbucket":
-      fetch(repo.commits.url + "?access_token=" + token, {
+      options = options + "&" + qs.stringify({ pagelen: 100 });
+      fetch(repo.commits.url + "?access_token=" + token + options, {
         agent,
         strictSSL: false
       })
         .then(getJson())
         .then(commits => {
+          console.log(commits);
           if (addCommitsBitbucket(commits.values, repo)) {
             res.json({ respuesta: "Se actualizaron correctamente!" });
           } else {
@@ -234,13 +244,16 @@ export async function create(req, res) {
 
       break;
     default:
-      console.log(token);
       if (token) {
-        fetch(repo.commits.url + "?access_token=" + token, {
+        fetch(repo.commits.url + "?access_token=" + token + options, {
           agent,
           strictSSL: false
         })
-          .then(getJson())
+          .then(response => {
+            let total = response.headers.get("x-total");
+            console.log("total", total);
+            return response.json();
+          })
           .then(commits => {
             if (addCommitsGitlab(commits, repo)) {
               res.json({ respuesta: "Se actualizaron correctamente!" });
