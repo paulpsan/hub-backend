@@ -283,7 +283,7 @@ async function getToken(tipo, id) {
   let token = await TokenController.getToken(tipo, id);
   return token;
 }
-
+//POST url="repositorios/oauth"
 export async function addOauth(req, res) {
   let usuario = req.body.usuario;
   // let usuarioOauth = req.body.usuarioOauth;

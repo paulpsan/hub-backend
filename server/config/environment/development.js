@@ -51,14 +51,14 @@ module.exports = {
     commit: 0.2
   },
   factorGitlab: {
-    stars: 0.2,
-    forks: 0.2,
+    stars: 0.3,
+    forks: 0.3,
     issues: 0.2,
     commit: 0.2
   },
   factorBitbucket: {
-    downloads: 0.2,
-    forks: 0.2,
+    downloads: 0.3,
+    forks: 0.3,
     issues: 0.2,
     commit: 0.2
   }

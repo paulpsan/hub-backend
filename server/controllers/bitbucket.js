@@ -324,6 +324,7 @@ export function adicionaBitbucket(token, usuario) {
     fetch("https://api.bitbucket.org/2.0/user?access_token=" + token)
       .then(getJson())
       .then(response => {
+        console.log(response);
         fetch(response.links.repositories.href + "?access_token=" + token)
           .then(getJson())
           .then(creaBitbucket(usuario))

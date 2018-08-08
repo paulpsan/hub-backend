@@ -10,17 +10,12 @@
 
 "use strict";
 
-import jsonpatch from "fast-json-patch";
 import bcrypt from "bcrypt-nodejs";
 import { Usuario } from "../sqldb";
 import SequelizeHelper from "../components/sequelize-helper";
 import jwt from "../components/service/jwt";
 import config from "../config/environment";
 import qs from "querystring";
-import https from "https";
-import _ from "lodash";
-import { Sequelize } from "sequelize";
-var fetch = require("node-fetch");
 
 function getJson() {
   return function(resultado) {

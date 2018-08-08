@@ -10,7 +10,6 @@
 
 "use strict";
 
-import jsonpatch from "fast-json-patch";
 import { Commit } from "../sqldb";
 import https from "https";
 import TokenController from "./token";

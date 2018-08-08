@@ -42,80 +42,296 @@ export default function seedDatabaseIfNeeded() {
         .then(() => {
           return Usuario.bulkCreate(
             [
-              // {
-              //   nombre: "1D'jalmar Gutierrez1",
-              //   email: "dgutierrez@adsib.gob.bo",
-              //   //con password 123
-              //   password:
-              //     "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
-              //   role: "admin",
-              //   login: "",
-              //   tipo: "local",
-              //   avatar: "",
-              //   descripcion: "",
-              //   clasificacion: {
-              //     datos: [],
-              //     valor: 1
-              //   },
-              //   datos: "",
-              //   url: ""
-              // },
-              // {
-              //   nombre: "2Teodoro Nina2",
-              //   email: "tnina@adsib.gob.bo",
-              //   //con password 123
-              //   password:
-              //     "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
-              //   role: "admin",
-              //   login: "",
-              //   tipo: "local",
-              //   avatar: "",
-              //   descripcion: "",
-              //   clasificacion: {
-              //     datos: [],
-              //     valor: 0
-              //   },
-              //   datos: "",
-              //   url: ""
-              // },
-              // {
-              //   nombre: "3Edwin Salcedo3",
-              //   email: "esalcedo@adsib.gob.bo",
-              //   //con password 123
-              //   password:
-              //     "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
-              //   role: "admin",
-              //   login: "",
-              //   tipo: "local",
-              //   avatar: "",
-              //   descripcion: "",
-              //   clasificacion: {
-              //     datos: [],
-              //     valor: 2
-              //   },
-              //   datos: "",
-              //   url: ""
-              // },
-              // {
-              //   nombre: "4Jhonny Monrroy4",
-              //   email: "jmonrroy@adsib.gob.bo",
-              //   //con password 123
-              //   password:
-              //     "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
-              //   role: "admin",
-              //   login: "",
-              //   tipo: "local",
-              //   avatar: "",
-              //   descripcion: "",
-              //   clasificacion: {
-              //     datos: [],
-              //     valor: 1
-              //   },
-              //   datos: "",
-              //   url: ""
-              // },
               {
-                nombre: "Paul Sanchez",
+                nombre: "1D'jalmar Gutierrez1",
+                email: "dgutierrez@adsib.gob.bo",
+                //con password 123
+                password:
+                  "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
+                role: "admin",
+                login: "",
+                tipo: "local",
+                avatar: "",
+                descripcion: "",
+                clasificacion: {
+                  datos: [],
+                  valor: 1
+                },
+                datos: "",
+                url: ""
+              },
+              {
+                nombre: "2Teodoro Nina2",
+                email: "tnina@adsib.gob.bo",
+                //con password 123
+                password:
+                  "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
+                role: "admin",
+                login: "",
+                tipo: "local",
+                avatar: "",
+                descripcion: "",
+                clasificacion: {
+                  datos: [],
+                  valor: 0
+                },
+                datos: "",
+                url: ""
+              },
+              {
+                nombre: "3Edwin Salcedo3",
+                email: "esalcedo@adsib.gob.bo",
+                //con password 123
+                password:
+                  "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
+                role: "admin",
+                login: "",
+                tipo: "local",
+                avatar: "",
+                descripcion: "",
+                clasificacion: {
+                  datos: [],
+                  valor: 2
+                },
+                datos: "",
+                url: ""
+              },
+              {
+                nombre: "4Jhonny Monrroy4",
+                email: "jmonrroy@adsib.gob.bo",
+                //con password 123
+                password:
+                  "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
+                role: "admin",
+                login: "",
+                tipo: "local",
+                avatar: "",
+                descripcion: "",
+                clasificacion: {
+                  datos: [],
+                  valor: 1
+                },
+                datos: "",
+                url: ""
+              },
+              {
+                nombre: "2Paul Sanchez",
+                email: "xd_luap_gg@hotmail.com",
+                //con password 123
+                password:
+                  "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
+                role: "admin",
+                login: "",
+                tipo: "local",
+                avatar: "",
+                descripcion: "",
+                clasificacion: {
+                  datos: [],
+                  valor: 1
+                },
+                datos: "",
+                url: ""
+              },
+              {
+                nombre: "3Paul Sanchez",
+                email: "xd_luap_gg@hotmail.com",
+                //con password 123
+                password:
+                  "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
+                role: "admin",
+                login: "",
+                tipo: "local",
+                avatar: "",
+                descripcion: "",
+                clasificacion: {
+                  datos: [],
+                  valor: 1
+                },
+                datos: "",
+                url: ""
+              },
+              {
+                nombre: "4Paul Sanchez",
+                email: "xd_luap_gg@hotmail.com",
+                //con password 123
+                password:
+                  "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
+                role: "admin",
+                login: "",
+                tipo: "local",
+                avatar: "",
+                descripcion: "",
+                clasificacion: {
+                  datos: [],
+                  valor: 1
+                },
+                datos: "",
+                url: ""
+              },
+              {
+                nombre: "5Paul Sanchez",
+                email: "xd_luap_gg@hotmail.com",
+                //con password 123
+                password:
+                  "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
+                role: "admin",
+                login: "",
+                tipo: "local",
+                avatar: "",
+                descripcion: "",
+                clasificacion: {
+                  datos: [],
+                  valor: 1
+                },
+                datos: "",
+                url: ""
+              },
+              {
+                nombre: "6Paul Sanchez",
+                email: "xd_luap_gg@hotmail.com",
+                //con password 123
+                password:
+                  "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
+                role: "admin",
+                login: "",
+                tipo: "local",
+                avatar: "",
+                descripcion: "",
+                clasificacion: {
+                  datos: [],
+                  valor: 1
+                },
+                datos: "",
+                url: ""
+              },
+              {
+                nombre: "7Paul Sanchez",
+                email: "xd_luap_gg@hotmail.com",
+                //con password 123
+                password:
+                  "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
+                role: "admin",
+                login: "",
+                tipo: "local",
+                avatar: "",
+                descripcion: "",
+                clasificacion: {
+                  datos: [],
+                  valor: 1
+                },
+                datos: "",
+                url: ""
+              },
+              {
+                nombre: "8Paul Sanchez",
+                email: "xd_luap_gg@hotmail.com",
+                //con password 123
+                password:
+                  "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
+                role: "admin",
+                login: "",
+                tipo: "local",
+                avatar: "",
+                descripcion: "",
+                clasificacion: {
+                  datos: [],
+                  valor: 1
+                },
+                datos: "",
+                url: ""
+              },
+              {
+                nombre: "9Paul Sanchez",
+                email: "xd_luap_gg@hotmail.com",
+                //con password 123
+                password:
+                  "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
+                role: "admin",
+                login: "",
+                tipo: "local",
+                avatar: "",
+                descripcion: "",
+                clasificacion: {
+                  datos: [],
+                  valor: 1
+                },
+                datos: "",
+                url: ""
+              },
+              {
+                nombre: "10Paul Sanchez",
+                email: "xd_luap_gg@hotmail.com",
+                //con password 123
+                password:
+                  "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
+                role: "admin",
+                login: "",
+                tipo: "local",
+                avatar: "",
+                descripcion: "",
+                clasificacion: {
+                  datos: [],
+                  valor: 1
+                },
+                datos: "",
+                url: ""
+              },
+              {
+                nombre: "11Paul Sanchez",
+                email: "xd_luap_gg@hotmail.com",
+                //con password 123
+                password:
+                  "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
+                role: "admin",
+                login: "",
+                tipo: "local",
+                avatar: "",
+                descripcion: "",
+                clasificacion: {
+                  datos: [],
+                  valor: 1
+                },
+                datos: "",
+                url: ""
+              },
+              {
+                nombre: "12Paul Sanchez",
+                email: "xd_luap_gg@hotmail.com",
+                //con password 123
+                password:
+                  "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
+                role: "admin",
+                login: "",
+                tipo: "local",
+                avatar: "",
+                descripcion: "",
+                clasificacion: {
+                  datos: [],
+                  valor: 1
+                },
+                datos: "",
+                url: ""
+              },
+              {
+                nombre: "13Paul Sanchez",
+                email: "xd_luap_gg@hotmail.com",
+                //con password 123
+                password:
+                  "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
+                role: "admin",
+                login: "",
+                tipo: "local",
+                avatar: "",
+                descripcion: "",
+                clasificacion: {
+                  datos: [],
+                  valor: 1
+                },
+                datos: "",
+                url: ""
+              },
+              {
+                nombre: "14Paul Sanchez",
                 email: "xd_luap_gg@hotmail.com",
                 //con password 123
                 password:
