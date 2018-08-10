@@ -15,12 +15,12 @@ function localAuthenticate(User, email, password, done) {
           if (check) {
             return done(null, user);
           } else {
-            return done(null, false, { mensaje: "Contraseña incorrecta" });
+            return done(null, false, { message: "Contraseña incorrecta" });
           }
         });
       } else {
         return done(null, false, {
-          mensaje: "No existe el usuario o contraseña incorrecta"
+          message: "No existe el usuario o contraseña incorrecta"
         });
       }
     })

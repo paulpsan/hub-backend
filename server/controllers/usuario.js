@@ -23,228 +23,6 @@ function getJson() {
   };
 }
 
-// function generaCommitsGitlab(res) {
-//   return function(entity) {
-//     let nombreRepo = [];
-//     let barChartData = [];
-//     let commitsArray = [];
-//     let años = [];
-//     let datosArray = [];
-//     for (const repositorio of entity.datos) {
-//       nombreRepo.push(repositorio.repo.name);
-//       let añoCommit = [];
-
-//       let año = 0;
-//       let commitTotal = 1;
-//       let sw = true;
-
-//       for (const commits of repositorio.commits) {
-//         let fecha = new Date(commits.committed_date);
-//         if (año != fecha.getFullYear() && sw) {
-//           año = fecha.getFullYear();
-//           sw = false;
-//         } else {
-//           if (año == fecha.getFullYear()) {
-//             commitTotal++;
-//           } else {
-//             añoCommit.push({
-//               año: año,
-//               commit: commitTotal,
-//               nombre: repositorio.repo.name
-//             });
-//             datosArray.push(añoCommit);
-//             año = fecha.getFullYear();
-//             commitTotal = 1;
-//           }
-//         }
-//         años.push(fecha.getFullYear());
-//       }
-//       if (commitTotal != 0) {
-//         añoCommit.push({
-//           año: año,
-//           commit: commitTotal,
-//           nombre: repositorio.repo.name
-//         });
-//         datosArray.push(añoCommit);
-//       }
-//     }
-//     años = _.uniq(años);
-//     //ordena ascendentemente
-//     años = _.orderBy(años, o => {
-//       return o * -1;
-//     });
-//     datosArray = _.uniqWith(datosArray, _.isEqual);
-//     for (const datos of datosArray) {
-//       let dataCommit = [];
-//       let i = 0;
-//       for (let index = 0; index < años.length; index++) {
-//         if (años[index] != datos[i].año) {
-//           dataCommit.push(0);
-//         } else {
-//           dataCommit.push(datos[i].commit);
-//           if (i < datos.length - 1) {
-//             i++;
-//           }
-//         }
-//       }
-//       barChartData.push({
-//         data: dataCommit,
-//         label: datos[0].nombre
-//       });
-//     }
-//     años.reverse();
-//     return res.status(200).json({ barChartData, años });
-//   };
-// }
-
-// function generaCommits(res) {
-//   return function(entity) {
-//     let nombreRepo = [];
-//     let barChartData = [];
-//     let commitsArray = [];
-//     let años = [];
-//     let datosArray = [];
-//     for (const repositorio of entity.datos) {
-//       nombreRepo.push(repositorio.repo.name);
-//       let añoCommit = [];
-
-//       let año = 0;
-//       let commitTotal = 1;
-//       let sw = true;
-
-//       for (const commits of repositorio.commits) {
-//         let fecha = new Date(commits.commit.author.date);
-//         if (año != fecha.getFullYear() && sw) {
-//           año = fecha.getFullYear();
-//           sw = false;
-//           // console.log("entro", año);
-//         } else {
-//           if (año == fecha.getFullYear()) {
-//             commitTotal++;
-//           } else {
-//             añoCommit.push({
-//               año: año,
-//               commit: commitTotal,
-//               nombre: repositorio.repo.name
-//             });
-//             datosArray.push(añoCommit);
-//             año = fecha.getFullYear();
-//             commitTotal = 1;
-//           }
-//         }
-//         años.push(fecha.getFullYear());
-//       }
-//       if (commitTotal != 0) {
-//         añoCommit.push({
-//           año: año,
-//           commit: commitTotal,
-//           nombre: repositorio.repo.name
-//         });
-//         datosArray.push(añoCommit);
-//       }
-//     }
-//     años = _.uniq(años);
-//     //ordena ascendentemente
-//     años = _.orderBy(años, o => {
-//       return o * -1;
-//     });
-//     datosArray = _.uniqWith(datosArray, _.isEqual);
-//     for (const datos of datosArray) {
-//       let dataCommit = [];
-//       let i = 0;
-//       for (let index = 0; index < años.length; index++) {
-//         if (años[index] != datos[i].año) {
-//           dataCommit.push(0);
-//         } else {
-//           dataCommit.push(datos[i].commit);
-//           if (i < datos.length - 1) {
-//             i++;
-//           }
-//         }
-//       }
-//       barChartData.push({
-//         data: dataCommit,
-//         label: datos[0].nombre
-//       });
-//     }
-//     años.reverse();
-//     return res.status(200).json({ barChartData, años });
-//   };
-// }
-// function generaDatos(res) {
-//   return function(entity) {
-//     // console.log("dd:", entity);
-//     let nombreRepo = [];
-//     let barChartData = [];
-//     let commitsArray = [];
-//     let años = [];
-//     let datosArray = [];
-//     for (const repositorio of entity.datos) {
-//       nombreRepo.push(repositorio.repo.name);
-//       let añoCommit = [];
-
-//       let año = 0;
-//       let commitTotal = 0;
-//       let sw = true;
-
-//       for (const commits of repositorio.commits) {
-//         let fecha = new Date(commits.commit.author.date);
-//         if (año != fecha.getFullYear() && sw) {
-//           año = fecha.getFullYear();
-//           sw = false;
-//           // console.log("entro", año);
-//         }
-//         if (año == fecha.getFullYear()) {
-//           commitTotal++;
-//         } else {
-//           añoCommit.push({
-//             año: año,
-//             commit: commitTotal,
-//             nombre: repositorio.repo.name
-//           });
-//           datosArray.push(añoCommit);
-//           año = fecha.getFullYear();
-//           commitTotal = 0;
-//         }
-//         años.push(fecha.getFullYear());
-//       }
-//       if (commitTotal != 0) {
-//         añoCommit.push({
-//           año: año,
-//           commit: commitTotal,
-//           nombre: repositorio.repo.name
-//         });
-//         datosArray.push(añoCommit);
-//       }
-//     }
-//     años = _.uniq(años);
-//     //ordena ascendentemente
-//     años = _.orderBy(años, o => {
-//       return o * -1;
-//     });
-//     datosArray = _.uniqWith(datosArray, _.isEqual);
-//     for (const datos of datosArray) {
-//       let dataCommit = [];
-//       let i = 0;
-//       for (let index = 0; index < años.length; index++) {
-//         if (años[index] != datos[i].año) {
-//           dataCommit.push(0);
-//         } else {
-//           dataCommit.push(datos[i].commit);
-//           if (i < datos.length - 1) {
-//             i++;
-//           }
-//         }
-//       }
-//       barChartData.push({
-//         data: dataCommit,
-//         label: datos[0].nombre
-//       });
-//     }
-//     return res.status(200).json(barChartData);
-//   };
-// }
-
 function respondWithResult(res, statusCode) {
   statusCode = statusCode || 200;
   // console.log("esto es un",entity);
@@ -326,21 +104,22 @@ export function index(req, res) {
         }
       }
     })
-      .then(datos => {
-        return SequelizeHelper.generarRespuesta(datos, req.opciones);
-      })
-      .then(respondWithResult(res))
-      .catch(handleError(res));
+    .then(datos => {
+      return SequelizeHelper.generarRespuesta(datos, req.opciones);
+    })
+    .then(respondWithResult(res))
+    .catch(handleError(res));
   } else {
+    console.log("req",req.usuario);
     return Usuario.findAndCountAll({
-      include: [{ all: true }],
+      // include: [{ all: true }],
       where: {
         estado: true
       },
       // order: [["clasificacion", "desc"]],
       offset: req.opciones.offset,
       limit: req.opciones.limit
-    })
+    },'_id nombre email')
       .then(datos => {
         return SequelizeHelper.generarRespuesta(datos, req.opciones);
       })
@@ -381,11 +160,11 @@ export function create(req, res) {
           .then(respondWithResult(res, 201))
           .catch(handleError(res));
       } else {
-        res.status(400).send({ mensaje: "rellena todos los datos" });
+        res.status(400).send({ message: "rellena todos los datos" });
       }
     });
   } else {
-    res.status(500).send({ mensaje: "introduce la contraseña" });
+    res.status(500).send({ message: "introduce la contraseña" });
   }
   // return Usuario.create(obj)
   // .then(respondWithResult(res, 201))
@@ -413,18 +192,18 @@ export function login(req, res) {
               usuario: user
             });
           } else {
-            res.status(404).send({ mensaje: "Contraseña incorrecta" });
+            res.status(404).send({ message: "Contraseña incorrecta" });
           }
         });
       } else {
         res
           .status(404)
-          .send({ mensaje: "No existe el usuario o contraseña incorrecta " });
+          .send({ message: "No existe el usuario o contraseña incorrecta " });
       }
 
       // respondWithResult(res, 201)
     });
-  // .catch(res.status(404).send({ mensaje: "No existe el usuario o contraseña incorrecta " }));
+  // .catch(res.status(404).send({ message: "No existe el usuario o contraseña incorrecta " }));
 }
 
 // Upserts the given Usuario in the DB at the specified ID

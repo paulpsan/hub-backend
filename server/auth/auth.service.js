@@ -2,78 +2,49 @@
 import config from "../config/environment";
 import jwt from "jsonwebtoken";
 import compose from "composable-middleware";
-import { Usuario } from "../sqldb";
-// import Usuario from '../api/usuario/usuario.model';
 
-// var validateJwt = expressJwt({
-//   secret: config.secrets.session
-// });
-
-/**
- * Attaches the usuario object to the request if authenticated
- * Otherwise returns 403
- */
 export function isAuthenticated() {
   return (
     compose()
-      // Validate jwt
-      .use(function(req, res, next) {
-        // allow access_token to be passed through query parameter as well
-        if (req.query && req.query.hasOwnProperty("access_token")) {
-          console.log('entro 1');
-          req.headers.authorization = `Bearer ${req.query.access_token}`;
-        }
-        // IE11 forgets to set Authorization header sometimes. Pull from cookie instead.
-        // if (req.query && typeof req.headers.authorization === "undefined") {
-        // console.log("entro 2 :",req.headers);
-        //   req.headers.authorization = `Bearer ${req.cookies.token}`;
-        // }
-        console.log("Authorization :",req.headers);
-        if (req.headers.authorization) {
-          // validateJwt(req, res, next);
-        }
-        next();
-      })
-      // Attach Usuario to request
-      // .use(function(req, res, next) {
-      //   console.log("requeee ",req.user);
-      //   Usuario.findOne({ usuario: req.user._id })
-      //     .then(usuario => {
-      //       if (!usuario) {
-      //         return res.status(401).end();
-      //       }
-      //       req.usuario = usuario;
-      //       next();
-      //     })
-      //     .catch(err => next(err));
-      // })
-  );
-}
-
-/**
- * Checks if the usuario role meets the minimum requirements of the route
- */
-export function hasRole(roleRequired) {
-  if(!roleRequired) {
-    throw new Error('Required role needs to be set');
-  }
-
-  return compose()
-    .use(isAuthenticated())
-    .use(function meetsRequirements(req, res, next) {
-      if(config.userRoles.indexOf(req.usuario.rol) >= config.userRoles.indexOf(roleRequired)) {
-        return next();
-      } else {
-        return res.status(403).send('Forbidden');
+    // Validate jwt
+    .use(function (req, res, next) {
+      // allow access_token to be passed through query parameter as well
+      if (req.query && req.query.hasOwnProperty("access_token")) {
+        console.log('entro 1');
+        req.headers.authorization = `Bearer ${req.query.access_token}`;
       }
-    });
+
+      if (req.headers.authorization) {
+        let token = req.headers.authorization.split(' ')[1];
+        console.log("TokenEntrante", token);
+        jwt.verify(token, config.secrets.session, (err, decoded) => {
+          if (err) {
+            return res.status(401).json({
+              message: 'Token incorrecto',
+              errors: err
+            });
+          } else {
+            req.usuario = decoded.usuario;
+            next();
+          }
+        });
+      } else {
+        return res.status(401).json({
+          message: 'No cuenta con los accesos al sistema',
+        });
+      }
+    })
+  );
 }
 
 /**
  * Returns a jwt token signed by the app secret
  */
-export function signToken(id, rol) {
-  return jwt.sign({ _id: id, rol }, config.secrets.session, {
+export function signToken(user) {
+  return jwt.sign({
+    _id: user._id,
+    rol: user.rol
+  }, config.secrets.session, {
     expiresIn: 60 * 60
   });
 }
@@ -82,7 +53,7 @@ export function signToken(id, rol) {
  * Set token cookie directly for oAuth strategies
  */
 export function setTokenCookie(req, res) {
-  if(!req.usuario) {
+  if (!req.usuario) {
     return res.status(404).send('It looks like you aren\'t logged in, please try again.');
   }
   var token = signToken(req.usuario._id, req.usuario.role);

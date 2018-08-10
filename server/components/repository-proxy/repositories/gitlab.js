@@ -110,10 +110,10 @@ class Gitlab {
     	    	};
     	    	resolve({metadatos:metadatos, datos:proyectos_procesados});
     		}else{
-    			let mensaje="Error al obtener los proyectos";
-    			console.log(mensaje,error);
+    			let message="Error al obtener los proyectos";
+    			console.log(message,error);
     			reject({
-						mensaje: mensaje
+						message: message
     	        });
     		}
     	});
@@ -255,7 +255,7 @@ class Gitlab {
           });
         } else {
           reject({
-            mensaje: "El proyecto " + url + " no es publico"
+            message: "El proyecto " + url + " no es publico"
           });
         }
       });
@@ -371,10 +371,10 @@ class Gitlab {
     	            });
     	          });
     		}else{
-    			let mensaje="Error al obtener el proyecto: "+id;
-    			console.log(mensaje,error);
+    			let message="Error al obtener el proyecto: "+id;
+    			console.log(message,error);
     			reject({
-    	           mensaje: mensaje
+    	           message: message
     	        });
     		}
     	});
@@ -487,7 +487,7 @@ class Gitlab {
 	          });
 	        } else {
 	          reject({
-	            mensaje: "El proyecto " + url + " no es publico"
+	            message: "El proyecto " + url + " no es publico"
 	          });
 	        }
 	      });

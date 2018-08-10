@@ -1,13 +1,17 @@
 "use strict";
-import { Usuario, Repositorio } from "../sqldb";
+import {
+  Usuario,
+  Repositorio
+} from "../sqldb";
 import Sequelize from "sequelize";
 import TokenController from "./token";
 import config from "../config/environment";
 import qs from "querystringify";
+import { signToken } from "../auth/auth.service";
+
 var fetch = require("node-fetch");
 
-let headersClient = qs.stringify(
-  {
+let headersClient = qs.stringify({
     client_id: config.github.clientId,
     client_secret: config.github.clientSecret
   },
@@ -15,7 +19,7 @@ let headersClient = qs.stringify(
 );
 
 function getJson() {
-  return function(resultado) {
+  return function (resultado) {
     return resultado.json();
   };
 }
@@ -84,15 +88,19 @@ function nuevoUsuario(usuarioOauth) {
 }
 
 function createUpdateUser() {
-  return function(response) {
+  return function (response) {
     let usuarioOauth = response.usuario;
     let token = response.token;
     const Op = Sequelize.Op;
     return Usuario.findOne({
-      where: {
-        [Op.or]: [{ id_github: usuarioOauth.id }, { email: usuarioOauth.email }]
-      }
-    })
+        where: {
+          [Op.or]: [{
+            id_github: usuarioOauth.id
+          }, {
+            email: usuarioOauth.email
+          }]
+        }
+      })
       .then(user => {
         console.log("object", user);
         if (user !== null) {
@@ -133,17 +141,17 @@ function createUpdateUser() {
 }
 
 function addUser(usuario) {
-  return function(userOauth) {
+  return function (userOauth) {
     let token = userOauth.token;
     let cuenta = [];
     cuenta = usuario.cuentas;
     return TokenController.updateCreateToken("github", usuario, token).then(
       resp => {
         return Usuario.findOne({
-          where: {
-            _id: usuario._id
-          }
-        })
+            where: {
+              _id: usuario._id
+            }
+          })
           .then(user => {
             cuenta.push(tipo);
             user.cuentas = cuenta;
@@ -197,8 +205,14 @@ export function authLoginGithub(req, res) {
   authenticateGithub(code)
     .then(createUpdateUser())
     .then(result => {
-      if (!result.errors) res.json({ usuario: result });
-      else res.status(500).send(result.errors);
+      if (!result.errors) {
+        var token = signToken(result);
+        res.json({
+          usuario: result,
+          token
+        })
+
+      } else res.status(500).send(result.errors);
     })
     .catch(err => {
       res.send(err);
@@ -223,7 +237,10 @@ export function refreshGithub(req, res) {
   refreshToken(req.body.code, req.body.usuario)
     .then(
       token => {
-        res.json({ token, usuario: req.body.usuario });
+        res.json({
+          token,
+          usuario: req.body.usuario
+        });
       },
       error => {
         console.log("error", error);
@@ -237,7 +254,7 @@ export function refreshGithub(req, res) {
 }
 
 function creaGithub(usuario) {
-  return async function(repositorios) {
+  return async function (repositorios) {
     for (const repo of repositorios) {
       let objRepositorio = {
         id_repositorio: repo.id,
@@ -279,11 +296,11 @@ function creaGithub(usuario) {
         fk_usuario: usuario._id
       };
       await Repositorio.findOne({
-        where: {
-          id_repositorio: objRepositorio.id_repositorio,
-          fk_usuario: usuario._id
-        }
-      })
+          where: {
+            id_repositorio: objRepositorio.id_repositorio,
+            fk_usuario: usuario._id
+          }
+        })
         .then(repo => {
           if (repo !== null) {
             return Repositorio.update(objRepositorio, {
@@ -310,12 +327,12 @@ export function adicionaGithub(token, usuario) {
       .then(responseGithub => {
         console.log(responseGithub);
         fetch(
-          "https://api.github.com/users/" +
+            "https://api.github.com/users/" +
             responseGithub.login +
             "/repos" +
             "?access_token=" +
             token
-        )
+          )
           .then(getJson())
           .then(creaGithub(usuario))
           .then(resp => {

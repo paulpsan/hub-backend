@@ -177,7 +177,7 @@ function createEntity(res, proyecto) {
           res.send(err);
         });
     } else {
-      res.send({ mensaje: entity.nombre + " ya existe" });
+      res.send({ message: entity.nombre + " ya existe" });
     }
     return entity;
   };
@@ -200,7 +200,7 @@ function saveUpdates(updates) {
 function handleEntityNotFound(res) {
   return function(entity) {
     if (!entity) {
-      res.status(404).send({ mensaje: "no se encuentra lo requerido" });
+      res.status(404).send({ message: "no se encuentra lo requerido" });
       return null;
     }
     return entity;

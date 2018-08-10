@@ -1,28 +1,32 @@
 "use strict";
 
-import { Usuario, Repositorio } from "../sqldb";
+import {
+  Usuario,
+  Repositorio
+} from "../sqldb";
 import Sequelize from "sequelize";
 import TokenController from "./token";
 import config from "../config/environment";
 import request from "request";
+import {signToken} from "../auth/auth.service";
 
 var fetch = require("node-fetch");
 
 function getJson() {
-  return function(resultado) {
+  return function (resultado) {
     return resultado.json();
   };
 }
 
 function addUser(usuario) {
-  return function(userOauth) {
+  return function (userOauth) {
     let token = userOauth.token;
     TokenController.updateCreateToken("bitbucket", usuario, token);
     return Usuario.findOne({
-      where: {
-        _id: usuario._id
-      }
-    })
+        where: {
+          _id: usuario._id
+        }
+      })
       .then(user => {
         user.id_bitbucket = userOauth.usuario.account_id;
         user.bitbucket = true;
@@ -35,12 +39,12 @@ function addUser(usuario) {
       });
   };
 }
+
 function authenticateBitbucket(code) {
   return new Promise((resolver, rechazar) => {
     let objRes = {};
     request.post(
-      `https://bitbucket.org/site/oauth2/access_token`,
-      {
+      `https://bitbucket.org/site/oauth2/access_token`, {
         auth: {
           username: config.bitbucket.clientId,
           password: config.bitbucket.clientSecret
@@ -56,8 +60,8 @@ function authenticateBitbucket(code) {
         objRes.token = data.access_token;
         if (objRes.token) {
           fetch(
-            "https://api.bitbucket.org/2.0/user?access_token=" + objRes.token
-          )
+              "https://api.bitbucket.org/2.0/user?access_token=" + objRes.token
+            )
             .then(getJson())
             .then(responseBitbucket => {
               resolver({
@@ -73,18 +77,19 @@ function authenticateBitbucket(code) {
     );
   });
 }
+
 function createUpdateUser() {
-  return function(response) {
+  return function (response) {
     console.log("response", response);
     let usuarioOauth = response.usuario;
     let token = response.token;
     //obtener email
     const Op = Sequelize.Op;
     return Usuario.findOne({
-      where: {
-        id_bitbucket: usuarioOauth.account_id
-      }
-    })
+        where: {
+          id_bitbucket: usuarioOauth.account_id
+        }
+      })
       .then(user => {
         if (user !== null) {
           //eliminar password
@@ -117,20 +122,26 @@ export function singOauthBitbucket(req, res) {
   let usuarioOauth = req.body.usuarioOauth;
   let token = req.body.token;
   Usuario.findOne({
-    where: {
-      id_bitbucket: usuarioOauth.account_id
-    }
-  })
+      where: {
+        id_bitbucket: usuarioOauth.account_id
+      }
+    })
     .then(user => {
       if (user !== null) {
         //eliminar password
         TokenController.updateCreateToken("bitbucket", result, token);
-        res.json({ token: token, usuario: user });
+        res.json({
+          token: token,
+          usuario: user
+        });
       } else {
         return nuevoUsuario(usuarioOauth, token)
           .then(result => {
             TokenController.createToken("bitbucket", result, token);
-            res.json({ usuario: result, token: token });
+            res.json({
+              usuario: result,
+              token: token
+            });
           })
           .catch(err => {
             res.send(err);
@@ -149,7 +160,11 @@ export function authLoginBitbucket(req, res) {
   authenticateBitbucket(code)
     .then(createUpdateUser())
     .then(result => {
-      res.json({ usuario: result });
+      var token = signToken(result);
+      res.json({
+        usuario: result,
+        token
+      });
     })
     .catch(err => {
       res.send(err);
@@ -173,8 +188,7 @@ export function authAddBitbucket(req, res) {
 function refreshToken(code, usuario) {
   return new Promise((resolver, rechazar) => {
     request.post(
-      `https://bitbucket.org/site/oauth2/access_token`,
-      {
+      `https://bitbucket.org/site/oauth2/access_token`, {
         auth: {
           username: config.bitbucket.clientId,
           password: config.bitbucket.clientSecret
@@ -199,7 +213,10 @@ export function refreshBitbucket(req, res) {
   refreshToken(req.body.code, req.body.usuario)
     .then(
       token => {
-        res.json({ token, usuario: req.body.usuario });
+        res.json({
+          token,
+          usuario: req.body.usuario
+        });
       },
       error => {
         console.log("error", error);
@@ -243,8 +260,9 @@ function nuevoUsuario(usuarioOauth, token) {
       });
   });
 }
+
 function creaBitbucket(usuario) {
-  return async function(repositorios) {
+  return async function (repositorios) {
     let i = 0;
     for (const repo of repositorios.values) {
       let objRepositorio = {
@@ -265,8 +283,7 @@ function creaBitbucket(usuario) {
         hooks: repo.links.hooks.href,
         tags: repo.links.tags.href,
         issues: {
-          url:
-            config.bitbucket.api_url +
+          url: config.bitbucket.api_url +
             "repositories/" +
             repo.full_name +
             "/issues",
@@ -294,11 +311,11 @@ function creaBitbucket(usuario) {
       };
 
       await Repositorio.findOne({
-        where: {
-          id_repositorio: objRepositorio.id_repositorio,
-          fk_usuario: usuario._id
-        }
-      })
+          where: {
+            id_repositorio: objRepositorio.id_repositorio,
+            fk_usuario: usuario._id
+          }
+        })
         .then(repo => {
           if (repo !== null) {
             return Repositorio.update(objRepositorio, {

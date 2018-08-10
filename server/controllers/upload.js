@@ -33,8 +33,8 @@ export function uploadFile(req, res) {
   var id = req.params.id;
   if (!req.files) {
     return res.status(400).json({
-      mensaje: "No selecciono nada",
-      errors: { mensaje: "Debe de seleccionar una imagen" }
+      message: "No selecciono nada",
+      errors: { message: "Debe de seleccionar una imagen" }
     });
   }
   // Obtener nombre del archivo
@@ -47,9 +47,9 @@ export function uploadFile(req, res) {
 
   if (extensionesValidas.indexOf(extensionArchivo) < 0) {
     return res.status(400).json({
-      mensaje: "Extension no válida",
+      message: "Extension no válida",
       errors: {
-        mensaje: "Las extensiones válidas son " + extensionesValidas.join(", ")
+        message: "Las extensiones válidas son " + extensionesValidas.join(", ")
       }
     });
   }
@@ -64,7 +64,7 @@ export function uploadFile(req, res) {
   archivo.mv(path, err => {
     if (err) {
       return res.status(500).json({
-        mensaje: "Error al mover archivo",
+        message: "Error al mover archivo",
         errors: err
       });
     }
@@ -73,7 +73,7 @@ export function uploadFile(req, res) {
 
     // res.status(200).json({
     //   ok: true,
-    //   mensaje: "Archivo movido",
+    //   message: "Archivo movido",
     //   extensionArchivo: extensionArchivo
     // });
   });
@@ -86,8 +86,8 @@ function subirPorTipo(tipo, id, nombreArchivo, res) {
       .then(usuario => {
         if (!usuario) {
           return res.status(400).json({
-            mensaje: "Usuario no existe",
-            errors: { mensaje: "Usuario no existe" }
+            message: "Usuario no existe",
+            errors: { message: "Usuario no existe" }
           });
         }
         var pathViejo = "./server/uploads/usuarios/" + usuario.avatar;
@@ -102,7 +102,7 @@ function subirPorTipo(tipo, id, nombreArchivo, res) {
           .then(usuarioActualizado => {
             usuarioActualizado.password = ":)";
             return res.status(200).json({
-              mensaje: "Imagen de usuario actualizada",
+              message: "Imagen de usuario actualizada",
               usuario: usuarioActualizado
             });
           })
@@ -112,7 +112,7 @@ function subirPorTipo(tipo, id, nombreArchivo, res) {
       })
       .catch(err => {
         return res.status(500).json({
-          mensaje: "No se pudo actualizar",
+          message: "No se pudo actualizar",
           errors: err
         });
       });
@@ -123,8 +123,8 @@ function subirPorTipo(tipo, id, nombreArchivo, res) {
       .then(repositorio => {
         if (!repositorio) {
           return res.status(400).json({
-            mensaje: "repositorio no existe",
-            errors: { mensaje: "repositorio no existe" }
+            message: "repositorio no existe",
+            errors: { message: "repositorio no existe" }
           });
         }
         var pathViejo = "./server/uploads/repositorios/" + repositorio.avatar;
@@ -138,7 +138,7 @@ function subirPorTipo(tipo, id, nombreArchivo, res) {
           .update({ avatar: nombreArchivo })
           .then(repositorioActualizado => {
             return res.status(200).json({
-              mensaje: "Imagen de repositorio actualizada",
+              message: "Imagen de repositorio actualizada",
               repositorio: repositorioActualizado
             });
           })
@@ -148,7 +148,7 @@ function subirPorTipo(tipo, id, nombreArchivo, res) {
       })
       .catch(err => {
         return res.status(500).json({
-          mensaje: "No se pudo actualizar",
+          message: "No se pudo actualizar",
           errors: err
         });
       });
@@ -159,8 +159,8 @@ function subirPorTipo(tipo, id, nombreArchivo, res) {
       .then(proyecto => {
         if (!proyecto) {
           return res.status(400).json({
-            mensaje: "proyecto no existe",
-            errors: { mensaje: "proyecto no existe" }
+            message: "proyecto no existe",
+            errors: { message: "proyecto no existe" }
           });
         }
 
@@ -174,7 +174,7 @@ function subirPorTipo(tipo, id, nombreArchivo, res) {
           .update({ avatar: nombreArchivo })
           .then(proyectoActualizado => {
             return res.status(200).json({
-              mensaje: "Imagen de proyecto actualizada",
+              message: "Imagen de proyecto actualizada",
               proyecto: proyectoActualizado
             });
           })
@@ -184,7 +184,7 @@ function subirPorTipo(tipo, id, nombreArchivo, res) {
       })
       .catch(err => {
         return res.status(500).json({
-          mensaje: "No se pudo actualizar",
+          message: "No se pudo actualizar",
           errors: err
         });
       });

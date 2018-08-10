@@ -1,12 +1,20 @@
 "use strict";
 
-import { Usuario } from "../sqldb";
-import { Repositorio } from "../sqldb";
+import {
+  Usuario
+} from "../sqldb";
+import {
+  Repositorio
+} from "../sqldb";
 import config from "../config/environment";
 import TokenController from "./token";
 import qs from "querystringify";
 import https from "https";
 import Sequelize from "sequelize";
+import {
+  signToken
+} from "../auth/auth.service";
+
 var fetch = require("node-fetch");
 
 const agent = new https.Agent({
@@ -14,14 +22,14 @@ const agent = new https.Agent({
 });
 
 function getJson() {
-  return function(resultado) {
+  return function (resultado) {
     return resultado.json();
   };
 }
 
 function handleError(res, statusCode) {
   statusCode = statusCode || 500;
-  return function(err) {
+  return function (err) {
     res.status(statusCode).send(err);
   };
 }
@@ -41,18 +49,20 @@ function authenticateGitlab(code, type) {
       redirect_uri: config[type].callback
     });
     fetch(config[type].token_url, {
-      method: "POST",
-      agent,
-      strictSSL: false,
-      body: data
-    })
+        method: "POST",
+        agent,
+        strictSSL: false,
+        body: data
+      })
       .then(getJson())
       .then(token => {
         objRes.token = token.access_token;
         fetch(
-          config[type].api_url + "user?access_token=" + token.access_token,
-          { agent, strictSSL: false }
-        )
+            config[type].api_url + "user?access_token=" + token.access_token, {
+              agent,
+              strictSSL: false
+            }
+          )
           .then(getJson())
           .then(responseGitlab => {
             resolver({
@@ -95,17 +105,17 @@ function nuevoUsuario(usuarioOauth, tipo) {
 }
 
 function addUser(usuario, tipo) {
-  return function(userOauth) {
+  return function (userOauth) {
     let token = userOauth.token;
     let cuenta = [];
     cuenta = usuario.cuentas;
     return TokenController.updateCreateToken(tipo, usuario, token).then(
       resp => {
         return Usuario.findOne({
-          where: {
-            _id: usuario._id
-          }
-        })
+            where: {
+              _id: usuario._id
+            }
+          })
           .then(user => {
             cuenta.push(tipo);
             user.cuentas = cuenta;
@@ -125,31 +135,35 @@ function addUser(usuario, tipo) {
 }
 
 function createUpdateUser(type) {
-  return function(response) {
+  return function (response) {
     let usuarioOauth = response.usuario;
     let token = response.token;
     const Op = Sequelize.Op;
     return Usuario.findOne({
-      where: {
-        [Op.or]: [{ id_gitlab: usuarioOauth.id }, { email: usuarioOauth.email }]
-      }
-    })
-    .then(user => {
-      if (user !== null) {
-        return TokenController.updateCreateToken(type, user, token).then(
-          resp => {
-            if (resp) {
-              user.gitlab = true;
-              user.id_gitlab = usuarioOauth.id;
-              user.save();
+        where: {
+          [Op.or]: [{
+            id_gitlab: usuarioOauth.id
+          }, {
+            email: usuarioOauth.email
+          }]
+        }
+      })
+      .then(user => {
+        if (user !== null) {
+          return TokenController.updateCreateToken(type, user, token).then(
+            resp => {
+              if (resp) {
+                user.gitlab = true;
+                user.id_gitlab = usuarioOauth.id;
+                user.save();
+              }
+              return user;
             }
-            return user;
-          }
-        );
-        //actualizar usuario
-      } else {
-        return nuevoUsuario(usuarioOauth, type)
-        .then(user => {
+          );
+          //actualizar usuario
+        } else {
+          return nuevoUsuario(usuarioOauth, type)
+            .then(user => {
               return TokenController.updateCreateToken(type, user, token).then(() => {
                 return user;
               });
@@ -174,7 +188,11 @@ export function authLoginGitlab(req, res) {
   authenticateGitlab(code, type)
     .then(createUpdateUser(type))
     .then(result => {
-      res.json({ usuario: result });
+      let token = signToken(result);
+      res.json({
+        usuario: result,
+        token
+      });
     })
     .catch(err => {
       res.send(err);
@@ -207,11 +225,11 @@ function refreshToken(code, usuario, tipo) {
       redirect_uri: config[tipo].callback
     });
     fetch(config[tipo].token_url, {
-      method: "POST",
-      agent,
-      strictSSL: false,
-      body: data
-    })
+        method: "POST",
+        agent,
+        strictSSL: false,
+        body: data
+      })
       .then(getJson())
       .then(resp => {
         let token = resp.access_token;
@@ -229,7 +247,10 @@ export function refreshGitlab(req, res) {
   refreshToken(req.body.code, req.body.usuario, req.body.tipo)
     .then(
       token => {
-        res.json({ token, usuario: req.body.usuario });
+        res.json({
+          token,
+          usuario: req.body.usuario
+        });
       },
       error => {
         console.log("error", error);
@@ -250,20 +271,23 @@ export function getMembers(req, res) {
   let token = req.body.token;
   let idProyecto = req.params.id_proyecto;
   fetch(
-    "https://gitlab.geo.gob.bo/api/v4/projects/" +
+      "https://gitlab.geo.gob.bo/api/v4/projects/" +
       idProyecto +
       "/members?access_token=" +
-      token,
-    { agent, strictSSL: false }
-  )
+      token, {
+        agent,
+        strictSSL: false
+      }
+    )
     .then(getJson())
     .then(response => {
       res.send(response);
     })
     .catch(err => {});
 }
+
 function creaGitlab(usuario, tipo) {
-  return async function(repositorios) {
+  return async function (repositorios) {
     for (const repo of repositorios) {
       let objRepositorio = {
         id_repositorio: repo.id,
@@ -286,11 +310,9 @@ function creaGitlab(usuario, tipo) {
           total: 0
         },
 
-        branches:
-          config[tipo].api_url + "projects/" + repo.id + "/repository/branches",
+        branches: config[tipo].api_url + "projects/" + repo.id + "/repository/branches",
         lenguajes: {
-          url:
-            config[tipo].api_url + "projects/" + repo.id + "/languages" || "",
+          url: config[tipo].api_url + "projects/" + repo.id + "/languages" || "",
           datos: ""
         },
         stars: {
@@ -298,8 +320,7 @@ function creaGitlab(usuario, tipo) {
           total: repo.star_count
         },
         commits: {
-          url:
-            config[tipo].api_url +
+          url: config[tipo].api_url +
             "projects/" +
             repo.id +
             "/repository/commits",
@@ -314,11 +335,11 @@ function creaGitlab(usuario, tipo) {
       };
 
       await Repositorio.findOne({
-        where: {
-          id_repositorio: objRepositorio.id_repositorio,
-          fk_usuario: usuario._id
-        }
-      })
+          where: {
+            id_repositorio: objRepositorio.id_repositorio,
+            fk_usuario: usuario._id
+          }
+        })
         .then(repo => {
           if (repo !== null) {
             return Repositorio.update(objRepositorio, {
@@ -341,21 +362,23 @@ export function adicionaGitlab(token, usuario, tipo) {
   return new Promise((resolver, rechazar) => {
     console.log(config[tipo].api_url, token);
     fetch(config[tipo].api_url + "user?access_token=" + token, {
-      agent,
-      strictSSL: false
-    })
+        agent,
+        strictSSL: false
+      })
       .then(getJson())
       .then(responseGitlab => {
         if (responseGitlab.message) rechazar(responseGitlab);
         fetch(
-          config[tipo].api_url +
+            config[tipo].api_url +
             "users/" +
             responseGitlab.id +
             "/projects" +
             "?access_token=" +
-            token,
-          { agent, strictSSL: false }
-        )
+            token, {
+              agent,
+              strictSSL: false
+            }
+          )
           .then(getJson())
           .then(creaGitlab(usuario, tipo))
           .then(resp => {

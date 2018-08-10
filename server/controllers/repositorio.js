@@ -330,7 +330,7 @@ export async function addOauth(req, res) {
           console.log(err);
           res
             .status(500)
-            .json({ mensaje: err.message })
+            .json({ message: err.message })
             .end();
         });
       break;
