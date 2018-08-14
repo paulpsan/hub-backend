@@ -1,0 +1,216 @@
+'use strict';
+import moment from 'moment';
+const weekdayName = new Intl.DateTimeFormat('es-us', {
+  weekday: 'short'
+});
+var meses = [
+  "enero",
+  "febrero",
+  "marzo",
+  "abril",
+  "mayo",
+  "junio",
+  "julio",
+  "agosto",
+  "septiembre",
+  "octubre",
+  "noviembre",
+  "diciembre"
+];
+
+function setTotal(commits, series) {
+  let date;
+  let count = 0;
+  let dateAux = new Date(commits[0].fecha);
+  for (const key in commits) {
+    date = new Date(commits[key].fecha);
+    if (
+      date.getFullYear() === dateAux.getFullYear()
+    ) {
+      count++;
+    } else {
+      series.push({
+        name: moment(dateAux).format('YYYY'),
+        value: count
+      });
+      count = 1;
+      dateAux = new Date(date);
+    }
+  }
+  series.push({
+    name: moment(dateAux).format('YYYY'),
+    value: count
+  });
+  // series = completeDate(series);
+  return series;
+}
+
+function setYear(commits, series) {
+  let date;
+  let count = 0;
+  let dateAux = new Date(commits[0].fecha);
+  for (const key in commits) {
+    date = new Date(commits[key].fecha);
+    if (
+      date.getMonth() === dateAux.getMonth() &&
+      date.getFullYear() === dateAux.getFullYear()
+    ) {
+      count++;
+    } else {
+      series.push({
+        name: moment(dateAux).format('YYYY MMM'),
+        value: count
+      });
+      count = 1;
+      dateAux = new Date(date);
+    }
+  }
+  series.push({
+    name: moment(dateAux).format('YYYY MMM'),
+    value: count
+  });
+  return series;
+}
+
+function setMonth(commits, series) {
+  let date;
+  let count = 0;
+  let dateAux = new Date(commits[0].fecha);
+  for (const key in commits) {
+    date = new Date(commits[key].fecha);
+    if (
+      date.getDay() === dateAux.getDay() &&
+      date.getMonth() === dateAux.getMonth() &&
+      date.getFullYear() === dateAux.getFullYear()
+    ) {
+      count++;
+    } else {
+      series.push({
+        name: moment(dateAux).format('YYYY MMM DD'),
+        value: count
+      });
+      count = 1;
+      dateAux = new Date(date);
+      // console.log(series);
+    }
+  }
+  series.push({
+    name: moment(dateAux).format('YYYY MMM DD'),
+    value: count
+  });
+
+  return series;
+}
+
+function completeDate(series) {
+  let dateAux;
+  let newSeries = [];
+  const VALUE = 0;
+  dateAux = series[0].name.getFullYear();
+  for (const serie of series) {
+    while (serie.name != dateAux) {
+
+    }
+    newSeries.push(serie);
+  }
+}
+
+function getCalendarData(commits) {
+  console.log(commits);
+  let date;
+  let calendarData = [];
+  let cont = 0;
+  let auxDate = new Date(commits[cont].name);
+  let maxDate = new Date(commits[commits.length - 1].name);
+  let todaysDay = maxDate.getDate();
+  let thisMonday = new Date(maxDate.getFullYear(), maxDate.getMonth(), todaysDay - maxDate.getDay() + 1);
+  let thisMondayDay = thisMonday.getDate();
+  const thisMondayYear = thisMonday.getFullYear();
+  const thisMondayMonth = thisMonday.getMonth();
+  const getDate = d => new Date(thisMondayYear, thisMondayMonth, d);
+
+  for (let week = -78; week <= 0; week++) {
+    const mondayDay = thisMondayDay + week * 7;
+    const monday = getDate(mondayDay);
+
+    const series = [];
+    let value;
+    for (let dayOfWeek = 0; dayOfWeek < 7; dayOfWeek++) {
+      const date = getDate(mondayDay - 1 + dayOfWeek);
+      console.log(date);
+      console.log(auxDate);
+      while (date.getDate() > auxDate.getDate() &&
+        date.getMonth() > auxDate.getMonth() &&
+        date.getFullYear() > auxDate.getFullYear()) {
+        cont++;
+        auxDate = new Date(commits[cont].name);
+      }
+      if (
+        date.getDate() === auxDate.getDate() &&
+        date.getMonth() === auxDate.getMonth() &&
+        date.getFullYear() === auxDate.getFullYear()
+      ) {
+        console.log(auxDate);
+        console.log(date);
+        console.log(commits[cont]);
+        value = commits[cont].value;
+        cont++;
+        if (commits[cont]) {
+          auxDate = new Date(commits[cont].name);
+        }
+      } else {
+        value = 0;
+      }
+      series.push({
+        date,
+        name: weekdayName.format(date),
+        value
+      });
+    }
+    // thisMondayDay = thisMondayDay + 7;
+    // thisMonday = new Date(thisMonday.getFullYear(), thisMonday.getMonth(), thisMondayDay)
+    calendarData.push({
+      name: monday.toString(),
+      series
+    });
+  }
+  console.log(calendarData);
+  return calendarData
+
+
+}
+
+
+
+
+class LineChart {
+
+  static byCommits(data) {
+
+    console.log(data);
+    let commits = data;
+    let resp = {};
+    let serieTotal = [];
+    let serieYear = [];
+    let serieMonth = [];
+
+    let barChartData = [];
+    let años = [];
+    let datosArray = [];
+    let datosMes = [];
+    let date;
+    let count_month = 0;
+    let dateAux;
+
+    resp.total = setTotal(data, serieTotal);
+    resp.año = setYear(data, serieYear);
+    resp.mes = setMonth(data, serieMonth);
+
+    resp.heatMap = getCalendarData(resp.mes);
+
+    return resp;
+  }
+
+}
+
+export default LineChart;

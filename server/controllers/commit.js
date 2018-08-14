@@ -10,11 +10,14 @@
 
 "use strict";
 
-import { Commit } from "../sqldb";
+import {
+  Commit
+} from "../sqldb";
 import https from "https";
 import TokenController from "./token";
 import qs from "querystringify";
-import { Sequelize } from "sequelize";
+import LineChart from "../components/graficos/lineChart";
+import Sequelize from "sequelize";
 import _ from "lodash";
 
 var fetch = require("node-fetch");
@@ -37,14 +40,14 @@ const agent = new https.Agent({
 });
 
 function getJson() {
-  return function(resultado) {
+  return function (resultado) {
     return resultado.json();
   };
 }
 
 function respondWithResult(res, statusCode) {
   statusCode = statusCode || 200;
-  return function(entity) {
+  return function (entity) {
     if (entity) {
       return res.status(statusCode).json(entity);
     }
@@ -53,7 +56,7 @@ function respondWithResult(res, statusCode) {
 }
 
 function saveUpdates(updates) {
-  return function(entity) {
+  return function (entity) {
     return entity
       .updateAttributes(updates)
       .then(updated => {
@@ -66,7 +69,7 @@ function saveUpdates(updates) {
 }
 
 function removeEntity(res) {
-  return function(entity) {
+  return function (entity) {
     if (entity) {
       return entity.destroy().then(() => {
         res.status(204).end();
@@ -76,7 +79,7 @@ function removeEntity(res) {
 }
 
 function handleEntityNotFound(res) {
-  return function(entity) {
+  return function (entity) {
     if (!entity) {
       res.status(404).end();
       return null;
@@ -87,17 +90,18 @@ function handleEntityNotFound(res) {
 
 function handleError(res, statusCode) {
   statusCode = statusCode || 500;
-  return function(err) {
+  return function (err) {
     res.status(statusCode).send(err);
   };
 }
+
 function crearCommit(objCommit) {
   return Commit.findOne({
-    where: {
-      sha: objCommit.sha,
-      fk_repositorio: objCommit.fk_repositorio
-    }
-  })
+      where: {
+        sha: objCommit.sha,
+        fk_repositorio: objCommit.fk_repositorio
+      }
+    })
     .then(respCommit => {
       console.log("respCommit", respCommit);
       if (respCommit === null) {
@@ -123,8 +127,7 @@ async function addCommitsGithub(commits, repo) {
       fecha: commit.commit.author.date,
       id_usuario: repo.fk_usuario,
       estado: repo.visibilidad && repo.estado,
-      avatar_autor:
-        commit.committer !== null ? commit.committer.avatar_url : "",
+      avatar_autor: commit.committer !== null ? commit.committer.avatar_url : "",
       web_url_autor: commit.committer !== null ? commit.committer.html_url : "",
       fk_repositorio: repo._id
     };
@@ -157,8 +160,8 @@ async function addCommitsBitbucket(commits, repo) {
       mensaje: commit.message,
       fecha: commit.date,
       estado: repo.visibilidad && repo.estado,
-      avatar_autor: commit.author.user?commit.author.user.links.avatar.href:"",
-      web_url_autor: commit.author.user?commit.author.user.links.html.href:"",
+      avatar_autor: commit.author.user ? commit.author.user.links.avatar.href : "",
+      web_url_autor: commit.author.user ? commit.author.user.links.html.href : "",
       id_usuario: repo.fk_usuario,
       fk_repositorio: repo._id
     };
@@ -169,8 +172,10 @@ async function addCommitsBitbucket(commits, repo) {
 
 export function index(req, res) {
   return Commit.findAll({
-    order: [["fecha", "desc"]]
-  })
+      order: [
+        ["fecha", "desc"]
+      ]
+    })
     .then(respondWithResult(res))
     .catch(handleError(res));
 }
@@ -178,9 +183,13 @@ export function index(req, res) {
 // Gets a single Commit from the DB
 export function show(req, res) {
   return Commit.findAll({
-    where: { fk_repositorio: req.params.id },
-    order: [["fecha", "desc"]]
-  })
+      where: {
+        fk_repositorio: req.params.id
+      },
+      order: [
+        ["fecha", "desc"]
+      ]
+    })
     .then(handleEntityNotFound(res))
     .then(respondWithResult(res))
     .catch(handleError(res));
@@ -205,38 +214,48 @@ export async function create(req, res) {
   switch (tipo) {
     case "github":
       fetch(repo.commits.url + "?access_token=" + token + options, {
-        agent,
-        strictSSL: false
-      })
+          agent,
+          strictSSL: false
+        })
         .then(getJson())
         .then(commits => {
           //validar
           if (addCommitsGithub(commits, repo)) {
-            res.json({ respuesta: "Se actualizaron correctamente!" });
+            res.json({
+              respuesta: "Se actualizaron correctamente!"
+            });
           } else {
             res
               .status(500)
-              .json({ error: "Problema en actualizacion" })
+              .json({
+                error: "Problema en actualizacion"
+              })
               .end();
           }
         });
 
       break;
     case "bitbucket":
-      options = options + "&" + qs.stringify({ pagelen: 100 });
+      options = options + "&" + qs.stringify({
+        pagelen: 100
+      });
       fetch(repo.commits.url + "?access_token=" + token + options, {
-        agent,
-        strictSSL: false
-      })
+          agent,
+          strictSSL: false
+        })
         .then(getJson())
         .then(commits => {
           console.log(commits);
           if (addCommitsBitbucket(commits.values, repo)) {
-            res.json({ respuesta: "Se actualizaron correctamente!" });
+            res.json({
+              respuesta: "Se actualizaron correctamente!"
+            });
           } else {
             res
               .status(500)
-              .json({ error: "Problema en actualizacion" })
+              .json({
+                error: "Problema en actualizacion"
+              })
               .end();
           }
         });
@@ -245,9 +264,9 @@ export async function create(req, res) {
     default:
       if (token) {
         fetch(repo.commits.url + "?access_token=" + token + options, {
-          agent,
-          strictSSL: false
-        })
+            agent,
+            strictSSL: false
+          })
           .then(response => {
             let total = response.headers.get("x-total");
             console.log("total", total);
@@ -255,18 +274,24 @@ export async function create(req, res) {
           })
           .then(commits => {
             if (addCommitsGitlab(commits, repo)) {
-              res.json({ respuesta: "Se actualizaron correctamente!" });
+              res.json({
+                respuesta: "Se actualizaron correctamente!"
+              });
             } else {
               res
                 .status(500)
-                .json({ error: "Problema en actualizacion" })
+                .json({
+                  error: "Problema en actualizacion"
+                })
                 .end();
             }
           });
       } else {
         res
           .status(500)
-          .json({ error: "Problema en actualizacion" })
+          .json({
+            error: "Problema en actualizacion"
+          })
           .end();
       }
       break;
@@ -280,10 +305,10 @@ export function upsert(req, res) {
   }
 
   return Commit.upsert(req.body, {
-    where: {
-      _id: req.params.id
-    }
-  })
+      where: {
+        _id: req.params.id
+      }
+    })
     .then(respondWithResult(res))
     .catch(handleError(res));
 }
@@ -291,10 +316,10 @@ export function upsert(req, res) {
 // Updates an existing Commit in the DB
 export function patch(req, res) {
   return Commit.findAll({
-    where: {
-      fk_repositorio: req.params.id
-    }
-  })
+      where: {
+        fk_repositorio: req.params.id
+      }
+    })
     .then(handleEntityNotFound(res))
     .then(saveUpdates(req.body))
     .then(respondWithResult(res))
@@ -304,104 +329,53 @@ export function patch(req, res) {
 // Deletes a Commit from the DB
 export function destroy(req, res) {
   return Commit.find({
-    where: {
-      _id: req.params.id
-    }
-  })
+      where: {
+        _id: req.params.id
+      }
+    })
     .then(handleEntityNotFound(res))
     .then(removeEntity(res))
     .catch(handleError(res));
 }
 export function totalCommit(req, res) {
   return Commit.findOne({
-    attributes: [[Sequelize.fn("COUNT", Sequelize.col("id_usuario")), "total"]],
-    where: {
-      id_usuario: req.params.id,
-      estado: true
-    }
-  })
+      attributes: [
+        [Sequelize.fn("COUNT", Sequelize.col("id_usuario")), "total"]
+      ],
+      where: {
+        id_usuario: req.params.id,
+        estado: true
+      }
+    })
     .then(handleEntityNotFound(res))
     .then(respondWithResult(res))
     .catch(err => {
       console.log(err);
     });
 }
-export function graficaCommits(req, res) {
+//gráfica commits por usuario
+export function byUser(req, res) {
+  let result;
   return Commit.findAll({
-    where: {
-      id_usuario: req.params.id,
-      estado: true
-    },
-    order: [["fecha", "asc"]]
-  })
+      where: {
+        id_usuario: req.params.id,
+        estado: true
+      },
+      order: [
+        ["fecha", "asc"]
+      ]
+    })
     .then(response => {
-      let barChartData = [];
-      let años = [];
-      let datosArray = [];
-      let datosMes = [];
-      let commits = response;
-      let fecha;
-      let count_month = 0;
-      let dateAux;
-      for (const key in commits) {
-        fecha = new Date(commits[key].fecha);
-        console.log(fecha);
-        if (key == 0) {
-          dateAux = new Date(fecha);
-        }
-        if (
-          fecha.getMonth() === dateAux.getMonth() &&
-          fecha.getFullYear() === dateAux.getFullYear()
-        ) {
-          count_month++;
-          // console.log(fecha, meses[fecha.getMonth()]);
-        } else {
-          datosMes.push({
-            año: dateAux.getFullYear(),
-            mes: meses[dateAux.getMonth()],
-            date: new Date(dateAux.getFullYear(), dateAux.getMonth()),
-            total: count_month
-          });
-          count_month = 1;
-          dateAux = new Date(fecha);
-        }
-      }
-      datosMes.push({
-        año: dateAux.getFullYear(),
-        mes: meses[dateAux.getMonth()],
-        date: new Date(dateAux.getFullYear(), dateAux.getMonth()),
-        total: count_month
-      });
-      // datosMes = datosMes.reverse();
-      console.log("+++++", datosMes);
-
-      for (const commit of commits) {
-        if (commit.estado) {
-          fecha = new Date(commit.fecha);
-          if (años.indexOf(fecha.getFullYear()) < 0) {
-            años.push(fecha.getFullYear());
-          }
-        }
-      }
-      años = _.sortBy(años);
-      for (const año of años) {
-        let count_year = 0;
-        for (const commit of commits) {
-          fecha = new Date(commit.fecha);
-          if (año === fecha.getFullYear()) {
-            count_year += 1;
-          }
-        }
-        datosArray.push(count_year);
-      }
-
-      barChartData.push({
-        data: datosArray,
-        label: "Commits"
-      });
+      result = LineChart.byCommits(response)
+      console.log(result);
       return res
         .status(200)
-        .json({ años: { barChartData, años }, mes: datosMes });
+        .json({
+          total: result.total,
+          años: result.año,
+          mes: result.mes,
+          heatMap:result.heatMap,
+        });
     })
     .catch(err => {
       console.log(err);
@@ -410,12 +384,14 @@ export function graficaCommits(req, res) {
 
 export function graficaRepositorio(req, res) {
   return Commit.findAll({
-    where: {
-      fk_repositorio: req.params.id,
-      estado: true
-    },
-    order: [["fecha", "asc"]]
-  })
+      where: {
+        fk_repositorio: req.params.id,
+        estado: true
+      },
+      order: [
+        ["fecha", "asc"]
+      ]
+    })
     .then(response => {
       let barChartData = [];
       let años = [];
@@ -483,7 +459,13 @@ export function graficaRepositorio(req, res) {
       });
       return res
         .status(200)
-        .json({ años: { barChartData, años }, mes: datosMes });
+        .json({
+          años: {
+            barChartData,
+            años
+          },
+          mes: datosMes
+        });
     })
     .catch(err => {
       console.log(err);
