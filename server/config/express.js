@@ -11,15 +11,8 @@ import methodOverride from "method-override";
 import errorHandler from "errorhandler";
 import fileUpload from "express-fileupload";
 
-var moment = require("moment-timezone");
-
 export default app => {
-  moment()
-    .tz("America/Los_Angeles")
-    .format();
-
   const env = app.get("env");
-
 
   app.use(morgan("dev"));
 

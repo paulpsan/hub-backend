@@ -1,8 +1,5 @@
 "use strict";
 import moment from "moment";
-const weekdayName = new Intl.DateTimeFormat("es-us", {
-  weekday: "short"
-});
 var meses = [
   "enero",
   "febrero",
@@ -57,7 +54,7 @@ function setYear(commits, series) {
       count++;
     } else {
       series.push({
-        name: moment(dateAux).format("YYYY MMM"),
+        name: new Date(dateAux),
         value: count
       });
       count = 1;
@@ -65,7 +62,7 @@ function setYear(commits, series) {
     }
   }
   series.push({
-    name: moment(dateAux).format("YYYY MMM"),
+    name: new Date(dateAux),
     value: count
   });
   return series;
@@ -85,40 +82,29 @@ function setMonth(commits, series) {
       count++;
     } else {
       series.push({
-        name: moment(dateAux).format("YYYY MMM DD"),
+        name: new Date(dateAux),
         value: count
       });
       count = 1;
       dateAux = new Date(date);
-      // console.log(series);
     }
   }
   series.push({
-    name: moment(dateAux).format("YYYY MMM DD"),
+    name: new Date(dateAux),
     value: count
   });
-
+  console.log(series);;
   return series;
 }
 
-function completeDate(series) {
-  let dateAux;
-  let newSeries = [];
-  const VALUE = 0;
-  dateAux = series[0].name.getFullYear();
-  for (const serie of series) {
-    while (serie.name != dateAux) { }
-    newSeries.push(serie);
-  }
-}
-
 function getCalendarData(commits) {
-  console.log(commits);
-  let date;
+  moment.locale('es')
+  console.log(commits[commits.length - 1].name);
   let calendarData = [];
   let cont = 0;
   let auxDate = new Date(commits[cont].name);
   let maxDate = new Date(commits[commits.length - 1].name);
+  console.log(auxDate, maxDate);
   let todaysDay = maxDate.getDate();
   let thisMonday = new Date(
     maxDate.getFullYear(),
@@ -128,15 +114,17 @@ function getCalendarData(commits) {
   let thisMondayDay = thisMonday.getDate();
   const thisMondayYear = thisMonday.getFullYear();
   const thisMondayMonth = thisMonday.getMonth();
-  
-  const getDate = d => new Date(thisMondayYear, thisMondayMonth, d);
+
+  const getDate = d => {
+    let date = new Date(thisMondayYear, thisMondayMonth, d);
+    // console.log(date);
+    return date
+  }
   let dateAgo = getDate(thisMondayDay - 364);
   while (dateAgo.getTime() > auxDate.getTime()) {
     cont++;
     auxDate = new Date(commits[cont].name);
   }
-
-
   for (let week = -52; week <= 0; week++) {
     const mondayDay = thisMondayDay + week * 7;
     const monday = getDate(mondayDay);
@@ -144,18 +132,14 @@ function getCalendarData(commits) {
     const series = [];
     let value;
     for (let dayOfWeek = 0; dayOfWeek < 7; dayOfWeek++) {
-      const date = getDate(mondayDay - 1 + dayOfWeek);
-      console.log(date);
-      console.log(auxDate);
-
+      let date = getDate(mondayDay - 1 + dayOfWeek);
+      // console.log(date);
+      // console.log(auxDate);
       if (
         date.getDate() === auxDate.getDate() &&
         date.getMonth() === auxDate.getMonth() &&
         date.getFullYear() === auxDate.getFullYear()
       ) {
-        console.log(auxDate);
-        console.log(date);
-        console.log(commits[cont]);
         value = commits[cont].value;
         cont++;
         if (commits[cont]) {
@@ -164,14 +148,14 @@ function getCalendarData(commits) {
       } else {
         value = 0;
       }
-      series.push({
+      date = moment(date);
+      series.unshift({
         date,
-        name: weekdayName.format(date),
+        name: moment(date).format('dddd'),
         value
       });
     }
-    // thisMondayDay = thisMondayDay + 7;
-    // thisMonday = new Date(thisMonday.getFullYear(), thisMonday.getMonth(), thisMondayDay)
+    // series.reverse();
     calendarData.push({
       name: monday.toString(),
       series
@@ -185,7 +169,6 @@ class LineChart {
   static byCommits(data) {
     if (data) {
       console.log(data);
-      let commits = data;
       let resp = {};
       let serieTotal = [];
       let serieYear = [];
@@ -193,9 +176,7 @@ class LineChart {
       resp.total = setTotal(data, serieTotal);
       resp.año = setYear(data, serieYear);
       resp.mes = setMonth(data, serieMonth);
-
       resp.heatMap = getCalendarData(resp.mes);
-
       return resp;
     }
     return null;
