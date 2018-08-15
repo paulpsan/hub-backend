@@ -97,11 +97,11 @@ function handleError(res, statusCode) {
 
 function crearCommit(objCommit) {
   return Commit.findOne({
-      where: {
-        sha: objCommit.sha,
-        fk_repositorio: objCommit.fk_repositorio
-      }
-    })
+    where: {
+      sha: objCommit.sha,
+      fk_repositorio: objCommit.fk_repositorio
+    }
+  })
     .then(respCommit => {
       console.log("respCommit", respCommit);
       if (respCommit === null) {
@@ -172,10 +172,10 @@ async function addCommitsBitbucket(commits, repo) {
 
 export function index(req, res) {
   return Commit.findAll({
-      order: [
-        ["fecha", "desc"]
-      ]
-    })
+    order: [
+      ["fecha", "desc"]
+    ]
+  })
     .then(respondWithResult(res))
     .catch(handleError(res));
 }
@@ -183,13 +183,13 @@ export function index(req, res) {
 // Gets a single Commit from the DB
 export function show(req, res) {
   return Commit.findAll({
-      where: {
-        fk_repositorio: req.params.id
-      },
-      order: [
-        ["fecha", "desc"]
-      ]
-    })
+    where: {
+      fk_repositorio: req.params.id
+    },
+    order: [
+      ["fecha", "desc"]
+    ]
+  })
     .then(handleEntityNotFound(res))
     .then(respondWithResult(res))
     .catch(handleError(res));
@@ -214,9 +214,9 @@ export async function create(req, res) {
   switch (tipo) {
     case "github":
       fetch(repo.commits.url + "?access_token=" + token + options, {
-          agent,
-          strictSSL: false
-        })
+        agent,
+        strictSSL: false
+      })
         .then(getJson())
         .then(commits => {
           //validar
@@ -240,9 +240,9 @@ export async function create(req, res) {
         pagelen: 100
       });
       fetch(repo.commits.url + "?access_token=" + token + options, {
-          agent,
-          strictSSL: false
-        })
+        agent,
+        strictSSL: false
+      })
         .then(getJson())
         .then(commits => {
           console.log(commits);
@@ -264,9 +264,9 @@ export async function create(req, res) {
     default:
       if (token) {
         fetch(repo.commits.url + "?access_token=" + token + options, {
-            agent,
-            strictSSL: false
-          })
+          agent,
+          strictSSL: false
+        })
           .then(response => {
             let total = response.headers.get("x-total");
             console.log("total", total);
@@ -305,10 +305,10 @@ export function upsert(req, res) {
   }
 
   return Commit.upsert(req.body, {
-      where: {
-        _id: req.params.id
-      }
-    })
+    where: {
+      _id: req.params.id
+    }
+  })
     .then(respondWithResult(res))
     .catch(handleError(res));
 }
@@ -316,10 +316,10 @@ export function upsert(req, res) {
 // Updates an existing Commit in the DB
 export function patch(req, res) {
   return Commit.findAll({
-      where: {
-        fk_repositorio: req.params.id
-      }
-    })
+    where: {
+      fk_repositorio: req.params.id
+    }
+  })
     .then(handleEntityNotFound(res))
     .then(saveUpdates(req.body))
     .then(respondWithResult(res))
@@ -329,24 +329,24 @@ export function patch(req, res) {
 // Deletes a Commit from the DB
 export function destroy(req, res) {
   return Commit.find({
-      where: {
-        _id: req.params.id
-      }
-    })
+    where: {
+      _id: req.params.id
+    }
+  })
     .then(handleEntityNotFound(res))
     .then(removeEntity(res))
     .catch(handleError(res));
 }
 export function totalCommit(req, res) {
   return Commit.findOne({
-      attributes: [
-        [Sequelize.fn("COUNT", Sequelize.col("id_usuario")), "total"]
-      ],
-      where: {
-        id_usuario: req.params.id,
-        estado: true
-      }
-    })
+    attributes: [
+      [Sequelize.fn("COUNT", Sequelize.col("id_usuario")), "total"]
+    ],
+    where: {
+      id_usuario: req.params.id,
+      estado: true
+    }
+  })
     .then(handleEntityNotFound(res))
     .then(respondWithResult(res))
     .catch(err => {
@@ -357,14 +357,14 @@ export function totalCommit(req, res) {
 export function byUser(req, res) {
   let result;
   return Commit.findAll({
-      where: {
-        id_usuario: req.params.id,
-        estado: true
-      },
-      order: [
-        ["fecha", "asc"]
-      ]
-    })
+    where: {
+      id_usuario: req.params.id,
+      estado: true
+    },
+    order: [
+      ["fecha", "asc"]
+    ]
+  })
     .then(response => {
       result = LineChart.byCommits(response)
       console.log(result);
@@ -374,24 +374,25 @@ export function byUser(req, res) {
           total: result.total,
           años: result.año,
           mes: result.mes,
-          heatMap:result.heatMap,
+          heatMap: result.heatMap,
         });
     })
     .catch(err => {
       console.log(err);
+      return res.status(500).json({err});
     });
 }
 
 export function graficaRepositorio(req, res) {
   return Commit.findAll({
-      where: {
-        fk_repositorio: req.params.id,
-        estado: true
-      },
-      order: [
-        ["fecha", "asc"]
-      ]
-    })
+    where: {
+      fk_repositorio: req.params.id,
+      estado: true
+    },
+    order: [
+      ["fecha", "asc"]
+    ]
+  })
     .then(response => {
       let barChartData = [];
       let años = [];
