@@ -266,6 +266,7 @@ function creaGithub(usuario) {
         html_url: repo.html_url,
         git_url: repo.git_url,
         api_url: repo.url,
+        is_fork:repo.fork,
         forks: {
           url: repo.forks_url,
           total: 0

@@ -20,7 +20,7 @@ export function isAuthenticated() {
         jwt.verify(token, config.secrets.session, (err, decoded) => {
           if (err) {
             return res.status(401).json({
-              message: 'Token incorrecto',
+              message: 'Token incorrecto o Token Expirado',
               errors: err
             });
           } else {
@@ -45,7 +45,7 @@ export function signToken(user) {
     _id: user._id,
     rol: user.rol
   }, config.secrets.session, {
-    expiresIn: 60 * 60
+    expiresIn: 60
   });
 }
 

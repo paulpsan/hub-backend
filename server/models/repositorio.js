@@ -1,9 +1,8 @@
 "use strict";
 
-export default function(sequelize, DataTypes) {
+export default function (sequelize, DataTypes) {
   return sequelize.define(
-    "Repositorio",
-    {
+    "Repositorio", {
       _id: {
         type: DataTypes.INTEGER,
         allowNull: false,
@@ -23,20 +22,41 @@ export default function(sequelize, DataTypes) {
         type: DataTypes.BOOLEAN,
         defaultValue: false
       },
+      is_fork: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
+      },
       tipo: DataTypes.STRING,
       git_url: DataTypes.STRING,
       api_url: DataTypes.STRING,
-      stars: { type: DataTypes.JSONB },
-      forks: { type: DataTypes.JSONB },
-      hooks: { type: DataTypes.JSONB },
-      tags: { type: DataTypes.JSONB },
-      issues: { type: DataTypes.JSONB },
-      branches: { type: DataTypes.JSONB },
-      lenguajes: { type: DataTypes.JSONB },
-      commits: { type: DataTypes.JSONB },
-      downloads: { type: DataTypes.JSONB }
-    },
-    {
+      stars: {
+        type: DataTypes.JSONB
+      },
+      forks: {
+        type: DataTypes.JSONB
+      },
+      hooks: {
+        type: DataTypes.JSONB
+      },
+      tags: {
+        type: DataTypes.JSONB
+      },
+      issues: {
+        type: DataTypes.JSONB
+      },
+      branches: {
+        type: DataTypes.JSONB
+      },
+      lenguajes: {
+        type: DataTypes.JSONB
+      },
+      commits: {
+        type: DataTypes.JSONB
+      },
+      downloads: {
+        type: DataTypes.JSONB
+      }
+    }, {
       tableName: "repositorio",
       createdAt: "fecha_creacion",
       updatedAt: "fecha_modificacion"

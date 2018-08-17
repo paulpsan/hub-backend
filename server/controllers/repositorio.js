@@ -85,6 +85,7 @@ async function getToken(tipo, id) {
 }
 
 function setLenguajes(repo, token) {
+
   return function(entity) {
     if (entity.lenguajes.url !== "") {
       return fetch(entity.lenguajes.url + "?access_token=" + token, {
@@ -246,20 +247,38 @@ export function index(req, res) {
 }
 
 export function indexUser(req, res) {
-  // console.log(req.params.id);
-  return Repositorio.findAndCountAll({
-    include: [{ all: true }],
-    where: {
-      fk_usuario: req.params.id,
-      estado: true
-    }
-  })
-    .then(datos => {
-      return SequelizeHelper.generarRespuesta(datos, req.opciones);
+  console.log(req.query.visibilidad);
+  if(req.query.visibilidad){
+    return Repositorio.findAndCountAll({
+      include: [{ all: true }],
+      where: {
+        fk_usuario: req.params.id,
+        estado:true,
+        visibilidad: true
+      }
     })
-    .then(respondWithResult(res))
-    .catch(handleError(res));
+      .then(datos => {
+        return SequelizeHelper.generarRespuesta(datos, req.opciones);
+      })
+      .then(respondWithResult(res))
+      .catch(handleError(res));
+  }
+  else{
+    return Repositorio.findAndCountAll({
+      // include: [{ all: true }],
+      where: {
+        fk_usuario: req.params.id,
+        estado: true
+      }
+    })
+      .then(datos => {
+        return SequelizeHelper.generarRespuesta(datos, req.opciones);
+      })
+      .then(respondWithResult(res))
+      .catch(handleError(res));
+  }
 }
+
 // Gets a single Repositorio from the DB
 export function show(req, res) {
   return Repositorio.find({

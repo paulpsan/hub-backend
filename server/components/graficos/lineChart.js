@@ -37,7 +37,6 @@ function setTotal(commits, series) {
     name: moment(dateAux).format("YYYY"),
     value: count
   });
-  // series = completeDate(series);
   return series;
 }
 
@@ -117,7 +116,6 @@ function getCalendarData(commits) {
 
   const getDate = d => {
     let date = new Date(thisMondayYear, thisMondayMonth, d);
-    // console.log(date);
     return date
   }
   let dateAgo = getDate(thisMondayDay - 364);
@@ -133,8 +131,6 @@ function getCalendarData(commits) {
     let value;
     for (let dayOfWeek = 0; dayOfWeek < 7; dayOfWeek++) {
       let date = getDate(mondayDay - 1 + dayOfWeek);
-      // console.log(date);
-      // console.log(auxDate);
       if (
         date.getDate() === auxDate.getDate() &&
         date.getMonth() === auxDate.getMonth() &&
@@ -165,6 +161,17 @@ function getCalendarData(commits) {
   return calendarData;
 }
 
+function changeLanguage(data, format) {
+  moment.locale('es');
+  let resultado;
+  resultado = data.map(function (data) {
+    let objEs = {}
+    objEs.name = moment(data.name).format(format);
+    objEs.value = data.value
+    return objEs;
+  })
+  return resultado;
+}
 class LineChart {
   static byCommits(data) {
     if (data) {
@@ -173,10 +180,12 @@ class LineChart {
       let serieTotal = [];
       let serieYear = [];
       let serieMonth = [];
-      resp.total = setTotal(data, serieTotal);
-      resp.año = setYear(data, serieYear);
-      resp.mes = setMonth(data, serieMonth);
-      resp.heatMap = getCalendarData(resp.mes);
+      resp.año = setTotal(data, serieTotal);
+      resp.mes = setYear(data, serieYear);
+      resp.total = setMonth(data, serieMonth);
+      resp.heatMap = getCalendarData(resp.total);
+      resp.mes = changeLanguage(resp.mes, "MMM YYYY");
+      resp.total = changeLanguage(resp.total, "DD MMM YYY");
       return resp;
     }
     return null;

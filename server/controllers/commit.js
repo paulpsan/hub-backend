@@ -359,7 +359,8 @@ export function byUser(req, res) {
   return Commit.findAll({
       where: {
         id_usuario: req.params.id,
-        estado: true
+        estado: true,
+        visibilidad:true
       },
       order: [
         ["fecha", "asc"]
@@ -390,7 +391,8 @@ export function graficaRepositorio(req, res) {
   return Commit.findAll({
       where: {
         fk_repositorio: req.params.id,
-        estado: true
+        estado: true,
+        visibilidad:true
       },
       order: [
         ["fecha", "asc"]
