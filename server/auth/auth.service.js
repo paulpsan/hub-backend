@@ -45,7 +45,7 @@ export function signToken(user) {
     _id: user._id,
     rol: user.rol
   }, config.secrets.session, {
-    expiresIn: 60
+    expiresIn: 60*120
   });
 }
 

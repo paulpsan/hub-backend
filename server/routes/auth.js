@@ -31,6 +31,7 @@ router.use("/local", (req, res, next) => {
    
   require("../auth/local/passport").setup(Usuario);
   require("../auth/local").default(req, res, next);
+  console.log("**Session**",req.session);
 });
 
 module.exports = router;

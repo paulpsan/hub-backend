@@ -1,8 +1,9 @@
 "use strict";
 
 import bodyParser from "body-parser";
-
+import redis from "redis";
 import session from "express-session";
+
 import cookieParser from "cookie-parser";
 import passport from "passport";
 import cors from "cors";
@@ -10,7 +11,8 @@ import morgan from "morgan";
 import methodOverride from "method-override";
 import errorHandler from "errorhandler";
 import fileUpload from "express-fileupload";
-
+var redisStore = require("connect-redis")(session)
+var client = redis.createClient();
 export default app => {
   const env = app.get("env");
 
@@ -18,17 +20,29 @@ export default app => {
 
   app.use(methodOverride());
 
-  
   app.use(
     session({
       secret: "catalogo-software",
+      store: new redisStore({
+        host: 'localhost',
+        port: 6379,
+        client: client,
+        ttl: 360
+      }),
       resave: false,
-      saveUninitialized: false //guarda informacion en la base de datos cuando nos conectamos
+      saveUninitialized: true
     })
   );
-  app.use(cors());
+  var corsOptions = {
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+    exposedHeaders: ['token', 'x-token', 'x-forwarded-for', 'set-cookie'],
+    optionsSuccessStatus: 204
+  };
+  app.use(cors(corsOptions));
   app.use(bodyParser.json());
-  app.use(bodyParser.urlencoded({ extended: false }));
+  app.use(bodyParser.urlencoded({
+    extended: false
+  }));
   app.use(cookieParser());
   app.use(fileUpload());
 
@@ -40,5 +54,5 @@ export default app => {
 
   app.use(passport.session());
   // require("../config/github")(passport);
-  
+
 };

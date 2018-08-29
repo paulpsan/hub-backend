@@ -299,7 +299,7 @@ function creaGitlab(usuario, tipo) {
         html_url: repo.web_url,
         git_url: repo.ssh_url_to_repo,
         api_url: config[tipo].api_url + "projects/",
-        is_fork: repo.hasOwnProperty(forked_from_project) ? true : false,
+        is_fork: repo.hasOwnProperty('forked_from_project') ? true : false,
         forks: {
           url: config[tipo].api_url + "projects/" + repo.id + "/forks",
           total: 0

@@ -16,6 +16,7 @@ export default function(sequelize, DataTypes) {
       fecha: DataTypes.DATE,
       avatar_autor: DataTypes.TEXT,
       estado: { type: DataTypes.BOOLEAN, defaultValue: true },
+      visibilidad: { type: DataTypes.BOOLEAN, defaultValue: true },
       web_url_autor: DataTypes.TEXT,
       id_usuario: DataTypes.INTEGER
     },
