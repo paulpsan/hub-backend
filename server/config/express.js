@@ -11,8 +11,8 @@ import morgan from "morgan";
 import methodOverride from "method-override";
 import errorHandler from "errorhandler";
 import fileUpload from "express-fileupload";
-var redisStore = require("connect-redis")(session)
-var client = redis.createClient();
+let redisStore = require("connect-redis")(session)
+let client = redis.createClient();
 export default app => {
   const env = app.get("env");
 

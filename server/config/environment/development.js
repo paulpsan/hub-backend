@@ -12,7 +12,14 @@ module.exports = {
       timezone: "-04:00" //for writing to database
     }
   },
-
+  email: {
+    from:"psanchez@adsib.gob.bo",
+    user: "psanchez@adsib.gob.bo", //miusuario@adsib.gob.bo
+    password: "psanchezc0np4ssu1d280318",
+    host: "mail.adsib.gob.bo", //mail.adsib.gob.bo
+    port: 587, //587
+    tls: true
+  },
   github: {
     api_url: "https://api.github.com/",
     clientId: "deafb08eb71ea00e531c",

@@ -19,39 +19,39 @@ export default function seedDatabaseIfNeeded() {
     let Repositorio = sqldb.Repositorio;
     let repositorios;
 
-    return Rating.destroy({ where: {} }).then(() => {
+    return Rating.destroy({
+      where: {}
+    }).then(() => {
       return Rating.bulkCreate(
-        [
-          {
+          [{
             downloads: 1,
             issues: 1,
             stars: 1,
             forks: 1,
             commits: 1,
             votaciones: 1
+          }], {
+            returning: true
           }
-        ],
-        {
-          returning: true
-        }
-      )
+        )
         .then(resultado => {
           ratings = resultado;
-          return Usuario.destroy({ where: {} });
+          return Usuario.destroy({
+            where: {}
+          });
         })
         .then(() => {
           return Usuario.bulkCreate(
-            [
-              {
+            [{
                 nombre: "1D'jalmar Gutierrez1",
                 email: "dgutierrez@adsib.gob.bo",
                 //con password 123
-                password:
-                  "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
+                password: "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
                 role: "admin",
                 login: "",
                 tipo: "local",
                 avatar: "",
+                estado: true,
                 descripcion: "",
                 clasificacion: {
                   datos: [],
@@ -64,8 +64,7 @@ export default function seedDatabaseIfNeeded() {
                 nombre: "2Teodoro Nina2",
                 email: "tnina@adsib.gob.bo",
                 //con password 123
-                password:
-                  "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
+                password: "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
                 role: "admin",
                 login: "",
                 tipo: "local",
@@ -82,8 +81,7 @@ export default function seedDatabaseIfNeeded() {
                 nombre: "3Edwin Salcedo3",
                 email: "esalcedo@adsib.gob.bo",
                 //con password 123
-                password:
-                  "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
+                password: "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
                 role: "admin",
                 login: "",
                 tipo: "local",
@@ -98,10 +96,9 @@ export default function seedDatabaseIfNeeded() {
               },
               {
                 nombre: "4Jhonny Monrroy4",
-                email: "jmonrroy@adsib.gob.bo",
+                email: "psanchez@adsib.gob.bo",
                 //con password 123
-                password:
-                  "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
+                password: "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
                 role: "admin",
                 login: "",
                 tipo: "local",
@@ -114,17 +111,19 @@ export default function seedDatabaseIfNeeded() {
                 datos: "",
                 url: ""
               },
-            ],
-            {
+            ], {
               returning: true
             }
           );
         })
         .then(resultado => {
-              usuarios = resultado;
-              console.log("Se crearon usuarios de prueba");
-              return Repositorio.destroy({ where: {}, cascade: true });
-            })
+          usuarios = resultado;
+          console.log("Se crearon usuarios de prueba");
+          return Repositorio.destroy({
+            where: {},
+            cascade: true
+          });
+        })
         //     .then(() => {
         //       return Repositorio.bulkCreate(
         //         [
@@ -226,7 +225,7 @@ export default function seedDatabaseIfNeeded() {
         //       proyectos = resultado;
         //       console.log("Se crearon proyectos de prueba");
         //     })
-            .catch(err => console.log("error populating things", err));
+        .catch(err => console.log("error populating things", err));
     });
   }
 }

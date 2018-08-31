@@ -17,17 +17,15 @@ export function isAuthenticated() {
       if (req.headers.authorization) {
         let token = req.headers.authorization.split(' ')[1];
         console.log("TokenEntrante", token);
-        jwt.verify(token, config.secrets.session, (err, decoded) => {
-          if (err) {
-            return res.status(401).json({
-              message: 'Token incorrecto o Token Expirado',
-              errors: err
-            });
-          } else {
-            req.usuario = decoded.usuario;
-            next();
-          }
-        });
+        if (verifyToken(token)) {
+          req.usuario = decoded.usuario;
+          next();
+        } else {
+          return res.status(401).json({
+            message: 'Token incorrecto o Token Expirado',
+            errors: err
+          });
+        }
       } else {
         return res.status(401).json({
           message: 'No cuenta con los accesos al sistema',
@@ -40,23 +38,23 @@ export function isAuthenticated() {
 /**
  * Returns a jwt token signed by the app secret
  */
-export function signToken(user) {
+export function signToken(user, expires = 60 * 120) {
   return jwt.sign({
     _id: user._id,
     rol: user.rol
   }, config.secrets.session, {
-    expiresIn: 60*120
+    expiresIn: expires
   });
 }
 
-/**
- * Set token cookie directly for oAuth strategies
- */
-export function setTokenCookie(req, res) {
-  if (!req.usuario) {
-    return res.status(404).send('It looks like you aren\'t logged in, please try again.');
-  }
-  var token = signToken(req.usuario._id, req.usuario.role);
-  res.cookie('token', token);
-  res.redirect('/');
+export function verifyToken(token) {
+  return new Promise((resolve, reject) => {
+    jwt.verify(token, config.secrets.session, (err, decoded) => {
+      if (err) {
+        reject(false)
+      } else {
+        resolve(decoded);
+      }
+    })
+  });
 }

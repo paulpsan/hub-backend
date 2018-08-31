@@ -15,9 +15,9 @@ import {
   Usuario
 } from "../sqldb";
 import SequelizeHelper from "../components/sequelize-helper";
-import jwt from "../components/service/jwt";
 import captcha from "../components/service/captcha";
 import Gitlab from "../components/service/gitlab"
+import Email from "../components/service/email"
 import config from "../config/environment";
 import qs from "querystring";
 
@@ -90,6 +90,7 @@ function handleEntityNotFound(res) {
 function handleError(res, statusCode) {
   statusCode = statusCode || 500;
   return function (err) {
+    console.log("handleError", err.errors);
     res.status(statusCode).send(err);
   };
 }
@@ -160,25 +161,184 @@ export function captchaUser(req, res) {
   });
 }
 
+export function recoverPassword(req, res) {
+  console.log("req", req.body.password);
+  console.log("req", req.body.token);
+  const token = req.body.token;
+  let password = req.body.password;
+  if (password) {
+    Email.verify(token).then(resp => {
+      console.log("respUser", resp);
+      bcrypt.hash(password, null, null, (err, hash) => {
+        password = hash;
+        if (resp) {
+          Usuario.update({
+              password: password,
+              estado: true
+            }, {
+              where: {
+                _id: resp._id
+              }
+            })
+            .then(resp => {
+              if (resp[0] === 0) {
+                //delete token!!
+                res.send({
+                  message: "Usuario no Encontrado"
+                });
+              } else {
+                res.send({
+                  message: "Cambio de Password Exitosamente"
+                });
+              }
+            })
+            .catch(err => {
+              console.log(err);
+              res.send({
+                message: err
+              });
+            });
+
+
+          // 
+        } else {
+          res.status(409).send({
+            message: "No Existe el token o Token Expirado"
+          });
+        }
+
+      })
+
+    }).catch(err => {
+      res.status(409).send({
+        message: "No Existe el token o Token Expirado"
+      });
+    })
+  } else {
+    res.status(409).send({
+      message: "El Password es requerido"
+    });
+  }
+
+}
+export function recoverUser(req, res) {
+  console.log("req", req.body.email);
+  const email = req.body.email
+  return Usuario.findOne({
+    where: {
+      email: email
+    }
+  }).then(user => {
+    if (user) {
+      const obj = {
+        _id: user._id,
+        email: user.email
+      }
+      Email.sendRecover(obj).then(resp => {
+        if (resp)
+          res.status(200).json({
+            message: "Se le envió la información a su correo Electrónico "
+          });
+        else
+          res.status(200).json({
+            message: "Existe un error Intente de Nuevo "
+          });
+      })
+    } else {
+      res.status(200).json({
+        message: `No existe registro del Correo Electrónico ${email}`
+      });
+    }
+  });
+}
+
+export function verifyUser(req, res) {
+  let token = req.query.token;
+  Email.verify(token).then(resp => {
+    console.log("respUser", resp);
+    if (resp) {
+      Usuario.update({
+          estado: true
+        }, {
+          where: {
+            _id: resp._id
+          }
+        })
+        .then(resp => {
+          if (resp[0] === 0) {
+            res.send({
+              message: "Usuario no Encontrado"
+            });
+          } else {
+            res.send({
+              message: "Usuario Verificado Exitosamente"
+            });
+          }
+        })
+        .catch(err => {
+          console.log(err);
+          res.send({
+            message: err
+          });
+        });
+
+
+      // 
+    } else {
+    console.log("resp", resp);
+
+      res.status(409).send({
+        message: "No Existe el token o Token Expirado"
+      });
+    }
+  }).catch(err => {
+    res.status(409).send({
+      message: "No Existe el token o Token Expirado"
+    });
+  })
+}
 // Creates a new Usuario in the DB
 export function create(req, res) {
   let captchaCurrent;
+  console.log(req.body.sessionID);
   captcha.getCurrent(req.body.sessionID).then(resp => {
+    console.log(resp);
     captchaCurrent = JSON.parse(resp).captcha
     if (req.body.captcha === captchaCurrent && captchaCurrent) {
       let obj = new Object();
       let params = req.body;
       obj.nombre = params.nombre;
+      obj.login = params.username || ''
       obj.email = params.email.toLowerCase();
       obj.password = params.password;
       obj.cuentas = ["local"];
+      obj.role = "usuario";
       if (params.password) {
+        // envia verificacion a correo
         bcrypt.hash(params.password, null, null, (err, hash) => {
           obj.password = hash;
-          if (obj.nombre != null && obj.email != null && obj.password != null) {
-            return Usuario.create(obj)
-              .then(respondWithResult(res, 201))
-              .catch(handleError(res));
+          if (!obj.nombre && !obj.email && !obj.password) {
+            return Usuario.findOne({
+              where: {
+                email: obj.email
+              }
+            }).then(user => {
+              if (user) {
+                return Usuario.create(obj)
+                  .then(user => {
+                    return Email.send(user).then(resp => {
+                      console.log(resp);
+                      return user;
+                    }).catch(handleError(res))
+                  })
+                  .then(respondWithResult(res, 201))
+                  .catch(handleError(res));
+              } else {
+                res.status(409).send({
+                  message: "El Correo Electrónico ya esta en uso"
+                });
+              }
+            })
           } else {
             res.status(409).send({
               message: "Introduce todos los campos"
@@ -193,6 +353,7 @@ export function create(req, res) {
     }
 
   }).catch(err => {
+    console.log(err);
     res.status(409).send({
       message: "Captcha Expirado"
     });
@@ -215,7 +376,6 @@ export function createGitlab(req, res) {
           res.status(409).send(err);
         })
 
-
     } else {
       res.status(409).send({
         message: "Captcha Invalido o Expirado"
@@ -227,45 +387,6 @@ export function createGitlab(req, res) {
       message: "Captcha Expirado"
     });
   })
-}
-// Login usuario en la DB
-export function login(req, res) {
-  const params = req.body;
-  let email = params.email;
-  let password = params.password;
-  let tipo = params.tipo;
-  Usuario.findOne({
-      where: {
-        email: email.toLowerCase(),
-        tipo: tipo
-      }
-    })
-    // .then(respondWithResult(res, 201))
-    .then(user => {
-      if (user != null) {
-        bcrypt.compare(password, user.password, (err, check) => {
-          if (check) {
-            res.status(200).send({
-              token: jwt.createToken(user),
-              usuario: user
-            });
-          } else {
-            res.status(404).send({
-              message: "Contraseña incorrecta"
-            });
-          }
-        });
-      } else {
-        res
-          .status(404)
-          .send({
-            message: "No existe el usuario o contraseña incorrecta "
-          });
-      }
-
-      // respondWithResult(res, 201)
-    });
-  // .catch(res.status(404).send({ message: "No existe el usuario o contraseña incorrecta " }));
 }
 
 // Upserts the given Usuario in the DB at the specified ID
@@ -310,64 +431,4 @@ export function destroy(req, res) {
     .then(removeEntity(res))
     .then(respondWithResult(res))
     .catch(handleError(res));
-}
-
-// Genera Json para graficos de usuarios - commits - proyecto
-export function graficos(req, res) {
-  return Usuario.find({
-      where: {
-        _id: req.params.id
-      }
-    })
-    .then(generaDatos(res))
-    .catch(handleError(res));
-}
-
-export function commitsGithub(req, res) {
-  return Usuario.find({
-      where: {
-        _id: req.params.id
-      }
-    })
-    .then(generaCommits(res))
-    .catch(handleError(res));
-}
-
-export function commitsGitlab(req, res) {
-  return Usuario.find({
-      where: {
-        _id: req.params.id
-      }
-    })
-    .then(generaCommitsGitlab(res))
-    .catch(handleError(res));
-}
-
-function getToken(params, usuario) {
-  return new Promise((resolver, rechazar) => {
-    switch (params.state) {
-      case "github":
-        let data = qs.stringify({
-          client_id: config.github.clientId,
-          client_secret: config.github.clientSecret,
-          code: code
-        });
-        break;
-      case "gitlab":
-        break;
-      case "bitbucket":
-        break;
-      default:
-        break;
-    }
-  });
-}
-export function refreshToken(req, res) {
-  getToken(req.params.params, req.params.usuario)
-    .then(result => {
-      res.send("exito!!");
-    })
-    .catch(err => {
-      res.send(err);
-    });
 }
