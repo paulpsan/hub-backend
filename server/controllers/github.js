@@ -75,7 +75,9 @@ function nuevoUsuario(usuarioOauth) {
     objGithub.avatar = usuarioOauth.avatar_url;
     objGithub.url = usuarioOauth.html_url;
     objGithub.github = true;
+    objGithub.estado = true;
     objGithub.id_github = usuarioOauth.id;
+
     Usuario.create(objGithub)
       .then(respUsuario => {
         resolver(respUsuario);
@@ -109,6 +111,7 @@ function createUpdateUser() {
             resp => {
               if (resp) {
                 user.github = true;
+                user.estado=true;
                 user.id_github = usuarioOauth.id;
                 user.save();
               }

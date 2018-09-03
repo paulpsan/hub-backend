@@ -93,6 +93,7 @@ function nuevoUsuario(usuarioOauth, tipo) {
     objGitlab.avatar = usuarioOauth.avatar_url;
     objGitlab.url = usuarioOauth.html_url;
     objGitlab.gitlab = true;
+    objGitlab.estado = true;
     objGitlab.id_gitlab = usuarioOauth.id;
     Usuario.create(objGitlab)
       .then(respUsuario => {
@@ -154,6 +155,7 @@ function createUpdateUser(type) {
             resp => {
               if (resp) {
                 user.gitlab = true;
+                user.estado=true;
                 user.id_gitlab = usuarioOauth.id;
                 user.save();
               }

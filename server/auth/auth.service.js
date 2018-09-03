@@ -17,15 +17,17 @@ export function isAuthenticated() {
       if (req.headers.authorization) {
         let token = req.headers.authorization.split(' ')[1];
         console.log("TokenEntrante", token);
-        if (verifyToken(token)) {
-          req.usuario = decoded.usuario;
-          next();
-        } else {
-          return res.status(401).json({
-            message: 'Token incorrecto o Token Expirado',
-            errors: err
-          });
-        }
+        verifyToken(token).then(decoded => {
+          if (decoded) {
+            req.usuario = decoded.usuario;
+            next();
+          } else {
+            return res.status(401).json({
+              message: 'Token incorrecto o Token Expirado',
+              errors: err
+            });
+          }
+        })
       } else {
         return res.status(401).json({
           message: 'No cuenta con los accesos al sistema',
