@@ -86,39 +86,57 @@ function createUpdateUser() {
     console.log("response", response);
     let usuarioOauth = response.usuario;
     let token = response.token;
+    let email
     //obtener email
-    const Op = Sequelize.Op;
-    return Usuario.findOne({
-        where: {
-          id_bitbucket: usuarioOauth.account_id
-        }
-      })
-      .then(user => {
-        if (user !== null) {
-          //eliminar password
-          return TokenController.updateCreateToken(type, user, token).then(
-            resp => {
-              if (resp) {
-                user.bitbucket = true;
-                user.estado = true;
-                user.id_bitbucket = usuarioOauth.account_id;
-                user.save();
-              }
-              return user;
+    return fetch("https://api.bitbucket.org/2.0/user/emails?access_token=" + token)
+      .then(getJson())
+      .then(result => {
+        email = result.values[0].email;
+        const Op = Sequelize.Op;
+        return Usuario.findOne({
+            where: {
+              [Op.or]: [{
+
+                id_bitbucket: usuarioOauth.account_id
+              }, {
+                email: email
+
+              }]
             }
-          );
-        } else {
-          return nuevoUsuario(usuarioOauth, token)
-            .then(user => {
-              return TokenController.updateCreateToken("bitbucket", user, token).then(() => {
-                return user;
-              });
-            })
-            .catch(err => {
-              console.log(err);
-              return err;
-            });
-        }
+          })
+          .then(user => {
+            console.log(user);
+            if (user !== null) {
+              //eliminar password
+              return TokenController.updateCreateToken("bitbucket", user, token).then(
+                resp => {
+                  console.log("tokenresp", resp);
+                  if (resp) {
+                    user.bitbucket = true;
+                    user.estado = true;
+                    user.id_bitbucket = usuarioOauth.account_id;
+                    user.save();
+                  }
+                  return user;
+                }
+              );
+            } else {
+              return nuevoUsuario(usuarioOauth, token)
+                .then(user => {
+                  return TokenController.updateCreateToken("bitbucket", user, token).then(() => {
+                    return user;
+                  });
+                })
+                .catch(err => {
+                  console.log(err);
+                  return err;
+                });
+            }
+          })
+          .catch(err => {
+            console.log(err);
+            return err;
+          });
       })
       .catch(err => {
         console.log(err);
@@ -140,7 +158,7 @@ export function singOauthBitbucket(req, res) {
         //eliminar password
         return TokenController.updateCreateToken("bitbucket", result, token).then(
           resp => {
-            
+
           });
         res.json({
           token: token,
@@ -170,6 +188,7 @@ export function authLoginBitbucket(req, res) {
   authenticateBitbucket(code)
     .then(createUpdateUser())
     .then(result => {
+      console.log(result);
       var token = signToken(result);
       res.json({
         usuario: result,

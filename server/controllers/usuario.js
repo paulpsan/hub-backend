@@ -229,7 +229,8 @@ export function recoverUser(req, res) {
       email: email
     }
   }).then(user => {
-    if (user===null) {
+    console.log(user);
+    if (user !== null) {
       const obj = {
         _id: user._id,
         email: user.email
@@ -240,12 +241,12 @@ export function recoverUser(req, res) {
             message: "Se le envió la información a su correo Electrónico "
           });
         else
-          res.status(200).json({
+          res.status(500).json({
             message: "Existe un error Intente de Nuevo "
           });
       })
     } else {
-      res.status(200).json({
+      res.status(409).json({
         message: `No existe registro del Correo Electrónico ${email}`
       });
     }
@@ -285,7 +286,7 @@ export function verifyUser(req, res) {
 
       // 
     } else {
-    console.log("resp", resp);
+      console.log("resp", resp);
 
       res.status(409).send({
         message: "No Existe el token o Token Expirado"
@@ -323,7 +324,7 @@ export function create(req, res) {
                 email: obj.email
               }
             }).then(user => {
-              if (user===null) {
+              if (user === null) {
                 return Usuario.create(obj)
                   .then(user => {
                     return Email.send(user).then(resp => {
