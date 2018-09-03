@@ -229,7 +229,7 @@ export function recoverUser(req, res) {
       email: email
     }
   }).then(user => {
-    if (user) {
+    if (user===null) {
       const obj = {
         _id: user._id,
         email: user.email
@@ -317,13 +317,13 @@ export function create(req, res) {
         // envia verificacion a correo
         bcrypt.hash(params.password, null, null, (err, hash) => {
           obj.password = hash;
-          if (!obj.nombre && !obj.email && !obj.password) {
+          if (obj.nombre != null && obj.email != null && obj.password != null) {
             return Usuario.findOne({
               where: {
                 email: obj.email
               }
             }).then(user => {
-              if (user) {
+              if (user===null) {
                 return Usuario.create(obj)
                   .then(user => {
                     return Email.send(user).then(resp => {

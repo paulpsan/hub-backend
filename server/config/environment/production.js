@@ -6,13 +6,14 @@
 module.exports = {
   // Server IP
   sequelize: {
-    // uri: "postgresql://postgres:postgres@localhost/hub",
     uri: "postgresql://postgres:postgres@localhost/catalogo",
     options: {
       timezone: "-04:00" //for writing to database
     }
   },
   email: {
+    url_verify:"https://desarrollo.adsib.gob.bo/catalogo/api/usuarios/verificacion",
+    from:"psanchez@adsib.gob.bo",
     user: "psanchez@adsib.gob.bo", //miusuario@adsib.gob.bo
     password: "psanchezc0np4ssu1d280318",
     host: "mail.adsib.gob.bo", //mail.adsib.gob.bo

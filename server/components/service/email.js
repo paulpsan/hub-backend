@@ -29,7 +29,7 @@ class Email {
       client.expire(token, 60 * 60 * 24)
 
       //guarda en redis
-      let link = `http://localhost:3000/api/usuarios/verificacion?token=${token}`
+      let link = `${config.email.url_verify}?token=${token}`
       let mailOptions = {
         from: config.email.from,
         to: user.email,
