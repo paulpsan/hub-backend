@@ -28,8 +28,9 @@ router.post("/", controller.create);
 router.post("/reset", controller.recoverPassword);
 router.post("/gitlab", controller.createGitlab);
 router.post("/recuperar", controller.recoverUser);
+router.post("/contrasena", controller.passwordUser);
 router.put("/:id", autenticacion.isAuthenticated(), controller.upsert);
-router.patch("/:id", autenticacion.isAuthenticated(), controller.patch);
+router.patch("/:id", controller.patch);
 router.delete("/:id", autenticacion.isAuthenticated(), controller.destroy);
 
 module.exports = router;

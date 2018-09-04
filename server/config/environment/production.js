@@ -12,8 +12,10 @@ module.exports = {
     }
   },
   email: {
-    url_verify:"https://desarrollo.adsib.gob.bo/catalogo/api/usuarios/verificacion",
-    from:"psanchez@adsib.gob.bo",
+    url_verify:
+      "https://desarrollo.adsib.gob.bo/catalogo/api/usuarios/verificacion",
+    url_reset: "https://desarrollo.adsib.gob.bo/catalogo/auth/recuperar",
+    from: "psanchez@adsib.gob.bo",
     user: "psanchez@adsib.gob.bo", //miusuario@adsib.gob.bo
     password: "psanchezc0np4ssu1d280318",
     host: "mail.adsib.gob.bo", //mail.adsib.gob.bo
@@ -29,15 +31,19 @@ module.exports = {
   gitlab: {
     api_url: "https://gitlab.com/api/v4/",
     token_url: "https://gitlab.com/oauth/token",
-    clientId: "bc4486e353751b8bcbad14732a0d3626bdd9ef259534b7dfc0376c4baa5c75c6",
-    clientSecret: "9ac3cc5c3c49e10cb14a268158f2b3ffa4c70a8df9a1c22c81d239e4bbce494f",
+    clientId:
+      "bc4486e353751b8bcbad14732a0d3626bdd9ef259534b7dfc0376c4baa5c75c6",
+    clientSecret:
+      "9ac3cc5c3c49e10cb14a268158f2b3ffa4c70a8df9a1c22c81d239e4bbce494f",
     callback: "https://desarrollo.adsib.gob.bo/catalogo/inicio"
   },
   gitlabGeo: {
     api_url: "https://gitlab.geo.gob.bo/api/v4/",
     token_url: "https://gitlab.geo.gob.bo/oauth/token",
-    clientId: "5fd3c547dbc17e2d3f77a0c81a4fae588d3f31007f626a64489814d3900a315d",
-    clientSecret: "f08b68a537601fa7e0aab9d013c4f312d64adfc8d2967a1445cac741229c0a2f",
+    clientId:
+      "5fd3c547dbc17e2d3f77a0c81a4fae588d3f31007f626a64489814d3900a315d",
+    clientSecret:
+      "f08b68a537601fa7e0aab9d013c4f312d64adfc8d2967a1445cac741229c0a2f",
     state: "gitlab",
     callback: "https://desarrollo.adsib.gob.bo/catalogo/inicio"
   },

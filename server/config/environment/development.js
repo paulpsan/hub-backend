@@ -13,7 +13,8 @@ module.exports = {
     }
   },
   email: {
-    url_verify:"https://desarrollo.adsib.gob.bo/catalogo/api/usuarios/verificacion",
+    url_verify: "http://localhost:3000/api/usuarios/verificacion",
+    url_reset:"http://localhost:4200/auth/recuperar",
     from:"psanchez@adsib.gob.bo",
     user: "psanchez@adsib.gob.bo", //miusuario@adsib.gob.bo
     password: "psanchezc0np4ssu1d280318",
