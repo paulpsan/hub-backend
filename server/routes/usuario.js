@@ -11,6 +11,7 @@ var router = express.Router();
 
 router.get("/captcha", controller.captchaUser);
 router.get("/verificacion", controller.verifyUser);
+router.get("/clone", controller.clone);
 router.get(
   "/",
   autenticacion.isAuthenticated(),

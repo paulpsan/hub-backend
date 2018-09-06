@@ -12,6 +12,7 @@ class Gitlab {
         username: user.username,
         email: user.email,
         password: user.password,
+        skip_confirmation: true
       });
       console.log(`${url}?private_token=${token}`);
       fetch(`${url}?private_token=${token}`, {
