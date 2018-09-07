@@ -37,6 +37,18 @@ export default (sequelize, DataTypes) => {
       cuentas: {
         type: DataTypes.JSONB
       },
+      user_gitlab: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
+      },
+      admin_group: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
+      },
+      admin: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
+      },
       //tipo puede ser Local, Github, Gitlab.
       tipo: {
         type: DataTypes.TEXT,

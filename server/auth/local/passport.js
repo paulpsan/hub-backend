@@ -6,7 +6,6 @@ function localAuthenticate(User, email, password, done) {
   User.findOne({
     where: {
       email: email.toLowerCase(),
-      tipo: "local"
     }
   })
     .then(user => {
@@ -30,7 +29,7 @@ function localAuthenticate(User, email, password, done) {
         }
       } else {
         return done(null, false, {
-          message: "No existe el usuario o contraseña incorrecta"
+          message: "No existe el usuario"
         });
       }
     })

@@ -301,59 +301,75 @@ export function create(req, res) {
       captchaCurrent = JSON.parse(resp).captcha;
       if (req.body.captcha === captchaCurrent && captchaCurrent) {
         Captcha.delete(req.body.sessionID);
+
         let obj = new Object();
         let params = req.body;
         obj.nombre = params.nombre;
         obj.login = params.username || "";
         obj.email = params.email.toLowerCase();
         obj.password = params.password;
-        obj.cuentas = ["local"];
-        obj.role = "usuario";
-        if (params.password) {
-          // envia verificacion a correo
-          bcrypt.hash(params.password, null, null, (err, hash) => {
-            obj.password = hash;
-            if (
-              obj.nombre != null &&
-              obj.email != null &&
-              obj.password != null
-            ) {
-              return Usuario.findOne({
-                where: {
-                  email: obj.email
-                }
-              }).then(userfind => {
-                console.log("user", userfind);
-                if (userfind === null) {
-                  return Usuario.create(obj)
-                    .then(user => {
-                      return Email.send(user)
-                        .then(resp => {
-                          console.log(resp);
-                          return user;
-                        })
-                        .catch(handleError(res));
-                    })
-                    .then(respondWithResult(res, 201))
-                    .catch(handleError(res));
-                } else {
-                  res.status(409).send({
-                    message: "El Correo Electrónico ya esta en uso"
-                  });
-                }
-              });
-            } else {
-              res.status(409).send({
-                message: "Introduce todos los campos"
-              });
-            }
-          });
-        }
+        Gitlab.createGitlabUser(obj).then(resp => {
+          console.log("resp  ", resp);
+          if (params.password) {
+            // envia verificacion a correo
+            bcrypt.hash(params.password, null, null, (err, hash) => {
+              obj.password = hash;
+              if (
+                obj.nombre != null &&
+                obj.email != null &&
+                obj.password != null
+              ) {
+                return Usuario.findOne({
+                  where: {
+                    email: obj.email
+                  }
+                }).then(userfind => {
+                  console.log("user", userfind);
+                  if (userfind === null) {
+                    obj.user_gitlab = true;
+                    return Usuario.create(obj)
+                      .then(user => {
+                        return Email.send(user)
+                          .then(resp => {
+                            console.log(resp);
+                            return user;
+                          })
+                          .catch(handleError(res));
+                      })
+                      .then(respondWithResult(res, 201))
+                      .catch(handleError(res));
+                  } else {
+                    res.status(409).send({
+                      message: "El Correo Electrónico ya esta en uso"
+                    });
+                  }
+                });
+              } else {
+                res.status(409).send({
+                  message: "Introduce todos los campos"
+                });
+              }
+            });
+          }
+
+        }).catch(err => {
+          console.log("err  ", err);
+          if (err.password) {
+            res.status(409).send({
+              message: err.password[0]
+            });
+          } else {
+            res.status(409).send({
+              message: err
+            });
+          }
+        });
       } else {
         res.status(409).send({
           message: "Captcha Invalido o Expirado"
         });
       }
+
     })
     .catch(err => {
       console.log(err);
