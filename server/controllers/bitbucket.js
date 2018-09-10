@@ -23,7 +23,7 @@ function getJson() {
 function addUser(usuario) {
   return function (userOauth) {
     let token = userOauth.token;
-    TokenController.updateCreateToken("bitbucket", usuario, token).then(resp => {
+    return TokenController.updateCreateToken("bitbucket", usuario, token).then(resp => {
       return Usuario.findOne({
           where: {
             _id: usuario._id
@@ -32,13 +32,18 @@ function addUser(usuario) {
         .then(user => {
           user.id_bitbucket = userOauth.usuario.account_id;
           user.bitbucket = true;
-          user.save();
+          user.save().catch(err=>{
+            console.log(err);
+          });
+          console.log(user);
           return user;
         })
         .catch(err => {
           console.log("err", err);
           return err;
         });
+    }).catch(err=>{
+      console.log(err);
     });
   };
 }
@@ -67,6 +72,7 @@ function authenticateBitbucket(code) {
             )
             .then(getJson())
             .then(responseBitbucket => {
+              console.log(responseBitbucket);
               resolver({
                 token: objRes.token,
                 usuario: responseBitbucket
@@ -207,9 +213,11 @@ export function authAddBitbucket(req, res) {
   authenticateBitbucket(code, type)
     .then(addUser(usuario))
     .then(result => {
+      console.log(result);
       res.json(result);
     })
     .catch(err => {
+      console.log(err);
       res.send(err);
     });
 }

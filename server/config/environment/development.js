@@ -25,9 +25,9 @@ module.exports = {
   repo: {
     gitlab: {
       user: "root",
-      password: "paulcasa",
-      privateToken: "Zskfg_p1fizX55_5brUe",
-      domain: "http://127.0.0.1:30080"
+      password: "4dm1n2()18adsib",
+      privateToken: "mTy4d5kVEkWXwW_uNAXh",
+      domain: "http://192.168.5.217",
     }
   },
 

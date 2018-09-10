@@ -52,7 +52,7 @@ class UserGitlab {
         username: user.login,
         email: user.email,
         password: user.password,
-        skip_confirmation: false
+        skip_confirmation: true
       };
 
       api.Users.create(data)

@@ -49,11 +49,11 @@ function setCommits(proyecto) {
           proyecto.ultimaActividad = commits[0].fecha;
           proyecto.commits = commits;
           //carga los usuarios que hicieron commits
-          let usuarios = [];
-          for (const commit of commits) {
-            usuarios.push(commit.autor);
-          }
-          proyecto.usuarios = _.uniq(usuarios);
+          // let usuarios = [];
+          // for (const commit of commits) {
+          //   usuarios.push(commit.autor);
+          // }
+          // proyecto.usuarios = _.uniq(usuarios);
           proyecto.save();
           return proyecto;
         })
@@ -80,6 +80,7 @@ function setDatosRepo() {
 }
 function setMaxValue(rating) {
   return function(repositorio) {
+    console.log("setMavx***",repositorio.downloads,rating);
     if (rating.downloads <= repositorio.downloads.total) {
       rating.downloads = repositorio.downloads.total;
     }
@@ -280,6 +281,7 @@ export function create(req, res) {
         .catch(handleError(res))
     );
   } else {
+    //importa proyecto
     if (!req.query.nuevo) {
       console.log("import", req.query.nuevo);
       createGitlab(req.body,false)
@@ -296,6 +298,7 @@ export function create(req, res) {
           res.status(400).send({ message: err.error.message });
         });
     }else{
+      //crea proyecto nuevo
       createGitlab(req.body,true)
         .then(resp => {
           //correcto
@@ -304,7 +307,7 @@ export function create(req, res) {
               //actualizar
               .then(proy=>{
                 if(proy==null){
-                  return Proyecto.create(proy)
+                  return Proyecto.create(req.body)
                     .then(response => {
                       res
                         .status(201)

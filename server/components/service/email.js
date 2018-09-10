@@ -3,7 +3,10 @@
 import nodemailer from "nodemailer";
 import redis from "redis";
 import config from "../../config/environment";
-import { signToken, verifyToken } from "../../auth/auth.service";
+import {
+  signToken,
+  verifyToken
+} from "../../auth/auth.service";
 
 let client = redis.createClient();
 let smtpTransport = nodemailer.createTransport({
@@ -30,12 +33,11 @@ class Email {
         from: config.email.from,
         to: user.email,
         subject: "Por favor verifique su cuenta de Correo Electronico ",
-        html:
-          "Hola,<br> Usted se registro en el Catalogo del Repositorio Estatal <br>Por favor hacer Click en el Enlace para verificar su email.<br><a href=" +
+        html: "Hola,<br> Usted se registro en el Catalogo del Repositorio Estatal <br>Por favor hacer Click en el Enlace para verificar su email.<br><a href=" +
           link +
           ">Click aqui para verificar</a>"
       };
-      smtpTransport.sendMail(mailOptions, function(error, response) {
+      smtpTransport.sendMail(mailOptions, function (error, response) {
         if (error) {
           console.log(error);
           reject(error);
@@ -59,12 +61,11 @@ class Email {
         from: config.email.from,
         to: user.email,
         subject: "Servicio de recuperación de contraseña ",
-        html:
-          "Hola,<br> Please Click on the link to verify your email.<br><a href=" +
+        html: "Hola,<br> Please Click on the link to verify your email.<br><a href=" +
           link +
           ">Click here to verify</a>"
       };
-      smtpTransport.sendMail(mailOptions, function(error, response) {
+      smtpTransport.sendMail(mailOptions, function (error, response) {
         if (error) {
           console.log(error);
           reject(error);
@@ -77,7 +78,7 @@ class Email {
   }
   static verify(token) {
     return new Promise((resolve, reject) => {
-      client.get(token, function(error, response) {
+      client.get(token, function (error, response) {
         console.log(response);
         if (error) {
           console.log(error);
@@ -96,6 +97,10 @@ class Email {
         }
       });
     });
+  }
+  static delete(token) {
+    client.del(token)
+    return;
   }
 }
 export default Email;
