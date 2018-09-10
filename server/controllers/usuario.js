@@ -11,9 +11,7 @@
 "use strict";
 
 import bcrypt from "bcrypt-nodejs";
-import {
-  Usuario
-} from "../sqldb";
+import { Usuario } from "../sqldb";
 import SequelizeHelper from "../components/sequelize-helper";
 import Captcha from "../components/service/captcha";
 import Gitlab from "../components/service/gitlab";
@@ -21,9 +19,10 @@ import Email from "../components/service/email";
 import config from "../config/environment";
 import qs from "querystring";
 import Github from "../components/nodegit/github";
+import UserGitlab from "../components/gitlab/userGitlab";
 
 function getJson() {
-  return function (resultado) {
+  return function(resultado) {
     return resultado.json();
   };
 }
@@ -31,7 +30,7 @@ function getJson() {
 function respondWithResult(res, statusCode) {
   statusCode = statusCode || 200;
   // console.log("esto es un",entity);
-  return function (entity) {
+  return function(entity) {
     if (entity) {
       return res
         .status(statusCode)
@@ -43,7 +42,7 @@ function respondWithResult(res, statusCode) {
 }
 
 function saveUpdates(updates) {
-  return function (entity) {
+  return function(entity) {
     return entity
       .updateAttributes(updates)
       .then(updated => {
@@ -57,7 +56,7 @@ function saveUpdates(updates) {
 }
 
 function removeEntity(res) {
-  return function (entity) {
+  return function(entity) {
     let usuario = {};
     usuario._id = entity._id;
     usuario.email = entity.email;
@@ -78,7 +77,7 @@ function removeEntity(res) {
 }
 
 function handleEntityNotFound(res) {
-  return function (entity) {
+  return function(entity) {
     if (!entity) {
       res.status(404).end();
       return null;
@@ -89,7 +88,7 @@ function handleEntityNotFound(res) {
 
 function handleError(res, statusCode) {
   statusCode = statusCode || 500;
-  return function (err) {
+  return function(err) {
     console.log("handleError", err.errors);
     res.status(statusCode).send(err);
   };
@@ -101,18 +100,20 @@ export function index(req, res) {
   if (req.query.buscar != undefined) {
     const Op = Sequelize.Op;
     return Usuario.findAndCountAll({
-        include: [{
+      include: [
+        {
           all: true
-        }],
-        offset: req.opciones.offset,
-        limit: req.opciones.limit,
-        where: {
-          estado: true,
-          nombre: {
-            [Op.iLike]: "%" + req.query.buscar + "%"
-          }
         }
-      })
+      ],
+      offset: req.opciones.offset,
+      limit: req.opciones.limit,
+      where: {
+        estado: true,
+        nombre: {
+          [Op.iLike]: "%" + req.query.buscar + "%"
+        }
+      }
+    })
       .then(datos => {
         return SequelizeHelper.generarRespuesta(datos, req.opciones);
       })
@@ -120,17 +121,18 @@ export function index(req, res) {
       .catch(handleError(res));
   } else {
     console.log("req", req.usuario);
-    return Usuario.findAndCountAll({
-          // include: [{ all: true }],
-          where: {
-            estado: true
-          },
-          // order: [["clasificacion", "desc"]],
-          offset: req.opciones.offset,
-          limit: req.opciones.limit
+    return Usuario.findAndCountAll(
+      {
+        // include: [{ all: true }],
+        where: {
+          estado: true
         },
-        "_id nombre email"
-      )
+        // order: [["clasificacion", "desc"]],
+        offset: req.opciones.offset,
+        limit: req.opciones.limit
+      },
+      "_id nombre email"
+    )
       .then(datos => {
         return SequelizeHelper.generarRespuesta(datos, req.opciones);
       })
@@ -174,14 +176,17 @@ export function recoverPassword(req, res) {
         bcrypt.hash(password, null, null, (err, hash) => {
           password = hash;
           if (resp) {
-            Usuario.update({
+            Usuario.update(
+              {
                 password: password,
                 estado: true
-              }, {
+              },
+              {
                 where: {
                   _id: resp._id
                 }
-              })
+              }
+            )
               .then(resp => {
                 if (resp[0] === 0) {
                   //delete token!!
@@ -264,12 +269,22 @@ export function verifyUser(req, res) {
           }
         }).then(user => {
           if (user !== null) {
-            user.estado = true;
-            user.save();
-            res.send({
-              message: "Usuario Verificado Exitosamente",
-              usuario: user
-            });
+            UserGitlab.create(user)
+              .then(userGitlab => {
+                user.usuarioGitlab = userGitlab.id;
+                user.estado = true;
+                user.save();
+                res.send({
+                  message: "Usuario Verificado Exitosamente",
+                  usuario: user
+                });
+              })
+              .catch(err => {
+                res.status(409).send({
+                  message: "No se pudo confirmar usuario vuelva a registrase",
+                  err
+                });
+              });
           } else {
             res.status(409).send({
               message: "Usuario no Encontrado"
@@ -293,12 +308,10 @@ export function verifyUser(req, res) {
 // Creates a new Usuario in the DB
 export function create(req, res) {
   let captchaCurrent;
-  console.log(req.body.sessionID);
-  Captcha
-    .getCurrent(req.body.sessionID)
+  Captcha.getCurrent(req.body.sessionID)
     .then(resp => {
-      console.log(resp);
       captchaCurrent = JSON.parse(resp).captcha;
+      console.log("captchas!!!!", req.body.captcha, captchaCurrent);
       if (req.body.captcha === captchaCurrent && captchaCurrent) {
         Captcha.delete(req.body.sessionID);
 
@@ -308,68 +321,60 @@ export function create(req, res) {
         obj.login = params.username || "";
         obj.email = params.email.toLowerCase();
         obj.password = params.password;
-        Gitlab.createGitlabUser(obj).then(resp => {
-          console.log("resp  ", resp);
-          if (params.password) {
-            // envia verificacion a correo
-            bcrypt.hash(params.password, null, null, (err, hash) => {
-              obj.password = hash;
-              if (
-                obj.nombre != null &&
-                obj.email != null &&
-                obj.password != null
-              ) {
-                return Usuario.findOne({
-                  where: {
-                    email: obj.email
-                  }
-                }).then(userfind => {
-                  console.log("user", userfind);
-                  if (userfind === null) {
-                    obj.user_gitlab = true;
-                    return Usuario.create(obj)
-                      .then(user => {
-                        return Email.send(user)
-                          .then(resp => {
-                            console.log(resp);
-                            return user;
-                          })
-                          .catch(handleError(res));
-                      })
-                      .then(respondWithResult(res, 201))
-                      .catch(handleError(res));
-                  } else {
-                    res.status(409).send({
-                      message: "El Correo Electrónico ya esta en uso"
-                    });
-                  }
-                });
-              } else {
-                res.status(409).send({
-                  message: "Introduce todos los campos"
-                });
-              }
-            });
-          }
-
-        }).catch(err => {
-          console.log("err  ", err);
-          if (err.password) {
-            res.status(409).send({
-              message: err.password[0]
-            });
-          } else {
-            res.status(409).send({
-              message: err
-            });
-          }
-        });
+        UserGitlab.verifyUserEmail(obj)
+          .then(resp => {
+            console.log("resp  ", resp);
+            if (resp) {
+              // envia verificacion a correo
+              bcrypt.hash(params.password, null, null, (err, hash) => {
+                obj.password = hash;
+                if (
+                  obj.nombre != null &&
+                  obj.email != null &&
+                  obj.password != null
+                ) {
+                  return Usuario.findOne({
+                    where: {
+                      email: obj.email
+                    }
+                  }).then(userfind => {
+                    console.log("user", userfind);
+                    if (userfind === null) {
+                      obj.user_gitlab = true;
+                      return Usuario.create(obj)
+                        .then(user => {
+                          return Email.send(user)
+                            .then(resp => {
+                              console.log(resp);
+                              return user;
+                            })
+                            .catch(handleError(res));
+                        })
+                        .then(respondWithResult(res, 201))
+                        .catch(handleError(res));
+                    } else {
+                      res.status(409).send({
+                        message: "El Correo Electrónico ya esta en uso"
+                      });
+                    }
+                  });
+                } else {
+                  res.status(409).send({
+                    message: "Introduce todos los campos"
+                  });
+                }
+              });
+            }
+          })
+          .catch(err => {
+            console.log("err  ", err);
+            res.status(409).send({ message: err.message });
+          });
       } else {
         res.status(409).send({
           message: "Captcha Invalido o Expirado"
         });
       }
-
     })
     .catch(err => {
       console.log(err);
@@ -407,8 +412,7 @@ export function passwordUser(req, res) {
 }
 export function createGitlab(req, res) {
   let captchaCurrent;
-  Captcha
-    .getCurrent(req.body.usuario.sessionID)
+  Captcha.getCurrent(req.body.usuario.sessionID)
     .then(resp => {
       console.log(req.body.usuario.captcha, resp);
       captchaCurrent = JSON.parse(resp).captcha;
@@ -416,10 +420,10 @@ export function createGitlab(req, res) {
         console.log("entro.......");
         Captcha.delete(req.body.usuario.sessionID);
         Gitlab.createGitlabUser(
-            req.body.domain,
-            req.body.token,
-            req.body.usuario
-          )
+          req.body.domain,
+          req.body.token,
+          req.body.usuario
+        )
           .then(resp => {
             if (resp.message) {
               res.status(409).send(resp);
@@ -442,10 +446,10 @@ export function createGitlab(req, res) {
     });
 }
 export function clone(req, res) {
-  Github.clone()
+  Github.clone();
   res.send({
     message: "se realizo correctamente"
-  })
+  });
 }
 
 // Upserts the given Usuario in the DB at the specified ID
@@ -455,10 +459,10 @@ export function upsert(req, res) {
   }
 
   return Usuario.upsert(req.body, {
-      where: {
-        _id: req.params.id
-      }
-    })
+    where: {
+      _id: req.params.id
+    }
+  })
     .then(respondWithResult(res))
     .catch(handleError(res));
 }
@@ -469,10 +473,10 @@ export function patch(req, res) {
     delete req.body._id;
   }
   return Usuario.find({
-      where: {
-        _id: req.params.id
-      }
-    })
+    where: {
+      _id: req.params.id
+    }
+  })
     .then(handleEntityNotFound(res))
     .then(saveUpdates(req.body))
     .then(respondWithResult(res))
@@ -482,10 +486,10 @@ export function patch(req, res) {
 // Deletes a Usuario from the DB
 export function destroy(req, res) {
   return Usuario.find({
-      where: {
-        _id: req.params.id
-      }
-    })
+    where: {
+      _id: req.params.id
+    }
+  })
     .then(handleEntityNotFound(res))
     .then(removeEntity(res))
     .then(respondWithResult(res))

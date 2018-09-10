@@ -31,9 +31,9 @@ class Email {
         to: user.email,
         subject: "Por favor verifique su cuenta de Correo Electronico ",
         html:
-          "Hello,<br> Please Click on the link to verify your email.<br><a href=" +
+          "Hola,<br> Usted se registro en el Catalogo del Repositorio Estatal <br>Por favor hacer Click en el Enlace para verificar su email.<br><a href=" +
           link +
-          ">Click here to verify</a>"
+          ">Click aqui para verificar</a>"
       };
       smtpTransport.sendMail(mailOptions, function(error, response) {
         if (error) {

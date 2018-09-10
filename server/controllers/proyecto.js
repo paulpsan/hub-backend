@@ -1,19 +1,11 @@
-/**
- * Using Rails-like standard naming convention for endpoints.
- * GET     /api/proyectos              ->  index
- * POST    /api/proyectos              ->  create
- * GET     /api/proyectos/:id          ->  show
- * PUT     /api/proyectos/:id          ->  upsert
- * PATCH   /api/proyectos/:id          ->  patch
- * DELETE  /api/proyectos/:id          ->  destroy
- */
-
 "use strict";
 import { Proyecto, Repositorio, Usuario, Commit, Rating } from "../sqldb";
 import config from "../config/environment";
 import SequelizeHelper from "../components/sequelize-helper";
 import _ from "lodash";
 import Sequelize from "sequelize";
+import UserGitlab from "../components/gitlab/userGitlab";
+import ProjectGitlab from "../components/gitlab/projectGitlab";
 
 function respondWithResult(res, statusCode) {
   statusCode = statusCode || 200;
@@ -162,6 +154,20 @@ function setRating() {
     });
   };
 }
+function createGitlab(project,isNew) {
+  return new Promise((resolve, reject) => {
+    ProjectGitlab.create(project, isNew)
+      .then(resp => {
+        if (resp.message) {
+          reject(resp.message);
+        }
+        resolve(resp);
+      })
+      .catch(err => {
+        reject(err);
+      });
+  });
+}
 
 function createEntity(res, proyecto) {
   return function(entity) {
@@ -174,10 +180,10 @@ function createEntity(res, proyecto) {
         })
         .catch(err => {
           console.log(err);
-          res.send(err);
+          res.status(400).send(err);
         });
     } else {
-      res.send({ message: entity.nombre + " ya existe" });
+      res.status(400).send({ message: entity.nombre + " ya existe" });
     }
     return entity;
   };
@@ -263,17 +269,65 @@ export function show(req, res) {
 // Creates a new Proyecto in the DB
 //parsear datos
 export function create(req, res) {
-  console.log("body:", req.body, "params:", req.params);
-  return (
-    Proyecto.find({
-      where: {
-        nombre: req.body.nombre
-      }
-    })
-      //actualizar
-      .then(createEntity(res, req.body))
-      .catch(handleError(res))
-  );
+  console.log("params:", req.query);
+
+  if (!req.query.import && !req.query.nuevo) {
+    console.log("entri", req.params);
+    return (
+      Proyecto.find({ where: { nombre: req.body.nombre } })
+        //actualizar
+        .then(createEntity(res, req.body))
+        .catch(handleError(res))
+    );
+  } else {
+    if (!req.query.nuevo) {
+      console.log("import", req.query.nuevo);
+      createGitlab(req.body,false)
+        .then(resp => {
+          //correcto
+          return (
+            Proyecto.find({ where: { nombre: req.body.nombre } })
+              //actualizar
+              .then(createEntity(res, req.body))
+              .catch(handleError(res))
+          );
+        })
+        .catch(err => {
+          res.status(400).send({ message: err.error.message });
+        });
+    }else{
+      createGitlab(req.body,true)
+        .then(resp => {
+          //correcto
+          return (
+            Proyecto.find({ where: { nombre: req.body.nombre } })
+              //actualizar
+              .then(proy=>{
+                if(proy==null){
+                  return Proyecto.create(proy)
+                    .then(response => {
+                      res
+                        .status(201)
+                        .json({ proyecto: response });
+                    })
+                    .catch(err => {
+                      console.log(err);
+                      res.status(400).send(err);
+                    });
+                }else{
+                  res.status(400).send({
+                    message: proy.nombre + " ya existe"
+                  });
+                }
+              })
+              .catch(handleError(res))
+          );
+        })
+        .catch(err => {
+          res.status(400).send({ message: err.error.message });
+        });
+    }
+  }
 }
 
 // Upserts the given Proyecto in the DB at the specified ID
@@ -323,4 +377,13 @@ export function setDatos(req, res) {
   })
     .then(setDatosRepo(res))
     .catch(handleError(res));
+}
+export function test(req, res) {
+  ProjectGitlab.create()
+    .then(resp => {
+      res.json({ usuario: resp });
+    })
+    .catch(err => {
+      res.status(409).send({ message: err });
+    });
 }

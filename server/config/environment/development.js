@@ -13,7 +13,7 @@ module.exports = {
     }
   },
   email: {
-    url_verify: "http://localhost:3000/api/usuarios/verificacion",
+    url_verify: "http://localhost:4200/auth/verificacion",
     url_reset: "http://localhost:4200/auth/recuperar",
     from: "psanchez@adsib.gob.bo",
     user: "psanchez@adsib.gob.bo", //miusuario@adsib.gob.bo
@@ -25,12 +25,11 @@ module.exports = {
   repo: {
     gitlab: {
       user: "root",
-      password: "4dm1n2()18adsib",
-      privateToken: "tHJ9mhRcLX7tjZGCM5PM",
-      domain: "http://192.168.5.217",
+      password: "paulcasa",
+      privateToken: "Zskfg_p1fizX55_5brUe",
+      domain: "http://127.0.0.1:30080"
     }
   },
-
 
   github: {
     api_url: "https://api.github.com/",
@@ -41,15 +40,19 @@ module.exports = {
   gitlab: {
     api_url: "https://gitlab.com/api/v4/",
     token_url: "https://gitlab.com/oauth/token",
-    clientId: "68b23d8cc8bdf2e9414f2b486456596bbd23e9d44e1c56c16e91298747b94485",
-    clientSecret: "99cca0cab45bf79a844763ec81db38e34915cbb8e8a5f6006a097707c4278d5b",
+    clientId:
+      "68b23d8cc8bdf2e9414f2b486456596bbd23e9d44e1c56c16e91298747b94485",
+    clientSecret:
+      "99cca0cab45bf79a844763ec81db38e34915cbb8e8a5f6006a097707c4278d5b",
     callback: "http://localhost:4200/inicio"
   },
   gitlabGeo: {
     api_url: "https://gitlab.geo.gob.bo/api/v4/",
     token_url: "https://gitlab.geo.gob.bo/oauth/token",
-    clientId: "800b8fdad978c3f6bdd3e6e4ad535748cb38d24863e65218b2b2256e40ef9139",
-    clientSecret: "272f3ddd82f15bb561c9cc34e44bfda2183100d4eb127a63dcc3529c181c1ac9",
+    clientId:
+      "800b8fdad978c3f6bdd3e6e4ad535748cb38d24863e65218b2b2256e40ef9139",
+    clientSecret:
+      "272f3ddd82f15bb561c9cc34e44bfda2183100d4eb127a63dcc3529c181c1ac9",
     callback: "http://localhost:4200/inicio"
   },
   bitbucket: {

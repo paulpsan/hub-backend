@@ -108,8 +108,6 @@ function nuevoUsuario(usuarioOauth, tipo) {
 function addUser(usuario, tipo) {
   return function (userOauth) {
     let token = userOauth.token;
-    let cuenta = [];
-    cuenta = usuario.cuentas;
     return TokenController.updateCreateToken(tipo, usuario, token).then(
       resp => {
         return Usuario.findOne({
@@ -118,8 +116,6 @@ function addUser(usuario, tipo) {
             }
           })
           .then(user => {
-            cuenta.push(tipo);
-            user.cuentas = cuenta;
             user.id_gitlab = userOauth.usuario.id;
             user.gitlab = true;
             user.save();

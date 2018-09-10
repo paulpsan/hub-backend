@@ -146,8 +146,6 @@ function createUpdateUser() {
 function addUser(usuario) {
   return function (userOauth) {
     let token = userOauth.token;
-    let cuenta = [];
-    cuenta = usuario.cuentas;
     return TokenController.updateCreateToken("github", usuario, token).then(
       resp => {
         return Usuario.findOne({
@@ -156,8 +154,6 @@ function addUser(usuario) {
             }
           })
           .then(user => {
-            cuenta.push(tipo);
-            user.cuentas = cuenta;
             user.id_github = userOauth.usuario.id;
             user.github = true;
             user.save();

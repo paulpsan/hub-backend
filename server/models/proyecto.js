@@ -19,6 +19,9 @@ export default function(sequelize, DataTypes) {
           }
         }
       },
+      usuarioGitlab: {
+        type: DataTypes.INTEGER
+      },
       descripcion: {
         type: DataTypes.TEXT
       },
