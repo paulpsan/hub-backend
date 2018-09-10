@@ -25,3 +25,8 @@ Instalar las dependencias del proyecto
 Iniciar el proyecto
 
 > $ npm start
+
+
+## Instalar la libreria
+
+>& apt-get install libssl-dev

@@ -22,6 +22,8 @@ import config from "../config/environment";
 import qs from "querystring";
 import Github from "../components/nodegit/github";
 import UserGitlab from "../components/gitlab/userGitlab";
+import Sequelize from "sequelize";
+
 
 function getJson() {
   return function (resultado) {
@@ -100,6 +102,7 @@ function handleError(res, statusCode) {
 export function index(req, res) {
   console.log("Session**", req.session);
   if (req.query.buscar != undefined) {
+    console.log(req.query);
     const Op = Sequelize.Op;
     return Usuario.findAndCountAll({
         include: [{
@@ -115,6 +118,7 @@ export function index(req, res) {
         }
       })
       .then(datos => {
+        console.log(datos);
         return SequelizeHelper.generarRespuesta(datos, req.opciones);
       })
       .then(respondWithResult(res))

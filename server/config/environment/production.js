@@ -12,7 +12,7 @@ module.exports = {
     }
   },
   email: {
-    url_verify: "https://desarrollo.adsib.gob.bo/catalogo/api/usuarios/verificacion",
+    url_verify: "https://desarrollo.adsib.gob.bo/catalogo/auth/verificacion",
     url_reset: "https://desarrollo.adsib.gob.bo/catalogo/auth/recuperar",
     from: "psanchez@adsib.gob.bo",
     user: "psanchez@adsib.gob.bo", //miusuario@adsib.gob.bo
