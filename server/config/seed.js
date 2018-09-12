@@ -9,15 +9,34 @@ import config from "./environment/";
 import repositorio from "../models/repositorio";
 
 export default function seedDatabaseIfNeeded() {
+  let Rating = sqldb.Rating;
+  let ratings;
+  let Proyecto = sqldb.Proyecto;
+  let proyectos;
+  let Usuario = sqldb.Usuario;
+  let usuarios;
+  let Repositorio = sqldb.Repositorio;
+  let repositorios;
+  if (!config.seedDB) {
+    return Rating.destroy({
+      where: {}
+    }).then(() => {
+      return Rating.bulkCreate(
+        [{
+          downloads: 1,
+          issues: 1,
+          stars: 1,
+          forks: 1,
+          commits: 1,
+          votaciones: 1
+        }], {
+          returning: true
+        }
+      ).then()
+    })
+  }
+
   if (config.seedDB) {
-    let Rating = sqldb.Rating;
-    let ratings;
-    let Proyecto = sqldb.Proyecto;
-    let proyectos;
-    let Usuario = sqldb.Usuario;
-    let usuarios;
-    let Repositorio = sqldb.Repositorio;
-    let repositorios;
 
     return Rating.destroy({
       where: {}

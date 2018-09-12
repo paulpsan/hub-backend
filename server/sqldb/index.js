@@ -9,6 +9,7 @@ let db = {
 db.Usuario = db.sequelize.import("../models/usuario");
 db.Commit = db.sequelize.import("../models/commit");
 db.Rating = db.sequelize.import("../models/rating");
+db.Grupo = db.sequelize.import("../models/grupo");
 db.Token = db.sequelize.import("../models/token");
 db.Repositorio = db.sequelize.import("../models/repositorio");
 db.Proyecto = db.sequelize.import("../models/proyecto");
@@ -30,6 +31,31 @@ db.inclusiones = {};
 //   through: "UsuarioProyecto",
 //   foreignKey: "fk_usuario"
 // });
+db.Grupo.hasMany(db.Usuario, {
+  foreignKey: {
+    name: "fk_usuario",
+    allowNull: true
+  }
+});
+db.Usuario.belongsTo(db.Grupo, {
+  foreignKey: {
+    name: "fk_usuario",
+    allowNull: true
+  }
+});
+
+db.Grupo.hasMany(db.Proyecto, {
+  foreignKey: {
+    name: "fk_proyecto",
+    allowNull: true
+  }
+});
+db.Proyecto.belongsTo(db.Grupo, {
+  foreignKey: {
+    name: "fk_proyecto",
+    allowNull: true
+  }
+});
 
 db.Usuario.hasMany(db.Repositorio, {
   foreignKey: {

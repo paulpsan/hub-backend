@@ -4,6 +4,7 @@ export default app => {
   app.use("/api/auth", require("./routes/auth"));
   app.use("/api/commits", require("./routes/commit"));
   app.use("/api/rating", require("./routes/rating"));
+  app.use("/api/grupos", require("./routes/grupo"));
   app.use("/api/proyectos", require("./routes/proyecto"));
   app.use("/api/repositorios", require("./routes/repositorio"));
   app.use("/api/usuarios", require("./routes/usuario"));

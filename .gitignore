@@ -43,6 +43,6 @@ testem.log
 Thumbs.db
 
 # archivos de configuracion
-server/config/environment/production.js
-server/config/environment/development.js
-server/uploads
+/server/config/environment/production.js
+/server/config/environment/development.js
+/server/uploads
