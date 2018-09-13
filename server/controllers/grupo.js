@@ -10,23 +10,20 @@
 
 "use strict";
 
-import { Grupo } from "../sqldb";
+import {
+  Grupo
+} from "../sqldb";
 import GroupGitlab from "../components/gitlab/groupGitlab";
-
+import MemberGitlab from "../components/gitlab/memberGitlab";
 import SequelizeHelper from "../components/sequelize-helper";
+import Sequelize from "sequelize";
+import { Usuario } from "../sqldb";
 import config from "../config/environment";
-import { Sequelize } from "sequelize";
-var fetch = require("node-fetch");
 
-function getJson() {
-  return function(resultado) {
-    return resultado.json();
-  };
-}
 function respondWithResult(res, statusCode) {
   statusCode = statusCode || 200;
   // console.log("esto es un",entity);
-  return function(entity) {
+  return function (entity) {
     if (entity) {
       return res
         .status(statusCode)
@@ -38,7 +35,7 @@ function respondWithResult(res, statusCode) {
 }
 
 function saveUpdates(updates) {
-  return function(entity) {
+  return function (entity) {
     return entity
       .updateAttributes(updates)
       .then(updated => {
@@ -52,7 +49,7 @@ function saveUpdates(updates) {
 }
 
 function removeEntity(res) {
-  return function(entity) {
+  return function (entity) {
     let grupo = {};
     grupo._id = entity._id;
     grupo.email = entity.email;
@@ -73,7 +70,7 @@ function removeEntity(res) {
 }
 
 function handleEntityNotFound(res) {
-  return function(entity) {
+  return function (entity) {
     if (!entity) {
       res.status(404).end();
       return null;
@@ -84,7 +81,7 @@ function handleEntityNotFound(res) {
 
 function handleError(res, statusCode) {
   statusCode = statusCode || 500;
-  return function(err) {
+  return function (err) {
     res.status(statusCode).send(err);
   };
 }
@@ -101,10 +98,10 @@ export function setGrupo(req, res) {
   return Grupo.find()
     .then(grupo => {
       return Repositorio.find({
-        where: {
-          _id: req.params.id
-        }
-      })
+          where: {
+            _id: req.params.id
+          }
+        })
         .then(repositorio => {
           if (grupo.issues <= repositorio.issues.total) {
             grupo.issues = repositorio.issues.total;
@@ -131,9 +128,39 @@ export function setGrupo(req, res) {
 
 // Gets a list of grupos y busca grupo
 export function index(req, res) {
-  return Grupo.findAndCountAll()
-    .then(respondWithResult(res))
-    .catch(handleError(res));
+  if (req.query.buscar != undefined) {
+    const Op = Sequelize.Op;
+    return Grupo.findAndCountAll({
+        include: [{
+          all: true
+        }],
+        offset: req.opciones.offset,
+        limit: req.opciones.limit,
+        where: {
+          nombre: {
+            [Op.iLike]: "%" + req.query.buscar + "%"
+          }
+        }
+      })
+      .then(datos => {
+        return SequelizeHelper.generarRespuesta(datos, req.opciones);
+      })
+      .then(respondWithResult(res))
+      .catch(handleError(res));
+  } else {
+    return Grupo.findAndCountAll({
+        include: [{
+          all: true
+        }],
+        offset: req.opciones.offset,
+        limit: req.opciones.limit
+      })
+      .then(datos => {
+        return SequelizeHelper.generarRespuesta(datos, req.opciones);
+      })
+      .then(respondWithResult(res))
+      .catch(handleError(res));
+  }
 }
 
 // Gets a single Grupo from the DB
@@ -149,16 +176,40 @@ export function show(req, res) {
     .catch(handleError(res));
 }
 
+
+
 // Creates a new Grupo in the DB
 export function create(req, res) {
-  console.log(req);
+
+  console.log(req.body.usuarios);
+  GroupGitlab.create(req.body).then(resp => {
+    console.log(resp);
+    req.body.id_gitlab = resp.id;
+    //adicionar usuario al grupo
+    MemberGitlab.addGroup(resp.id, req.body.usuarios).then(resp => {
+      console.log(resp);
+      if (resp) {
+        return Grupo.create(req.body,{
+          include:[{
+            model:Usuario,
+            as:'usuarios'
+          }]
+        })
+          .then(respondWithResult(res, 201))
+          .catch(handleError(res));
+      }
+    }).catch(err => {
+      res.status(400).send(err);
+    })
+
+  }).catch(err => {
+    console.log(err);
+    res.status(400).send(err);
+  })
 
 
 
 
-  return Grupo.create(req.body)
-    .then(respondWithResult(res, 201))
-    .catch(handleError(res));
 }
 
 export function upsert(req, res) {
@@ -167,10 +218,10 @@ export function upsert(req, res) {
   }
 
   return Grupo.upsert(req.body, {
-    where: {
-      _id: req.params.id
-    }
-  })
+      where: {
+        _id: req.params.id
+      }
+    })
     .then(respondWithResult(res))
     .catch(handleError(res));
 }
@@ -180,10 +231,10 @@ export function patch(req, res) {
     delete req.body._id;
   }
   return Grupo.find({
-    where: {
-      _id: req.params.id
-    }
-  })
+      where: {
+        _id: req.params.id
+      }
+    })
     .then(handleEntityNotFound(res))
     .then(saveUpdates(req.body))
     .then(respondWithResult(res))
@@ -193,10 +244,10 @@ export function patch(req, res) {
 // Deletes a Grupo from the DB
 export function destroy(req, res) {
   return Grupo.find({
-    where: {
-      _id: req.params.id
-    }
-  })
+      where: {
+        _id: req.params.id
+      }
+    })
     .then(handleEntityNotFound(res))
     .then(removeEntity(res))
     .then(respondWithResult(res))

@@ -31,30 +31,30 @@ db.inclusiones = {};
 //   through: "UsuarioProyecto",
 //   foreignKey: "fk_usuario"
 // });
-db.Grupo.hasMany(db.Usuario, {
-  foreignKey: {
-    name: "fk_usuario",
-    allowNull: true
-  }
+
+//malll
+// db.Usuario.hasMany(db.Grupo, {
+//   foreignKey: {
+//     name: "fk_usuario",
+//     allowNull: true
+//   }
+// });
+db.Grupo.belongsToMany(db.Usuario, {
+  through: 'UsuarioGrupo',
+  foreignKey:'fk_usuario'
 });
-db.Usuario.belongsTo(db.Grupo, {
-  foreignKey: {
-    name: "fk_usuario",
-    allowNull: true
-  }
+db.Usuario.belongsToMany(db.Grupo, {
+  through: 'UsuarioGrupo',
+  foreignKey:'fk_grupo'
 });
 
-db.Grupo.hasMany(db.Proyecto, {
-  foreignKey: {
-    name: "fk_proyecto",
-    allowNull: true
-  }
+db.Grupo.belongsToMany(db.Proyecto, {
+  through: 'ProyectoGrupo',
+  foreignKey:'fk_proyecto'
 });
-db.Proyecto.belongsTo(db.Grupo, {
-  foreignKey: {
-    name: "fk_proyecto",
-    allowNull: true
-  }
+db.Proyecto.belongsToMany(db.Grupo, {
+  through: 'ProyectoGrupo',
+  foreignKey:'fk_grupo'
 });
 
 db.Usuario.hasMany(db.Repositorio, {
@@ -96,16 +96,17 @@ db.Repositorio.hasMany(db.Commit, {
     allowNull: false
   }
 });
-db.Token.belongsTo(db.Usuario, {
-  foreignKey: {
-    name: "fk_usuario",
-    allowNull: false
-  }
-});
 
 db.Commit.belongsTo(db.Repositorio, {
   foreignKey: {
     name: "fk_repositorio",
+    allowNull: false
+  }
+});
+
+db.Token.belongsTo(db.Usuario, {
+  foreignKey: {
+    name: "fk_usuario",
     allowNull: false
   }
 });

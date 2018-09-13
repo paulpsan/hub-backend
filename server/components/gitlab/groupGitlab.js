@@ -11,13 +11,13 @@ const api = new Gitlab({
 class GroupGitlab {
   static create(grupo) {
     return new Promise((resolve, reject) => {
-      let data = qs.stringify({
-        name: "prueba",
-        path: "",
-        description: "esto es una prueba",
-        visibility: 'private',
+      let data = {
+        name: grupo.nombre,
+        path: grupo.path,
+        description: grupo.descripcion,
+        visibility: grupo.visibilidad,
         request_access_enabled:false
-      });
+      };
       api.Groups.create(data)
         .then(resp => {
           console.log("grups",resp);

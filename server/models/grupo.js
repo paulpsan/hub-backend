@@ -34,12 +34,17 @@ export default (sequelize, DataTypes) => {
       descripcion: {
         type: DataTypes.TEXT
       },
-      visibility: {
+      visibilidad: {
         type: DataTypes.TEXT,
       },
-      url: {
-        type: DataTypes.TEXT,
-        defaultValue: ""
+      path: {
+        type: DataTypes.TEXT
+      },
+      usuarios: {
+        type: DataTypes.JSONB
+      },
+      proyectos: {
+        type: DataTypes.JSONB
       },
     }, {
       tableName: "grupo",
