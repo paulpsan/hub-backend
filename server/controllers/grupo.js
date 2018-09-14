@@ -17,7 +17,10 @@ import GroupGitlab from "../components/gitlab/groupGitlab";
 import MemberGitlab from "../components/gitlab/memberGitlab";
 import SequelizeHelper from "../components/sequelize-helper";
 import Sequelize from "sequelize";
-import { Usuario } from "../sqldb";
+import {
+  Usuario,
+  UsuarioGrupo
+} from "../sqldb";
 import config from "../config/environment";
 
 function respondWithResult(res, statusCode) {
@@ -45,6 +48,28 @@ function saveUpdates(updates) {
         console.log(err);
         return err;
       });
+  };
+}
+
+function createAssociation(usuarios) {
+  return async function (entity) {
+    for (const usuario of usuarios) {
+      let obj = {
+        fk_usuario: usuario._id,
+        fk_grupo: entity._id,
+        nombre_permiso: usuario.nombre,
+        access_level: usuario.access_level,
+      }
+      await UsuarioGrupo.create(obj)
+        .then(resp => {
+          console.log(resp);
+        })
+        .catch(err => {
+          console.log(err);
+          return err;
+        });
+    }
+    return entity;
   };
 }
 
@@ -82,6 +107,7 @@ function handleEntityNotFound(res) {
 function handleError(res, statusCode) {
   statusCode = statusCode || 500;
   return function (err) {
+    console.log(err);
     res.status(statusCode).send(err);
   };
 }
@@ -163,6 +189,20 @@ export function index(req, res) {
   }
 }
 
+// Obtiene una lista de Usuarios de un grupo y busca
+export function getUsers(req, res) {
+  return Grupo.find({
+      include: [{
+        all: true
+      }],
+      where: {
+        _id: req.params.id
+      }
+    })
+    .then(respondWithResult(res))
+    .catch(handleError(res));
+}
+
 // Gets a single Grupo from the DB
 export function show(req, res) {
   let opciones = {
@@ -189,12 +229,13 @@ export function create(req, res) {
     MemberGitlab.addGroup(resp.id, req.body.usuarios).then(resp => {
       console.log(resp);
       if (resp) {
-        return Grupo.create(req.body,{
-          include:[{
-            model:Usuario,
-            as:'usuarios'
-          }]
-        })
+        let objGrupo = {
+          nombre: req.body.nombre,
+
+        }
+        console.log(objGrupo);
+        return Grupo.create(req.body)
+          .then(createAssociation(req.body.usuarios))
           .then(respondWithResult(res, 201))
           .catch(handleError(res));
       }
