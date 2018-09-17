@@ -15,6 +15,7 @@ db.Repositorio = db.sequelize.import("../models/repositorio");
 db.Proyecto = db.sequelize.import("../models/proyecto");
 db.UsuarioGrupo = db.sequelize.import("../models/usuarioGrupo");
 db.ProyectoGrupo = db.sequelize.import("../models/proyectoGrupo");
+db.Solicitud = db.sequelize.import("../models/solicitud");
 
 
 db.inclusiones = {};
@@ -113,6 +114,12 @@ db.Token.belongsTo(db.Usuario, {
   }
 });
 
+db.Solicitud.belongsTo(db.Usuario, {
+  foreignKey: {
+    name: "fk_usuario",
+    allowNull: false
+  }
+});
 module.exports = db;
 
 

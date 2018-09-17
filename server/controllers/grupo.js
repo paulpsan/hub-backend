@@ -50,7 +50,17 @@ function saveUpdates(updates) {
       });
   };
 }
-
+function saveGitlab(updates) {
+  return function (entity) {
+    return GroupGitlab.edit(updates).then(resp=>{
+      console.log(resp);
+      return entity
+    }).catch(err=>{
+      console.log(err);
+      return err
+    })
+  };
+}
 function createAssociation(usuarios) {
   return async function (entity) {
     for (const usuario of usuarios) {
@@ -271,12 +281,14 @@ export function patch(req, res) {
   if (req.body._id) {
     delete req.body._id;
   }
+  console.log(req.body);
   return Grupo.find({
       where: {
         _id: req.params.id
       }
     })
     .then(handleEntityNotFound(res))
+    .then(saveGitlab(req.body))
     .then(saveUpdates(req.body))
     .then(respondWithResult(res))
     .catch(handleError(res));
