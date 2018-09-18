@@ -2,10 +2,12 @@
 
 var express = require("express");
 var controller = require("../controllers/solicitud");
-
+import {
+    generarOpciones
+} from '../components/sequelize-middleware';
 var router = express.Router();
 
-router.get("/", controller.index);
+router.get("/", generarOpciones, controller.index);
 router.get("/:id", controller.show);
 router.post("/", controller.create);
 router.put("/:id", controller.upsert);

@@ -11,7 +11,7 @@ export default function (sequelize, DataTypes) {
       },
       institucion: DataTypes.TEXT,
       descripcion: DataTypes.TEXT,
-      estado: DataTypes.BOOLEAN,
+      estado: DataTypes.TEXT,
       path: DataTypes.TEXT,
       cargo: DataTypes.TEXT,
     }, {
