@@ -1,15 +1,12 @@
 "use strict";
 
 var express = require("express");
-var controller = require("../controllers/grupo");
-import {
-    generarOpciones
-  } from '../components/sequelize-middleware';
+var controller = require("../controllers/solicitud");
+
 var router = express.Router();
 
-router.get("/",generarOpciones, controller.index);
+router.get("/", controller.index);
 router.get("/:id", controller.show);
-router.get("/:id/usuarios", controller.getUsers);
 router.post("/", controller.create);
 router.put("/:id", controller.upsert);
 router.patch("/:id", controller.patch);

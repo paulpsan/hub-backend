@@ -62,10 +62,10 @@ export default function seedDatabaseIfNeeded() {
         .then(() => {
           return Usuario.bulkCreate(
             [{
-                nombre: "1D'jalmar Gutierrez1",
-                email: "dgutierrez@adsib.gob.bo",
+                nombre: "paul Sanchez",
+                email: "psanchez@adsib.gob.bo",
                 //con password 123
-                password: "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
+                password: "$$2a$10$a1bk5NCgqxhtyFj9ZCjfce/zxpId30IbKZ4oc/WwxPyQ7Ta2UH3pe",
                 role: "admin",
                 login: "",
                 tipo: "local",
@@ -77,59 +77,61 @@ export default function seedDatabaseIfNeeded() {
                   valor: 1
                 },
                 datos: "",
+                usuarioGitlab:7,
+                user_gitlab:true,
                 url: ""
               },
-              {
-                nombre: "2Teodoro Nina2",
-                email: "tnina@adsib.gob.bo",
-                //con password 123
-                password: "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
-                role: "admin",
-                login: "",
-                tipo: "local",
-                avatar: "",
-                descripcion: "",
-                clasificacion: {
-                  datos: [],
-                  valor: 0
-                },
-                datos: "",
-                url: ""
-              },
-              {
-                nombre: "3Edwin Salcedo3",
-                email: "esalcedo@adsib.gob.bo",
-                //con password 123
-                password: "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
-                role: "admin",
-                login: "",
-                tipo: "local",
-                avatar: "",
-                descripcion: "",
-                clasificacion: {
-                  datos: [],
-                  valor: 2
-                },
-                datos: "",
-                url: ""
-              },
-              {
-                nombre: "4Jhonny Monrroy4",
-                email: "psanchez@adsib.gob.bo",
-                //con password 123
-                password: "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
-                role: "admin",
-                login: "",
-                tipo: "local",
-                avatar: "",
-                descripcion: "",
-                clasificacion: {
-                  datos: [],
-                  valor: 1
-                },
-                datos: "",
-                url: ""
-              },
+              // {
+              //   nombre: "2Teodoro Nina2",
+              //   email: "tnina@adsib.gob.bo",
+              //   //con password 123
+              //   password: "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
+              //   role: "admin",
+              //   login: "",
+              //   tipo: "local",
+              //   avatar: "",
+              //   descripcion: "",
+              //   clasificacion: {
+              //     datos: [],
+              //     valor: 0
+              //   },
+              //   datos: "",
+              //   url: ""
+              // },
+              // {
+              //   nombre: "3Edwin Salcedo3",
+              //   email: "esalcedo@adsib.gob.bo",
+              //   //con password 123
+              //   password: "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
+              //   role: "admin",
+              //   login: "",
+              //   tipo: "local",
+              //   avatar: "",
+              //   descripcion: "",
+              //   clasificacion: {
+              //     datos: [],
+              //     valor: 2
+              //   },
+              //   datos: "",
+              //   url: ""
+              // },
+              // {
+              //   nombre: "4Jhonny Monrroy4",
+              //   email: "psanchez@adsib.gob.bo",
+              //   //con password 123
+              //   password: "$2a$10$Xr1xF.TCidKQlDcsfjU52eKMJNXZFaS9Z7A8i.MjYJioh16HYrrri",
+              //   role: "admin",
+              //   login: "",
+              //   tipo: "local",
+              //   avatar: "",
+              //   descripcion: "",
+              //   clasificacion: {
+              //     datos: [],
+              //     valor: 1
+              //   },
+              //   datos: "",
+              //   url: ""
+              // },
             ], {
               returning: true
             }

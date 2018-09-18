@@ -78,6 +78,48 @@ class MemberGitlab {
       resolve(true)
     });
   }
+
+  static editGroup(id, usuarios) {
+    return new Promise(async (resolve, reject) => {
+      console.log(id, usuarios);
+      for (const usuario of usuarios) {
+        let obj = {
+          user_id: usuario.user_id,
+          access_level: usuario.access_level,
+          id: id,
+        };
+        await addGrupo(obj).then(resp => {
+          if (resp.error) {
+            reject(resp)
+          }
+        }).catch(err => {
+          reject(err)
+        });
+      }
+      resolve(true)
+    });
+  }
+
+  static deleteGroup(id, usuarios) {
+    return new Promise(async (resolve, reject) => {
+      console.log(id, usuarios);
+      for (const usuario of usuarios) {
+        let obj = {
+          user_id: usuario.user_id,
+          access_level: usuario.access_level,
+          id: id,
+        };
+        await addGrupo(obj).then(resp => {
+          if (resp.error) {
+            reject(resp)
+          }
+        }).catch(err => {
+          reject(err)
+        });
+      }
+      resolve(true)
+    });
+  }
   //busca email o username y devuelve true si encuentra
   static search(data = "pausl") {
     return new Promise((resolve, reject) => {

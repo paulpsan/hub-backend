@@ -45,7 +45,7 @@ export default (sequelize, DataTypes) => {
         type: DataTypes.BOOLEAN,
         defaultValue: false
       },
-      admin_group: {
+      admin_grupo: {
         type: DataTypes.BOOLEAN,
         defaultValue: false
       },

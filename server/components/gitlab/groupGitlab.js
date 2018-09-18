@@ -29,6 +29,50 @@ class GroupGitlab {
         });
     });
   }
+
+  static edit(grupo) {
+    return new Promise((resolve, reject) => {
+      let data = {
+        id:grupo.id_gitlab,
+        name: grupo.nombre,
+        path: grupo.path,
+        description: grupo.descripcion,
+        visibility: grupo.visibilidad,
+        request_access_enabled:false
+      };
+      api.Groups.edit(data)
+        .then(resp => {
+          console.log("grups",resp);
+          resolve(resp);
+        })
+        .catch(err => {
+          console.log("****err***",err);
+          reject(err);
+        });
+    });
+  }
+
+  static delete(grupo) {
+    return new Promise((resolve, reject) => {
+      let data = {
+        name: grupo.nombre,
+        path: grupo.path,
+        description: grupo.descripcion,
+        visibility: grupo.visibilidad,
+        request_access_enabled:false
+      };
+      api.Groups.create(data)
+        .then(resp => {
+          console.log("grups",resp);
+          resolve(resp);
+        })
+        .catch(err => {
+          console.log("****err***",err);
+          reject(err);
+        });
+    });
+  }
+
   static createProject() {
     const url = `${config.repo.gitlab.domain}/api/v4/projects/user/`
     return new Promise((resolver, rechazar) => {

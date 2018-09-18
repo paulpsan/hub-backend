@@ -52,7 +52,8 @@ class UserGitlab {
         username: user.login,
         email: user.email,
         password: user.password,
-        skip_confirmation: true
+        skip_confirmation: true,
+        can_create_group:false
       };
 
       api.Users.create(data)
