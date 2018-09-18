@@ -13,8 +13,13 @@
 import bcrypt from "bcrypt-nodejs";
 import {
   Solicitud,
-  Repositorio
+  Usuario,
+  Grupo,
+  UsuarioGrupo
 } from "../sqldb";
+import MemberGitlab from "../components/gitlab/memberGitlab";
+import GroupGitlab from "../components/gitlab/groupGitlab";
+
 import SequelizeHelper from "../components/sequelize-helper";
 import config from "../config/environment";
 import {
@@ -30,14 +35,20 @@ function getJson() {
 
 function respondWithResult(res, statusCode) {
   statusCode = statusCode || 200;
-  // console.log("esto es un",entity);
   return function (entity) {
-    if (entity) {
+    console.log("esto es un", entity);
+    if (!entity.error) {
       return res
         .status(statusCode)
         .json(entity)
         .end();
+    } else {
+      return res
+        .status(entity.statusCode)
+        .json(entity.error)
+        .end();
     }
+
     return null;
   };
 }
@@ -47,12 +58,72 @@ function saveUpdates(updates) {
     return entity
       .updateAttributes(updates)
       .then(updated => {
-        return updated;
+        return Usuario.find({
+          where: {
+            _id: updated.fk_usuario
+          }
+        }).then(user => {
+          user.admin_grupo = true;
+          user.save();
+          return updated;
+        }).catch(err => {
+          console.log(err);
+          return err;
+        });
       })
       .catch(err => {
         console.log(err);
         return err;
       });
+  };
+}
+
+function createGroup(solicitud) {
+  return function (entity) {
+    return Usuario.find({
+      where: {
+        _id: solicitud.fk_usuario
+      }
+    }).then(usuario => {
+      let data = {
+        nombre: entity.institucion,
+        path: entity.path,
+        descripcion: entity.descripcion,
+        visibility: "private"
+      }
+      return GroupGitlab.create(data).then(resp => {
+        let user = [{
+          user_id: usuario.usuarioGitlab,
+          access_level: 50
+        }]
+        data.visibilidad = "private"
+        data.id_gitlab = resp.id
+
+        Grupo.create(data).then(resp => {
+          let obj = {
+            fk_usuario: usuario._id,
+            fk_grupo: resp._id,
+            nombre_permiso: 'propietario',
+            access_level: 50,
+          }
+          UsuarioGrupo.create(obj)
+        }).catch(err => {
+          console.log(err);
+          return err;
+        });
+        return MemberGitlab.addGroup(resp.id, user).then(response => {
+          console.log(response);
+          return entity;
+        }).catch(err => {
+          console.log(err);
+          return err;
+        });
+      })
+
+    }).catch(err => {
+      console.log(err);
+      return err;
+    });
   };
 }
 
@@ -80,6 +151,7 @@ function removeEntity(res) {
 function handleEntityNotFound(res) {
   return function (entity) {
     if (!entity) {
+      console.log(entity);
       res.status(404).end();
       return null;
     }
@@ -143,7 +215,7 @@ export function index(req, res) {
 export function show(req, res) {
   let opciones = {
     where: {
-      _id: req.params.id
+      fk_usuario: req.params.id
     }
   };
   return Solicitud.find(Object.assign(opciones, req.opciones))
@@ -184,6 +256,7 @@ export function patch(req, res) {
     })
     .then(handleEntityNotFound(res))
     .then(saveUpdates(req.body))
+    .then(createGroup(req.body))
     .then(respondWithResult(res))
     .catch(handleError(res));
 }

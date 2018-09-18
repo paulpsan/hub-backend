@@ -50,17 +50,19 @@ function saveUpdates(updates) {
       });
   };
 }
+
 function saveGitlab(updates) {
   return function (entity) {
-    return GroupGitlab.edit(updates).then(resp=>{
+    return GroupGitlab.edit(updates).then(resp => {
       console.log(resp);
       return entity
-    }).catch(err=>{
+    }).catch(err => {
       console.log(err);
       return err
     })
   };
 }
+
 function createAssociation(usuarios) {
   return async function (entity) {
     for (const usuario of usuarios) {
@@ -132,32 +134,6 @@ function setGrupo() {
 
 export function setGrupo(req, res) {
   return Grupo.find()
-    .then(grupo => {
-      return Repositorio.find({
-          where: {
-            _id: req.params.id
-          }
-        })
-        .then(repositorio => {
-          if (grupo.issues <= repositorio.issues.total) {
-            grupo.issues = repositorio.issues.total;
-          }
-          if (grupo.stars <= repositorio.stars.total) {
-            grupo.stars = repositorio.stars.total;
-          }
-          if (grupo.forks <= repositorio.forks.total) {
-            grupo.forks = repositorio.forks.total;
-          }
-          console.log(grupo);
-
-          grupo.save();
-          return grupo;
-        })
-        .catch(err => {
-          console.log(err);
-        });
-      console.log(req.params.id);
-    })
     .then(respondWithResult(res))
     .catch(handleError(res));
 }
@@ -213,9 +189,24 @@ export function getUsers(req, res) {
     .catch(handleError(res));
 }
 
+export function getProjects(req, res) {
+  return Grupo.find({
+      include: [{
+        all: true
+      }],
+      where: {
+        _id: req.params.id
+      }
+    })
+    .then(respondWithResult(res))
+    .catch(handleError(res));
+}
 // Gets a single Grupo from the DB
 export function show(req, res) {
   let opciones = {
+    include: [{
+      all: true
+    }],
     where: {
       _id: req.params.id
     }
@@ -226,7 +217,33 @@ export function show(req, res) {
     .catch(handleError(res));
 }
 
-
+// Creates a new Grupo in the DB
+export function setUser(req, res) {
+  let user = [{
+    user_id: req.body.usuarioGitlab,
+    access_level: req.body.access_level,
+  }]
+  //adicionar usuario al grupo
+  return MemberGitlab.addGroup(req.body.idGrupoGitlab, user)
+    .then(resp => {
+      console.log(resp);
+      if (resp) {
+        let obj = {
+          fk_usuario: req.body._id,
+          fk_grupo: req.body.idGrupo,
+          nombre_permiso: req.body.nombre_permiso,
+          access_level: req.body.access_level,
+        }
+        console.log(obj);
+        UsuarioGrupo.create(obj)
+      }
+      return resp
+    }).then(respondWithResult(res, 201))
+    .catch(err => {
+      console.log(err);
+      res.status(err.statusCode).send(err);
+    })
+}
 
 // Creates a new Grupo in the DB
 export function create(req, res) {

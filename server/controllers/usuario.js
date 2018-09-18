@@ -147,6 +147,9 @@ export function index(req, res) {
 // Gets a single Usuario from the DB
 export function show(req, res) {
   let opciones = {
+    include: [{
+      all: true
+    }],
     where: {
       _id: req.params.id
     }
@@ -273,7 +276,7 @@ export function verifyUser(req, res) {
 
             UserGitlab.create(user)
               .then(userGitlab => {
-                console.log("userGitlab",userGitlab);
+                console.log("userGitlab", userGitlab);
                 bcrypt.hash(user.password, null, null, (err, hash) => {
                   user.password = hash;
                   user.user_gitlab = true;
@@ -288,7 +291,7 @@ export function verifyUser(req, res) {
                 })
               })
               .catch(err => {
-                console.log("err",err);
+                console.log("err", err);
                 res.status(409).send({
                   message: "No se pudo confirmar usuario vuelva a registrase",
                   err

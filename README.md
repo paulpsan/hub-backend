@@ -4,7 +4,7 @@ Backend de catalogo de software libre, api de repositorios, usuarios, proyectos
 
 ## URL
 
-> https://desarrollo.adsib.gob.bo/validador_doc/
+> https://desarrollo.adsib.gob.bo/catalogo/
 
 ## Requisitos
 

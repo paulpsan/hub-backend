@@ -1,5 +1,11 @@
 "use strict";
-import { Proyecto, Repositorio, Usuario, Commit, Rating } from "../sqldb";
+import {
+  Proyecto,
+  Repositorio,
+  Usuario,
+  Commit,
+  Rating
+} from "../sqldb";
 import config from "../config/environment";
 import SequelizeHelper from "../components/sequelize-helper";
 import _ from "lodash";
@@ -9,7 +15,8 @@ import ProjectGitlab from "../components/gitlab/projectGitlab";
 
 function respondWithResult(res, statusCode) {
   statusCode = statusCode || 200;
-  return function(entity) {
+  return function (entity) {
+    console.log(entity);
     if (entity) {
       return res.status(statusCode).json(entity);
     }
@@ -18,7 +25,7 @@ function respondWithResult(res, statusCode) {
 }
 
 function removeEntity(res) {
-  return function(entity) {
+  return function (entity) {
     if (entity) {
       return entity.destroy().then(() => {
         res.status(204).end();
@@ -28,49 +35,49 @@ function removeEntity(res) {
 }
 
 function setCommits(proyecto) {
-  return function(repo) {
+  return function (repo) {
     return (
       Commit.findAll({
         where: {
           fk_repositorio: repo._id
         }
       })
-        //devuelve array de commits
-        .then(commits => {
-          let datos = {
-            issues: repo.issues,
-            stars: repo.stars,
-            forks: repo.forks,
-            downloads: repo.downloads,
-            lenguajes: repo.lenguajes
-          };
-          proyecto.datos = datos;
-          proyecto.fechaCreacion = commits[commits.length - 1].fecha;
-          proyecto.ultimaActividad = commits[0].fecha;
-          proyecto.commits = commits;
-          //carga los usuarios que hicieron commits
-          // let usuarios = [];
-          // for (const commit of commits) {
-          //   usuarios.push(commit.autor);
-          // }
-          // proyecto.usuarios = _.uniq(usuarios);
-          proyecto.save();
-          return proyecto;
-        })
-        .catch(err => {
-          return err;
-        })
+      //devuelve array de commits
+      .then(commits => {
+        let datos = {
+          issues: repo.issues,
+          stars: repo.stars,
+          forks: repo.forks,
+          downloads: repo.downloads,
+          lenguajes: repo.lenguajes
+        };
+        proyecto.datos = datos;
+        proyecto.fechaCreacion = commits[commits.length - 1].fecha;
+        proyecto.ultimaActividad = commits[0].fecha;
+        proyecto.commits = commits;
+        //carga los usuarios que hicieron commits
+        // let usuarios = [];
+        // for (const commit of commits) {
+        //   usuarios.push(commit.autor);
+        // }
+        // proyecto.usuarios = _.uniq(usuarios);
+        proyecto.save();
+        return proyecto;
+      })
+      .catch(err => {
+        return err;
+      })
     );
   };
 }
 
 function setDatosRepo() {
-  return function(proyecto) {
+  return function (proyecto) {
     return Repositorio.findOne({
-      where: {
-        _id: proyecto.fk_repositorio
-      }
-    })
+        where: {
+          _id: proyecto.fk_repositorio
+        }
+      })
       .then(setCommits(proyecto))
       .catch(err => {
         console.log("_______", err);
@@ -78,9 +85,10 @@ function setDatosRepo() {
       });
   };
 }
+
 function setMaxValue(rating) {
-  return function(repositorio) {
-    console.log("setMavx***",repositorio.downloads,rating);
+  return function (repositorio) {
+    console.log("setMavx***", repositorio.downloads, rating);
     if (rating.downloads <= repositorio.downloads.total) {
       rating.downloads = repositorio.downloads.total;
     }
@@ -97,14 +105,15 @@ function setMaxValue(rating) {
     return repositorio;
   };
 }
+
 function setClasificacion(proyecto, rating) {
-  return function(repo) {
+  return function (repo) {
     let valor;
     switch (repo.tipo) {
       case "github":
         valor =
           repo.downloads.total *
-            (config.factorGithub.downloads / rating.downloads) +
+          (config.factorGithub.downloads / rating.downloads) +
           repo.issues.total * (config.factorGithub.issues / rating.issues) +
           repo.stars.total * (config.factorGithub.stars / rating.stars) +
           repo.forks.total * (config.factorGithub.forks / rating.forks);
@@ -120,7 +129,7 @@ function setClasificacion(proyecto, rating) {
       case "bitbucket":
         valor =
           repo.downloads.total *
-            (config.factorGithub.downloads / rating.downloads) +
+          (config.factorGithub.downloads / rating.downloads) +
           repo.issues.total * (config.factorGithub.issues / rating.issues) +
           repo.forks.total * (config.factorGithub.forks / rating.forks);
         break;
@@ -140,13 +149,13 @@ function setClasificacion(proyecto, rating) {
 }
 
 function setRating() {
-  return function(entity) {
+  return function (entity) {
     return Rating.find().then(rating => {
       return Repositorio.find({
-        where: {
-          _id: entity.fk_repositorio
-        }
-      })
+          where: {
+            _id: entity.fk_repositorio
+          }
+        })
         .then(setMaxValue(rating))
         .then(setClasificacion(entity, rating))
         .catch(err => {
@@ -155,7 +164,8 @@ function setRating() {
     });
   };
 }
-function createGitlab(project,isNew) {
+
+function createGitlab(project, isNew) {
   return new Promise((resolve, reject) => {
     ProjectGitlab.create(project, isNew)
       .then(resp => {
@@ -171,27 +181,31 @@ function createGitlab(project,isNew) {
 }
 
 function createEntity(res, proyecto) {
-  return function(entity) {
+  return function (entity) {
     if (!entity) {
       return Proyecto.create(proyecto)
         .then(setDatosRepo())
         .then(setRating())
         .then(response => {
-          res.status(201).json({ proyecto: response });
+          res.status(201).json({
+            proyecto: response
+          });
         })
         .catch(err => {
           console.log(err);
           res.status(400).send(err);
         });
     } else {
-      res.status(400).send({ message: entity.nombre + " ya existe" });
+      res.status(400).send({
+        message: entity.nombre + " ya existe"
+      });
     }
     return entity;
   };
 }
 
 function saveUpdates(updates) {
-  return function(entity) {
+  return function (entity) {
     return entity
       .updateAttributes(updates)
       .then(updated => {
@@ -205,9 +219,11 @@ function saveUpdates(updates) {
 }
 
 function handleEntityNotFound(res) {
-  return function(entity) {
+  return function (entity) {
     if (!entity) {
-      res.status(404).send({ message: "no se encuentra lo requerido" });
+      res.status(404).send({
+        message: "no se encuentra lo requerido"
+      });
       return null;
     }
     return entity;
@@ -216,7 +232,7 @@ function handleEntityNotFound(res) {
 
 function handleError(res, statusCode) {
   statusCode = statusCode || 500;
-  return function(err) {
+  return function (err) {
     console.log(err);
     res.status(statusCode).send(err);
   };
@@ -226,15 +242,17 @@ export function index(req, res) {
   if (req.query.buscar != undefined) {
     const Op = Sequelize.Op;
     return Proyecto.findAndCountAll({
-      include: [{ all: true }],
-      offset: req.opciones.offset,
-      limit: req.opciones.limit,
-      where: {
-        nombre: {
-          [Op.iLike]: "%" + req.query.buscar + "%"
+        include: [{
+          all: true
+        }],
+        offset: req.opciones.offset,
+        limit: req.opciones.limit,
+        where: {
+          nombre: {
+            [Op.iLike]: "%" + req.query.buscar + "%"
+          }
         }
-      }
-    })
+      })
       .then(datos => {
         return SequelizeHelper.generarRespuesta(datos, req.opciones);
       })
@@ -242,11 +260,13 @@ export function index(req, res) {
       .catch(handleError(res));
   } else {
     return Proyecto.findAndCountAll({
-      include: [{ all: true }],
-      // order: [["clasificacion", "desc"]],
-      offset: req.opciones.offset,
-      limit: req.opciones.limit
-    })
+        include: [{
+          all: true
+        }],
+        // order: [["clasificacion", "desc"]],
+        offset: req.opciones.offset,
+        limit: req.opciones.limit
+      })
       .then(datos => {
         return SequelizeHelper.generarRespuesta(datos, req.opciones);
       })
@@ -258,10 +278,10 @@ export function index(req, res) {
 // Gets a single Proyecto from the DB
 export function show(req, res) {
   return Proyecto.find({
-    where: {
-      _id: req.params.id
-    }
-  })
+      where: {
+        _id: req.params.id
+      }
+    })
     .then(handleEntityNotFound(res))
     .then(respondWithResult(res))
     .catch(handleError(res));
@@ -275,59 +295,77 @@ export function create(req, res) {
   if (!req.query.import && !req.query.nuevo) {
     console.log("entri", req.params);
     return (
-      Proyecto.find({ where: { nombre: req.body.nombre } })
-        //actualizar
-        .then(createEntity(res, req.body))
-        .catch(handleError(res))
+      Proyecto.find({
+        where: {
+          nombre: req.body.nombre
+        }
+      })
+      //actualizar
+      .then(createEntity(res, req.body))
+      .catch(handleError(res))
     );
   } else {
     //importa proyecto
     if (!req.query.nuevo) {
       console.log("import", req.query.nuevo);
-      createGitlab(req.body,false)
+      createGitlab(req.body, false)
         .then(resp => {
           //correcto
           return (
-            Proyecto.find({ where: { nombre: req.body.nombre } })
-              //actualizar
-              .then(createEntity(res, req.body))
-              .catch(handleError(res))
+            Proyecto.find({
+              where: {
+                nombre: req.body.nombre
+              }
+            })
+            //actualizar
+            .then(createEntity(res, req.body))
+            .catch(handleError(res))
           );
         })
         .catch(err => {
-          res.status(400).send({ message: err.error.message });
+          res.status(400).send({
+            message: err.error.message
+          });
         });
-    }else{
+    } else {
       //crea proyecto nuevo
-      createGitlab(req.body,true)
+      createGitlab(req.body, true)
         .then(resp => {
           //correcto
           return (
-            Proyecto.find({ where: { nombre: req.body.nombre } })
-              //actualizar
-              .then(proy=>{
-                if(proy==null){
-                  return Proyecto.create(req.body)
-                    .then(response => {
-                      res
-                        .status(201)
-                        .json({ proyecto: response });
-                    })
-                    .catch(err => {
-                      console.log(err);
-                      res.status(400).send(err);
-                    });
-                }else{
-                  res.status(400).send({
-                    message: proy.nombre + " ya existe"
+            Proyecto.find({
+              where: {
+                nombre: req.body.nombre
+              }
+            })
+            //actualizar
+            .then(proy => {
+              if (proy == null) {
+                return Proyecto.create(req.body)
+                  .then(response => {
+                    res
+                      .status(201)
+                      .json({
+                        proyecto: response
+                      });
+                  })
+                  .catch(err => {
+                    console.log(err);
+                    res.status(400).send(err);
                   });
-                }
-              })
-              .catch(handleError(res))
+              } else {
+                res.status(400).send({
+                  message: proy.nombre + " ya existe"
+                });
+              }
+            })
+            .catch(handleError(res))
           );
         })
         .catch(err => {
-          res.status(400).send({ message: err.error.message });
+          res.status(400).send({
+            message: err.error.message
+          });
         });
     }
   }
@@ -336,10 +374,10 @@ export function create(req, res) {
 // Upserts the given Proyecto in the DB at the specified ID
 export function upsert(req, res) {
   return Proyecto.upsert(req.body, {
-    where: {
-      _id: req.params.id
-    }
-  })
+      where: {
+        _id: req.params.id
+      }
+    })
     .then(respondWithResult(res))
     .catch(handleError(res));
 }
@@ -350,10 +388,10 @@ export function patch(req, res) {
     delete req.body._id;
   }
   return Proyecto.find({
-    where: {
-      _id: req.params.id
-    }
-  })
+      where: {
+        _id: req.params.id
+      }
+    })
     .then(handleEntityNotFound(res))
     .then(saveUpdates(req.body))
     .then(respondWithResult(res))
@@ -363,10 +401,10 @@ export function patch(req, res) {
 // Deletes a Proyecto from the DB
 export function destroy(req, res) {
   return Proyecto.find({
-    where: {
-      _id: req.params.id
-    }
-  })
+      where: {
+        _id: req.params.id
+      }
+    })
     .then(handleEntityNotFound(res))
     .then(removeEntity(res))
     .catch(handleError(res));
@@ -374,19 +412,23 @@ export function destroy(req, res) {
 
 export function setDatos(req, res) {
   return Proyecto.findOne({
-    where: {
-      _id: req.params.id
-    }
-  })
+      where: {
+        _id: req.params.id
+      }
+    })
     .then(setDatosRepo(res))
     .catch(handleError(res));
 }
 export function test(req, res) {
   ProjectGitlab.create()
     .then(resp => {
-      res.json({ usuario: resp });
+      res.json({
+        usuario: resp
+      });
     })
     .catch(err => {
-      res.status(409).send({ message: err });
+      res.status(409).send({
+        message: err
+      });
     });
 }
