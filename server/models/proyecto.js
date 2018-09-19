@@ -19,7 +19,7 @@ export default function(sequelize, DataTypes) {
           }
         }
       },
-      usuarioGitlab: {
+      proyectoGitlab: {
         type: DataTypes.INTEGER
       },
       descripcion: {

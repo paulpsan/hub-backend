@@ -2,23 +2,21 @@
 
 export default function (sequelize, DataTypes) {
   return sequelize.define(
-    "Solicitud", {
+    "UsuarioProyecto", {
       _id: {
         type: DataTypes.INTEGER,
         allowNull: false,
         primaryKey: true,
         autoIncrement: true
       },
-      institucion: DataTypes.TEXT,
-      descripcion: DataTypes.TEXT,
-      estado: DataTypes.TEXT,
-      path: {
+      nombre_permiso: {
         type: DataTypes.TEXT,
-        unique: true
       },
-      cargo: DataTypes.TEXT,
+      access_level: {
+        type: DataTypes.TEXT,
+      }
     }, {
-      tableName: "solicitud",
+      tableName: "UsuarioProyecto",
       createdAt: "fecha_creacion",
       updatedAt: "fecha_modificacion"
     }

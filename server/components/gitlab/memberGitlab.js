@@ -11,7 +11,7 @@ const api = new Gitlab({
 
 function addGrupo(object) {
   console.log(object);
-  return api.GroupMembers.add(object.id,object.user_id,object.access_level)
+  return api.GroupMembers.add(object.id, object.user_id, object.access_level)
     .then(resp => {
       return resp
     })
@@ -79,45 +79,29 @@ class MemberGitlab {
     });
   }
 
-  static editGroup(id, usuarios) {
+  static editGroup(data) {
     return new Promise(async (resolve, reject) => {
-      console.log(id, usuarios);
-      for (const usuario of usuarios) {
-        let obj = {
-          user_id: usuario.user_id,
-          access_level: usuario.access_level,
-          id: id,
-        };
-        await addGrupo(obj).then(resp => {
-          if (resp.error) {
-            reject(resp)
-          }
-        }).catch(err => {
+      return api.GroupMembers.edit(data.grupoGitlab, data.usuarioGitlab, data.access_level)
+        .then(resp => {
+          resolve(true)
+        })
+        .catch(err => {
           reject(err)
         });
-      }
-      resolve(true)
+
     });
   }
 
-  static deleteGroup(id, usuarios) {
+  static deleteGroup(data) {
     return new Promise(async (resolve, reject) => {
-      console.log(id, usuarios);
-      for (const usuario of usuarios) {
-        let obj = {
-          user_id: usuario.user_id,
-          access_level: usuario.access_level,
-          id: id,
-        };
-        await addGrupo(obj).then(resp => {
-          if (resp.error) {
-            reject(resp)
-          }
-        }).catch(err => {
+      return api.GroupMembers.remove(data.grupoGitlab, data.usuarioGitlab)
+        .then(resp => {
+          console.log(resp);
+          resolve(true)
+        })
+        .catch(err => {
           reject(err)
         });
-      }
-      resolve(true)
     });
   }
   //busca email o username y devuelve true si encuentra

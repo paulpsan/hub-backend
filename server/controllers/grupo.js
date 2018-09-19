@@ -10,15 +10,13 @@
 
 "use strict";
 
-import {
-  Grupo
-} from "../sqldb";
 import GroupGitlab from "../components/gitlab/groupGitlab";
 import MemberGitlab from "../components/gitlab/memberGitlab";
 import SequelizeHelper from "../components/sequelize-helper";
 import Sequelize from "sequelize";
 import {
-  Usuario,
+  Grupo,
+  Solicitud,
   UsuarioGrupo
 } from "../sqldb";
 import config from "../config/environment";
@@ -48,6 +46,21 @@ function saveUpdates(updates) {
         console.log(err);
         return err;
       });
+  };
+}
+
+function saveUser(updates) {
+  return function (entity) {
+    return MemberGitlab.editGroup(updates).then(resp => {
+      console.log(resp);
+      entity.access_level = updates.access_level;
+      entity.nombre = updates.nombre;
+      entity.save();
+      return entity
+    }).catch(err => {
+      console.log(err);
+      throw new err;
+    })
   };
 }
 
@@ -103,6 +116,30 @@ function removeEntity(res) {
           return err;
         });
     }
+  };
+}
+
+function removeUser(res, data) {
+  return function (entity) {
+    return MemberGitlab.deleteGroup(data).then(resp => {
+      console.log(resp);
+      // Solicitud.find({
+      //   where: {
+      //     fk_usuario: data.fk_usuario
+      //   }
+      // }).then(solicitud => {
+      //   solicitud.destroy();
+      // }).catch(err => {
+      //   console.log(err);
+      //   throw new err;
+      // })
+      return entity.destroy().then(() => {
+        res.status(204).end();
+      });
+    }).catch(err => {
+      console.log(err);
+      throw new err;
+    })
   };
 }
 
@@ -217,6 +254,20 @@ export function show(req, res) {
     .catch(handleError(res));
 }
 
+export function getGroup(req, res) {
+  return UsuarioGrupo.find({
+      include: [{
+        all: true
+      }],
+      where: {
+        fk_usuario: req.params.id
+      }
+    })
+    .then(handleEntityNotFound(res))
+    .then(respondWithResult(res))
+    .catch(handleError(res));
+}
+
 // Creates a new Grupo in the DB
 export function setUser(req, res) {
   let user = [{
@@ -225,7 +276,7 @@ export function setUser(req, res) {
   }]
   //adicionar usuario al grupo
   return MemberGitlab.addGroup(req.body.idGrupoGitlab, user)
-    .then(resp => {
+    .then(async resp => {
       console.log(resp);
       if (resp) {
         let obj = {
@@ -235,7 +286,7 @@ export function setUser(req, res) {
           access_level: req.body.access_level,
         }
         console.log(obj);
-        UsuarioGrupo.create(obj)
+        await UsuarioGrupo.create(obj)
       }
       return resp
     }).then(respondWithResult(res, 201))
@@ -311,7 +362,32 @@ export function patch(req, res) {
     .catch(handleError(res));
 }
 
+export function patchUsuario(req, res) {
+  if (req.body._id) {
+    delete req.body._id;
+  }
+  return UsuarioGrupo.find({
+      where: {
+        fk_usuario: req.params.id
+      }
+    })
+    .then(handleEntityNotFound(res))
+    .then(saveUser(req.body))
+    .then(respondWithResult(res))
+    .catch(handleError(res));
+}
 // Deletes a Grupo from the DB
+export function destroyUser(req, res) {
+  return UsuarioGrupo.find({
+      where: {
+        fk_usuario: req.params.id
+      }
+    })
+    .then(handleEntityNotFound(res))
+    .then(removeUser(res, req.body))
+    .catch(handleError(res));
+}
+
 export function destroy(req, res) {
   return Grupo.find({
       where: {

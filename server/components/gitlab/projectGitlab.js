@@ -2,10 +2,11 @@
 
 import config from "../../config/environment";
 import Gitlab from "gitlab";
+import request from "request";
 var fetch = require("node-fetch");
 
 function getJson() {
-  return function(resultado) {
+  return function (resultado) {
     console.log(resultado);
     return resultado.json();
   };
@@ -31,26 +32,61 @@ class ProjectGitlab {
 
   static create(project, isNew) {
     return new Promise((resolve, reject) => {
-      let data = {
-        userId: project.usuario.usuarioGitlab,
-        name: project.nombre,
-        description: project.descripcion,
-        visibility: "internal",
-        import_url: project.origenUrl
-      };
-      if(isNew){
-        delete data.import_url;
-      }
-      console.log(data);
-      api.Projects.create(data)
-        .then(resp => {
-          console.log("proy",resp);
-          resolve(resp);
-        })
-        .catch(err => {
-          console.log("****err***",err);
-          reject(err);
+      let namespace_id
+      console.log(project);
+      if (project.grupo.id_gitlab) {
+        namespace_id = project.grupo.id_gitlab
+        var options = {
+          method: 'POST',
+          url: `${config.repo.gitlab.domain}/api/v4/projects`,
+          qs: {
+            private_token: config.repo.gitlab.privateToken
+          },
+          headers: {
+            'cache-control': 'no-cache',
+            'content-type': 'application/x-www-form-urlencoded'
+          },
+          form: {
+            path: project.nombre,
+            name: project.nombre,
+            description: project.descripcion,
+            visibility: "private",
+            import_url: project.origenUrl,
+            namespace_id: namespace_id
+          }
+        };
+
+        request(options, function (error, response, body) {
+          console.log(body);
+          resolve(body);
+          if (error) reject(error);
         });
+      } else {
+        var options = {
+          method: 'POST',
+          url: `${config.repo.gitlab.domain}/api/v4/projects/user/${project.usuario.usuarioGitlab}`,
+          qs: {
+            private_token: config.repo.gitlab.privateToken
+          },
+          headers: {
+            'cache-control': 'no-cache',
+            'content-type': 'application/x-www-form-urlencoded'
+          },
+          form: {
+            user_id: project.usuario.usuarioGitlab,
+            name: project.nombre,
+            description: project.descripcion,
+            visibility: "private",
+            import_url: project.origenUrl,
+          }
+        };
+        request(options, function (error, response, body) {
+          console.log(body);
+          resolve(body);
+          if (error) reject(error);
+        });
+      }
+
     });
   }
   //busca email o username y devuelve true si encuentra
@@ -75,7 +111,7 @@ class ProjectGitlab {
 export default ProjectGitlab;
 
 function getJson() {
-  return function(resultado) {
+  return function (resultado) {
     return resultado.json();
   };
 }

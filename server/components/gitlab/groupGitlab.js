@@ -48,24 +48,23 @@ class GroupGitlab {
       console.log(data);
       var options = {
         method: 'PUT',
-        url: 'http://localhost:30080/api/v4/groups/7',
+        url: `${url}/api/v4/groups/${data.id}`,
         qs: {
-          private_token: '7C-NYPEcSKGbsV1og9_8'
+          private_token: token
         },
         headers: {
           'cache-control': 'no-cache',
           'content-type': 'application/x-www-form-urlencoded'
         },
         form: {
-          id: '7',
-          visibility: 'public'
+          id: data.id,
+          visibility: data.visibility
         }
       };
 
       request(options, function (error, response, body) {
-        if (error) throw new Error(error);
-
-        console.log(body);
+        resolve(body)
+        if (error) reject(error);
       });
 
 

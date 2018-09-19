@@ -2,9 +2,10 @@
 import {
   Proyecto,
   Repositorio,
-  Usuario,
+  ProyectoGrupo,
   Commit,
-  Rating
+  Rating,
+  UsuarioProyecto
 } from "../sqldb";
 import config from "../config/environment";
 import SequelizeHelper from "../components/sequelize-helper";
@@ -204,6 +205,43 @@ function createEntity(res, proyecto) {
   };
 }
 
+function createAssociation(project) {
+  return async function (entity) {
+    let obj = {
+      fk_proyecto: entity._id,
+      fk_grupo: project.grupo._id,
+      visibilidad: 'private',
+    }
+    console.log(obj);
+    ProyectoGrupo.create(obj)
+      .then(resp => {
+        console.log(resp);
+      })
+      .catch(err => {
+        console.log(err);
+        return err;
+      });
+
+    for (const usuario of project.usuarios) {
+      let data = {
+        fk_usuario: usuario._id,
+        fk_proyecto: entity._id,
+        access_level: 30,
+        nombre_permiso: "desarrollador"
+      }
+      await UsuarioProyecto.create(data)
+        .then(resp => {
+          console.log(resp);
+        })
+        .catch(err => {
+          console.log(err);
+          return err;
+        });
+    }
+    return entity;
+  };
+}
+
 function saveUpdates(updates) {
   return function (entity) {
     return entity
@@ -278,6 +316,9 @@ export function index(req, res) {
 // Gets a single Proyecto from the DB
 export function show(req, res) {
   return Proyecto.find({
+      include: [{
+        all: true
+      }],
       where: {
         _id: req.params.id
       }
@@ -290,7 +331,6 @@ export function show(req, res) {
 // Creates a new Proyecto in the DB
 //parsear datos
 export function create(req, res) {
-  console.log("params:", req.query);
 
   if (!req.query.import && !req.query.nuevo) {
     console.log("entri", req.params);
@@ -331,6 +371,7 @@ export function create(req, res) {
       //crea proyecto nuevo
       createGitlab(req.body, true)
         .then(resp => {
+          req.body.proyectoGitlab = JSON.parse(resp).id
           //correcto
           return (
             Proyecto.find({
@@ -341,7 +382,9 @@ export function create(req, res) {
             //actualizar
             .then(proy => {
               if (proy == null) {
+                console.log(req.body.proyectoGitlab);
                 return Proyecto.create(req.body)
+                  .then(createAssociation(req.body))
                   .then(response => {
                     res
                       .status(201)

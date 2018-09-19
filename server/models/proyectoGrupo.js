@@ -9,10 +9,7 @@ export default function (sequelize, DataTypes) {
         primaryKey: true,
         autoIncrement: true
       },
-      nombre_permiso: {
-        type: DataTypes.TEXT,
-      },
-      access_level: {
+      visibilidad: {
         type: DataTypes.TEXT,
       }
     }, {

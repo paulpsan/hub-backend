@@ -14,6 +14,7 @@ db.Token = db.sequelize.import("../models/token");
 db.Repositorio = db.sequelize.import("../models/repositorio");
 db.Proyecto = db.sequelize.import("../models/proyecto");
 db.UsuarioGrupo = db.sequelize.import("../models/usuarioGrupo");
+db.UsuarioProyecto = db.sequelize.import("../models/usuarioProyecto");
 db.ProyectoGrupo = db.sequelize.import("../models/proyectoGrupo");
 db.Solicitud = db.sequelize.import("../models/solicitud");
 
@@ -42,6 +43,16 @@ db.inclusiones = {};
 //     allowNull: true
 //   }
 // });
+
+db.Proyecto.belongsToMany(db.Usuario, {
+  through: 'UsuarioProyecto',
+  foreignKey:'fk_proyecto'
+});
+db.Usuario.belongsToMany(db.Proyecto, {
+  through: 'UsuarioProyecto',
+  foreignKey:'fk_usuario'
+});
+
 db.Grupo.belongsToMany(db.Usuario, {
   through: 'UsuarioGrupo',
   foreignKey:'fk_grupo'

@@ -37,18 +37,12 @@ function respondWithResult(res, statusCode) {
   statusCode = statusCode || 200;
   return function (entity) {
     console.log("esto es un", entity);
-    if (!entity.error) {
+    if (entity) {
       return res
         .status(statusCode)
         .json(entity)
         .end();
-    } else {
-      return res
-        .status(entity.statusCode)
-        .json(entity.error)
-        .end();
-    }
-
+    } 
     return null;
   };
 }
@@ -154,14 +148,16 @@ function handleEntityNotFound(res) {
       console.log(entity);
       res.status(404).end();
       return null;
+    } else {
+      return entity;
     }
-    return entity;
   };
 }
 
 function handleError(res, statusCode) {
   statusCode = statusCode || 500;
   return function (err) {
+    console.log(err);
     res.status(statusCode).send(err);
   };
 }
@@ -213,12 +209,11 @@ export function index(req, res) {
 
 // Gets a single Solicitud from the DB
 export function show(req, res) {
-  let opciones = {
+  return Solicitud.find({
     where: {
       fk_usuario: req.params.id
     }
-  };
-  return Solicitud.find(Object.assign(opciones, req.opciones))
+  })
     .then(handleEntityNotFound(res))
     .then(respondWithResult(res))
     .catch(handleError(res));
