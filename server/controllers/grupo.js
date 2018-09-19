@@ -58,7 +58,7 @@ function saveGitlab(updates) {
       return entity
     }).catch(err => {
       console.log(err);
-      return err
+      throw new err;
     })
   };
 }
