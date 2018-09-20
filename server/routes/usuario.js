@@ -12,19 +12,10 @@ var router = express.Router();
 router.get("/captcha", controller.captchaUser);
 router.get("/verificacion", controller.verifyUser);
 router.get("/clone", controller.clone);
-router.get(
-  "/",
-  autenticacion.isAuthenticated(),
-  generarOpciones,
-  controller.index
-);
+router.get("/", autenticacion.isAuthenticated(), generarOpciones, controller.index);
 
-router.get(
-  "/:id",
-  autenticacion.isAuthenticated(),
-  generarOpciones,
-  controller.show
-);
+router.get("/:id", autenticacion.isAuthenticated(), generarOpciones, controller.show);
+router.get("/:id/proyectos",controller.getProyects);
 router.post("/", controller.create);
 router.post("/reset", controller.recoverPassword);
 router.post("/gitlab", controller.createGitlab);

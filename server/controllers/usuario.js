@@ -160,6 +160,20 @@ export function show(req, res) {
     .catch(handleError(res));
 }
 
+export function getProyects(req, res) {
+  return Usuario.find({
+      include: [{
+        all: true
+      }],
+      where: {
+        _id: req.params.id
+      }
+    })
+    .then(handleEntityNotFound(res))
+    .then(respondWithResult(res))
+    .catch(handleError(res));
+}
+
 export function captchaUser(req, res) {
   console.log("req", req.sessionID);
   var captchaSession = Captcha.create();
