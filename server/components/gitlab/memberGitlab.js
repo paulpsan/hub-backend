@@ -20,6 +20,18 @@ function addGrupo(object) {
     });
 }
 
+function adiProyecto(object) {
+  console.log(object);
+  return api.ProjectMembers.add(object.id, object.user_id, object.access_level)
+    .then(resp => {
+      console.log(resp);
+      return resp
+    })
+    .catch(err => {
+      console.log(err);
+      return err
+    });
+}
 class MemberGitlab {
   static get() {
     return new Promise((resolve, reject) => {
@@ -79,6 +91,27 @@ class MemberGitlab {
     });
   }
 
+  static addProject(id, usuarios) {
+    return new Promise(async (resolve, reject) => {
+      console.log(id, usuarios);
+      for (const usuario of usuarios) {
+        let obj = {
+          user_id: usuario.usuarioGitlab,
+          access_level: 40,
+          id: id,
+        };
+        await adiProyecto(obj).then(resp => {
+          if (resp.error) {
+            reject(resp)
+          }
+        }).catch(err => {
+          reject(err)
+        });
+      }
+      resolve(true)
+    });
+  }
+
   static editGroup(data) {
     return new Promise(async (resolve, reject) => {
       return api.GroupMembers.edit(data.grupoGitlab, data.usuarioGitlab, data.access_level)
@@ -91,10 +124,33 @@ class MemberGitlab {
 
     });
   }
-
-  static deleteGroup(data) {
+  static editProject(data) {
     return new Promise(async (resolve, reject) => {
+      return api.ProjectMembers.edit(data.proyectoGitlab, data.usuarioGitlab, data.access_level)
+        .then(resp => {
+          resolve(true)
+        })
+        .catch(err => {
+          reject(err)
+        });
+
+    });
+  }
+  static deleteGroup(data) {
+    return new Promise((resolve, reject) => {
       return api.GroupMembers.remove(data.grupoGitlab, data.usuarioGitlab)
+        .then(resp => {
+          console.log(resp);
+          resolve(true)
+        })
+        .catch(err => {
+          reject(err)
+        });
+    });
+  }
+  static deleteProyect(data) {
+    return new Promise((resolve, reject) => {
+      return api.ProjectMembers.remove(data.proyectoGitlab, data.usuarioGitlab)
         .then(resp => {
           console.log(resp);
           resolve(true)

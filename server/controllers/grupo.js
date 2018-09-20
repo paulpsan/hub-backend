@@ -67,6 +67,7 @@ function saveUser(updates) {
 function saveGitlab(updates) {
   return function (entity) {
     return GroupGitlab.edit(updates).then(resp => {
+      entity.visibilidad = JSON.parse(resp).visibility;
       console.log(resp);
       return entity
     }).catch(err => {
@@ -237,6 +238,16 @@ export function getProjects(req, res) {
     })
     .then(respondWithResult(res))
     .catch(handleError(res));
+    // return ProyectoGrupo.findAll({
+    //     include: [{
+    //       all: true
+    //     }],
+    //     where: {
+    //       fk_grupo: req.params.id
+    //     }
+    //   })
+    //   .then(respondWithResult(res))
+    //   .catch(handleError(res));
 }
 // Gets a single Grupo from the DB
 export function show(req, res) {

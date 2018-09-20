@@ -2,8 +2,7 @@
 
 export default (sequelize, DataTypes) => {
   return sequelize.define(
-    "Usuario",
-    {
+    "Usuario", {
       _id: {
         type: DataTypes.INTEGER,
         allowNull: false,
@@ -20,14 +19,17 @@ export default (sequelize, DataTypes) => {
         }
       },
       usuarioGitlab: {
-        type: DataTypes.INTEGER
+        type: DataTypes.INTEGER,
+        allowNull: false,
       },
       email: {
         type: DataTypes.TEXT,
+        allowNull: false,
         unique: true
       },
       password: {
-        type: DataTypes.TEXT
+        type: DataTypes.TEXT,
+        allowNull: false,
       },
       role: {
         type: DataTypes.TEXT,
@@ -36,7 +38,9 @@ export default (sequelize, DataTypes) => {
 
       login: {
         type: DataTypes.TEXT,
+         allowNull: false,
         defaultValue: ""
+
       },
       cuentas: {
         type: DataTypes.JSONB
@@ -109,8 +113,7 @@ export default (sequelize, DataTypes) => {
       id_bitbucket: {
         type: DataTypes.STRING
       }
-    },
-    {
+    }, {
       tableName: "usuario",
       createdAt: "fecha_creacion",
       updatedAt: "fecha_modificacion"

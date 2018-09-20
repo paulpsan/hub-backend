@@ -1,9 +1,8 @@
 "use strict";
 
-export default function(sequelize, DataTypes) {
+export default function (sequelize, DataTypes) {
   return sequelize.define(
-    "Proyecto",
-    {
+    "Proyecto", {
       _id: {
         type: DataTypes.INTEGER,
         allowNull: false,
@@ -13,6 +12,7 @@ export default function(sequelize, DataTypes) {
       nombre: {
         allowNull: false,
         type: DataTypes.TEXT,
+        unique: true,
         validate: {
           notEmpty: {
             msg: "Ingrese el nombre del proyecto"
@@ -20,10 +20,15 @@ export default function(sequelize, DataTypes) {
         }
       },
       proyectoGitlab: {
-        type: DataTypes.INTEGER
+        type: DataTypes.INTEGER,
+        allowNull: false,
       },
       descripcion: {
         type: DataTypes.TEXT
+      },
+      visibilidad: {
+        type: DataTypes.TEXT,
+        allowNull: false,
       },
       urlRepositorio: {
         allowNull: false,
@@ -72,8 +77,7 @@ export default function(sequelize, DataTypes) {
         type: DataTypes.BOOLEAN,
         defaultValue: true
       }
-    },
-    {
+    }, {
       tableName: "proyecto",
       createdAt: "fecha_creacion",
       updatedAt: "fecha_modificacion"

@@ -9,7 +9,10 @@ export default function (sequelize, DataTypes) {
         primaryKey: true,
         autoIncrement: true
       },
-      institucion: DataTypes.TEXT,
+      institucion: {
+        type: DataTypes.TEXT,
+        unique: true
+      },
       descripcion: DataTypes.TEXT,
       estado: DataTypes.TEXT,
       path: {

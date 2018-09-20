@@ -13,6 +13,7 @@ import _ from "lodash";
 import Sequelize from "sequelize";
 import UserGitlab from "../components/gitlab/userGitlab";
 import ProjectGitlab from "../components/gitlab/projectGitlab";
+import MemberGitlab from "../components/gitlab/memberGitlab";
 
 function respondWithResult(res, statusCode) {
   statusCode = statusCode || 200;
@@ -32,6 +33,20 @@ function removeEntity(res) {
         res.status(204).end();
       });
     }
+  };
+}
+
+function removeUser(res, data) {
+  return function (entity) {
+    return MemberGitlab.deleteProyect(data).then(resp => {
+      console.log(resp);
+      return entity.destroy().then(() => {
+        res.status(204).end();
+      });
+    }).catch(err => {
+      console.log(err);
+      throw new err;
+    })
   };
 }
 
@@ -173,6 +188,7 @@ function createGitlab(project, isNew) {
         if (resp.message) {
           reject(resp.message);
         }
+        MemberGitlab.addProject(JSON.parse(resp).id, project.usuarios)
         resolve(resp);
       })
       .catch(err => {
@@ -253,6 +269,38 @@ function saveUpdates(updates) {
         console.log(err);
         return err;
       });
+  };
+}
+
+function saveGitlab(updates) {
+  return function (entity) {
+    return ProjectGitlab.edit(updates).then(resp => {
+      if (JSON.parse(resp).message) {
+        throw new err;
+      } else {
+        entity.visibilidad = JSON.parse(resp).visibility;
+        console.log(resp);
+        return entity
+      }
+    }).catch(err => {
+      console.log(err);
+      throw new err;
+    })
+  };
+}
+
+function saveUser(updates) {
+  return function (entity) {
+    return MemberGitlab.editProject(updates).then(resp => {
+      console.log(entity, resp);
+      entity.access_level = updates.access_level;
+      entity.nombre = updates.nombre;
+      entity.save();
+      return entity
+    }).catch(err => {
+      console.log(err);
+      return err
+    })
   };
 }
 
@@ -382,7 +430,7 @@ export function create(req, res) {
             //actualizar
             .then(proy => {
               if (proy == null) {
-                console.log(req.body.proyectoGitlab);
+                console.log(req.body);
                 return Proyecto.create(req.body)
                   .then(createAssociation(req.body))
                   .then(response => {
@@ -436,11 +484,37 @@ export function patch(req, res) {
       }
     })
     .then(handleEntityNotFound(res))
+    .then(saveGitlab(req.body))
     .then(saveUpdates(req.body))
     .then(respondWithResult(res))
     .catch(handleError(res));
 }
 
+export function patchUsuario(req, res) {
+  if (req.body._id) {
+    delete req.body._id;
+  }
+  return UsuarioProyecto.find({
+      where: {
+        fk_usuario: req.params.id
+      }
+    })
+    .then(handleEntityNotFound(res))
+    .then(saveUser(req.body))
+    .then(respondWithResult(res))
+    .catch(handleError(res));
+}
+
+export function destroyUser(req, res) {
+  return UsuarioProyecto.find({
+      where: {
+        fk_usuario: req.params.id
+      }
+    })
+    .then(handleEntityNotFound(res))
+    .then(removeUser(res, req.body))
+    .catch(handleError(res));
+}
 // Deletes a Proyecto from the DB
 export function destroy(req, res) {
   return Proyecto.find({

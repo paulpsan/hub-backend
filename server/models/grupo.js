@@ -12,6 +12,7 @@ export default (sequelize, DataTypes) => {
       nombre: {
         allowNull: false,
         type: DataTypes.TEXT,
+        unique: true,
         validate: {
           notEmpty: {
             msg: "Ingrese su nombre"
@@ -19,7 +20,8 @@ export default (sequelize, DataTypes) => {
         }
       },
       id_gitlab: {
-        type: DataTypes.INTEGER
+        type: DataTypes.INTEGER,
+         allowNull: false,
       },
       entidad: {
         type: DataTypes.TEXT,
@@ -36,6 +38,7 @@ export default (sequelize, DataTypes) => {
       },
       visibilidad: {
         type: DataTypes.TEXT,
+         allowNull: false,
       },
       path: {
         type: DataTypes.TEXT

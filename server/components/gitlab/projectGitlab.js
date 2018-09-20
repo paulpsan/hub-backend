@@ -50,7 +50,7 @@ class ProjectGitlab {
             path: project.nombre,
             name: project.nombre,
             description: project.descripcion,
-            visibility: "private",
+            visibility: project.visibilidad,
             import_url: project.origenUrl,
             namespace_id: namespace_id
           }
@@ -76,7 +76,7 @@ class ProjectGitlab {
             user_id: project.usuario.usuarioGitlab,
             name: project.nombre,
             description: project.descripcion,
-            visibility: "private",
+            visibility: project.visibilidad,
             import_url: project.origenUrl,
           }
         };
@@ -89,6 +89,39 @@ class ProjectGitlab {
 
     });
   }
+
+  static edit(proyecto) {
+    return new Promise((resolve, reject) => {
+      let url = `${config.repo.gitlab.domain}/` // Defaults to http://gitlab.com
+      let token = config.repo.gitlab.privateToken
+      let data = {
+        id: proyecto.proyectoGitlab,
+        visibility: proyecto.visibilidad,
+      };
+      console.log(data);
+      var options = {
+        method: 'PUT',
+        url: `${url}/api/v4/projects/${data.id}`,
+        qs: {
+          private_token: token
+        },
+        headers: {
+          'cache-control': 'no-cache',
+          'content-type': 'application/x-www-form-urlencoded'
+        },
+        form: {
+          id: data.id,
+          visibility: data.visibility
+        }
+      };
+
+      request(options, function (error, response, body) {
+        resolve(body)
+        if (error) reject(error);
+      });
+    });
+  }
+
   //busca email o username y devuelve true si encuentra
   static search(data = "pausl") {
     return new Promise((resolve, reject) => {
