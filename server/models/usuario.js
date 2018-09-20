@@ -20,7 +20,6 @@ export default (sequelize, DataTypes) => {
       },
       usuarioGitlab: {
         type: DataTypes.INTEGER,
-        allowNull: false,
       },
       email: {
         type: DataTypes.TEXT,

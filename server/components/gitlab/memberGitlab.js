@@ -100,6 +100,7 @@ class MemberGitlab {
           access_level: 40,
           id: id,
         };
+        obj.access_level = usuario.access_level ? usuario.access_level : 40;
         await adiProyecto(obj).then(resp => {
           if (resp.error) {
             reject(resp)

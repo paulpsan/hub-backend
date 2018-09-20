@@ -261,7 +261,7 @@ export function recoverUser(req, res) {
 }
 
 export function verifyUser(req, res) {
-  let token = req.query.token;
+  let token = req.query.token.split("?")[0];
   Email.verify(token)
     .then(resp => {
       console.log("respUser", resp);

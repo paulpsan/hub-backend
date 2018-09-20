@@ -25,7 +25,7 @@ function respondWithResult(res, statusCode) {
     return null;
   };
 }
-
+//remover proyectos y usuarios
 function removeEntity(res) {
   return function (entity) {
     if (entity) {
@@ -524,7 +524,35 @@ export function destroy(req, res) {
     })
     .then(handleEntityNotFound(res))
     .then(removeEntity(res))
+    .then(respondWithResult(res))
     .catch(handleError(res));
+}
+
+export function setUser(req, res) {
+  let user = [{
+    usuarioGitlab: req.body.usuarioGitlab,
+    access_level: req.body.access_level,
+  }]
+  //adicionar usuario al grupo
+  return MemberGitlab.addProject(req.body.proyectoGitlab, user)
+    .then(async resp => {
+      console.log(resp);
+      if (resp) {
+        let obj = {
+          fk_usuario: req.body._id,
+          fk_proyecto: req.body.idProyecto,
+          nombre_permiso: req.body.nombre_permiso,
+          access_level: req.body.access_level,
+        }
+        console.log(obj);
+        await UsuarioProyecto.create(obj)
+      }
+      return resp
+    }).then(respondWithResult(res, 201))
+    .catch(err => {
+      console.log(err);
+      res.status(err.statusCode).send(err);
+    })
 }
 
 export function setDatos(req, res) {

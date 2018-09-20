@@ -78,6 +78,7 @@ class Email {
   }
   static verify(token) {
     return new Promise((resolve, reject) => {
+      console.log(token);
       client.get(token, function (error, response) {
         console.log(response);
         if (error) {
