@@ -398,6 +398,7 @@ export function create(req, res) {
       console.log("import", req.query.nuevo);
       createGitlab(req.body, false)
         .then(resp => {
+          req.body.proyectoGitlab = JSON.parse(resp).id
           //correcto
           return (
             Proyecto.find({
@@ -406,8 +407,30 @@ export function create(req, res) {
               }
             })
             //actualizar
-            .then(createEntity(res, req.body))
-            .catch(handleError(res))
+            .then(proy => {
+              if (proy == null) {
+                console.log(req.body);
+                return Proyecto.create(req.body)
+                  .then(createAssociation(req.body))
+                  .then(setDatosRepo())
+                  .then(setRating())
+                  .then(response => {
+                    res
+                      .status(201)
+                      .json({
+                        proyecto: response
+                      });
+                  })
+                  .catch(err => {
+                    console.log(err);
+                    res.status(400).send(err);
+                  });
+              } else {
+                res.status(400).send({
+                  message: proy.nombre + " ya existe"
+                });
+              }
+            }).catch(handleError(res))
           );
         })
         .catch(err => {
