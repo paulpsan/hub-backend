@@ -136,10 +136,13 @@ function removeUser(res, data) {
       // })
       return entity.destroy().then(() => {
         res.status(204).end();
+      }).catch(err => {
+        console.log(err);
+        throw err;
       });
     }).catch(err => {
       console.log(err);
-      throw new err;
+      throw err;
     })
   };
 }
@@ -238,16 +241,16 @@ export function getProjects(req, res) {
     })
     .then(respondWithResult(res))
     .catch(handleError(res));
-    // return ProyectoGrupo.findAll({
-    //     include: [{
-    //       all: true
-    //     }],
-    //     where: {
-    //       fk_grupo: req.params.id
-    //     }
-    //   })
-    //   .then(respondWithResult(res))
-    //   .catch(handleError(res));
+  // return ProyectoGrupo.findAll({
+  //     include: [{
+  //       all: true
+  //     }],
+  //     where: {
+  //       fk_grupo: req.params.id
+  //     }
+  //   })
+  //   .then(respondWithResult(res))
+  //   .catch(handleError(res));
 }
 // Gets a single Grupo from the DB
 export function show(req, res) {

@@ -4,8 +4,8 @@ import nodemailer from "nodemailer";
 import redis from "redis";
 import config from "../../config/environment";
 import {
-  signToken,
-  verifyToken
+  createToken,
+  verifyTokenCreate
 } from "../../auth/auth.service";
 
 let client = redis.createClient();
@@ -20,9 +20,31 @@ let smtpTransport = nodemailer.createTransport({
 });
 
 class Email {
-  static send(user) {
+  static sendSolicitudAprobada(user, solicitud, text) {
     return new Promise((resolve, reject) => {
-      const token = signToken(user, 60 * 60 * 24);
+      //guarda en redis
+      let mailOptions = {
+        from: config.email.from,
+        to: user.email,
+        subject: "Solicitud de aprobación de Titularidad",
+        html: "Usted realizo una solicitud de titularidad de la institución " + solicitud.institucon +
+          " en el Repositorio Estatal <br> La cual fue ACEPTADA por el administrador "
+      };
+      smtpTransport.sendMail(mailOptions, function (error, response) {
+        if (error) {
+          console.log(error);
+          reject(error);
+        } else {
+          console.log("Message sent: " + response);
+          resolve(response);
+        }
+      });
+    });
+  }
+
+  static sendToken(user) {
+    return new Promise((resolve, reject) => {
+      const token = createToken(user, 60 * 60 * 24);
       client.set(token, "confirm");
       //expira en 1 dia
       client.expire(token, 60 * 60 * 24);
@@ -51,7 +73,7 @@ class Email {
 
   static sendRecover(user) {
     return new Promise((resolve, reject) => {
-      const token = signToken(user, 60 * 60 * 24);
+      const token = createToken(user, 60 * 60 * 24);
       client.set(token, "reset");
       client.expire(token, 60 * 60 * 24);
 
@@ -86,7 +108,7 @@ class Email {
           reject(false);
         }
         if (response === "confirm" || response === "reset") {
-          verifyToken(token)
+          verifyTokenCreate(token)
             .then(user => {
               user ? resolve(user) : resolve(false);
             })

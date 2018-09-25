@@ -62,24 +62,18 @@ export default function seedDatabaseIfNeeded() {
         .then(() => {
           return Usuario.bulkCreate(
             [{
-                nombre: "paul Sanchez",
-                email: "psanchez@adsib.gob.bo",
+                _id: 1,
+                nombre: "Administrador",
+                email: "admin@adsib.gob.bo",
                 //con password 123
-                password: "$$2a$10$a1bk5NCgqxhtyFj9ZCjfce/zxpId30IbKZ4oc/WwxPyQ7Ta2UH3pe",
+                password: "$2a$10$a1bk5NCgqxhtyFj9ZCjfce/zxpId30IbKZ4oc/WwxPyQ7Ta2UH3pe",
                 role: "admin",
-                login: "",
+                login: "admin",
                 tipo: "local",
                 avatar: "",
-                estado: true,
-                descripcion: "",
-                clasificacion: {
-                  datos: [],
-                  valor: 1
-                },
-                datos: "",
-                usuarioGitlab:7,
-                user_gitlab:true,
-                url: ""
+                estado: "habilitado",
+                admin: true,
+                descripcion: "usuario Administrador",
               },
               // {
               //   nombre: "2Teodoro Nina2",

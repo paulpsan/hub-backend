@@ -10,6 +10,7 @@ var router = express.Router();
 router.get("/", generarOpciones, controller.index);
 router.get("/:id", controller.show);
 router.post("/", controller.create);
+router.post("/:id", controller.approve);
 router.put("/:id", controller.upsert);
 router.patch("/:id", controller.patch);
 router.delete("/:id", controller.destroy);

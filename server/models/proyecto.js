@@ -30,8 +30,10 @@ export default function (sequelize, DataTypes) {
         type: DataTypes.TEXT,
         allowNull: false,
       },
+      path: {
+        type: DataTypes.TEXT,
+      },
       urlRepositorio: {
-        allowNull: false,
         type: DataTypes.TEXT,
         validate: {
           notEmpty: {

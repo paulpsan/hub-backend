@@ -7,7 +7,6 @@ export default (sequelize, DataTypes) => {
         type: DataTypes.INTEGER,
         allowNull: false,
         primaryKey: true,
-        autoIncrement: true
       },
       nombre: {
         allowNull: false,
@@ -18,10 +17,6 @@ export default (sequelize, DataTypes) => {
             msg: "Ingrese su nombre"
           }
         }
-      },
-      id_gitlab: {
-        type: DataTypes.INTEGER,
-         allowNull: false,
       },
       entidad: {
         type: DataTypes.TEXT,
@@ -38,17 +33,11 @@ export default (sequelize, DataTypes) => {
       },
       visibilidad: {
         type: DataTypes.TEXT,
-         allowNull: false,
+        allowNull: false,
       },
       path: {
         type: DataTypes.TEXT
-      },
-      usuarios: {
-        type: DataTypes.JSONB
-      },
-      proyectos: {
-        type: DataTypes.JSONB
-      },
+      }
     }, {
       tableName: "grupo",
       createdAt: "fecha_creacion",

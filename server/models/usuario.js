@@ -7,7 +7,6 @@ export default (sequelize, DataTypes) => {
         type: DataTypes.INTEGER,
         allowNull: false,
         primaryKey: true,
-        autoIncrement: true
       },
       nombre: {
         allowNull: false,
@@ -17,9 +16,6 @@ export default (sequelize, DataTypes) => {
             msg: "Ingrese su nombre"
           }
         }
-      },
-      usuarioGitlab: {
-        type: DataTypes.INTEGER,
       },
       email: {
         type: DataTypes.TEXT,
@@ -37,16 +33,13 @@ export default (sequelize, DataTypes) => {
 
       login: {
         type: DataTypes.TEXT,
-         allowNull: false,
+        allowNull: false,
+        unique: true,
         defaultValue: ""
 
       },
       cuentas: {
         type: DataTypes.JSONB
-      },
-      user_gitlab: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: false
       },
       admin_grupo: {
         type: DataTypes.BOOLEAN,
@@ -88,8 +81,7 @@ export default (sequelize, DataTypes) => {
         defaultValue: ""
       },
       estado: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: false
+        type: DataTypes.TEXT,
       },
       github: {
         type: DataTypes.BOOLEAN,

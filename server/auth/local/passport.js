@@ -1,17 +1,19 @@
 import passport from "passport";
 import bcrypt from "bcrypt-nodejs";
-import { Strategy as LocalStrategy } from "passport-local";
+import {
+  Strategy as LocalStrategy
+} from "passport-local";
 
 function localAuthenticate(User, email, password, done) {
   User.findOne({
-    where: {
-      email: email.toLowerCase(),
-    }
-  })
+      where: {
+        email: email.toLowerCase(),
+      }
+    })
     .then(user => {
       if (user != null) {
         console.log(user);
-        if (user.estado == true) {
+        if (user.estado == 'habilitado') {
           bcrypt.compare(password, user.password, (err, check) => {
             if (check) {
               return done(null, user);
@@ -23,8 +25,7 @@ function localAuthenticate(User, email, password, done) {
           });
         } else {
           return done(null, false, {
-            message:
-              "Confirmar el Correo Electrónico del Usuario. Revise su correo electronico"
+            message: "Confirmar el Correo Electrónico del Usuario. Revise su correo electronico"
           });
         }
       } else {
@@ -38,12 +39,11 @@ function localAuthenticate(User, email, password, done) {
 
 export function setup(User) {
   passport.use(
-    new LocalStrategy(
-      {
+    new LocalStrategy({
         usernameField: "email",
         passwordField: "password" // this is the virtual field on the model
       },
-      function(email, password, done) {
+      function (email, password, done) {
         return localAuthenticate(User, email, password, done);
       }
     )
