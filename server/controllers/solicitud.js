@@ -19,7 +19,7 @@ import {
 } from "../sqldb";
 import MemberGitlab from "../components/gitlab/memberGitlab";
 import GroupGitlab from "../components/gitlab/groupGitlab";
-
+import Email from "../components/service/email";
 import SequelizeHelper from "../components/sequelize-helper";
 import config from "../config/environment";
 import {
@@ -46,9 +46,11 @@ function respondWithResult(res, statusCode) {
     return null;
   };
 }
-function sendEmail() {
+
+function sendEmail(user) {
   return function (entity) {
-    return 
+    Email.sendSolicitudAprobada(user, entity)
+    return entity;
   };
 }
 
@@ -88,9 +90,10 @@ function createGroup(solicitud) {
     }).then(usuario => {
       let data = {
         nombre: entity.institucion,
+        institucion: entity.institucion,
         path: entity.path,
         descripcion: entity.descripcion,
-        visibility: "public"
+        visibilidad: "public"
       }
       return GroupGitlab.create(data).then(respGitlab => {
         let user = [{
@@ -99,6 +102,7 @@ function createGroup(solicitud) {
         }]
         data._id = respGitlab.id
         data.visibilidad = respGitlab.visibility;
+        console.log(data);
         return Grupo.create(data).then(resp => {
           let obj = {
             fk_usuario: usuario._id,
@@ -302,7 +306,7 @@ export function approve(req, res) {
     .then(handleEntityNotFound(res))
     .then(createGroup(req.body))
     .then(saveUpdates(req.body))
-    .then(sendEmail())
+    .then(sendEmail(req.body.Usuario))
     .then(respondWithResult(res))
     .catch(handleError(res));
 }

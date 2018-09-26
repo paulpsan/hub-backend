@@ -25,7 +25,7 @@ function localAuthenticate(User, email, password, done) {
           });
         } else {
           return done(null, false, {
-            message: "Confirmar el Correo Electrónico del Usuario. Revise su correo electronico"
+            message: "Su usuario fue bloqueado, Contactese con el soporte tecnico"
           });
         }
       } else {

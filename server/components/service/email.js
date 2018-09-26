@@ -20,14 +20,15 @@ let smtpTransport = nodemailer.createTransport({
 });
 
 class Email {
-  static sendSolicitudAprobada(user, solicitud, text) {
+  static sendSolicitudAprobada(user, solicitud) {
     return new Promise((resolve, reject) => {
       //guarda en redis
+      console.log(user, solicitud);
       let mailOptions = {
         from: config.email.from,
         to: user.email,
         subject: "Solicitud de aprobación de Titularidad",
-        html: "Usted realizo una solicitud de titularidad de la institución " + solicitud.institucon +
+        html: "Usted realizo una solicitud de titularidad de la institución " + solicitud.institucion +
           " en el Repositorio Estatal <br> La cual fue ACEPTADA por el administrador "
       };
       smtpTransport.sendMail(mailOptions, function (error, response) {
