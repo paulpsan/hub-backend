@@ -36,9 +36,9 @@ function removeEntity(res) {
   };
 }
 
-function removeUser(res, data) {
+function removeUser(res, id_usuario, id_proyecto) {
   return function (entity) {
-    return MemberGitlab.deleteProyect(data).then(resp => {
+    return MemberGitlab.deleteProyect(id_usuario, id_proyecto).then(resp => {
       console.log(resp);
       return entity.destroy().then(() => {
         res.status(204).end();
@@ -181,9 +181,9 @@ function setRating() {
   };
 }
 
-function createGitlab(project, isNew) {
+function createGitlab(project) {
   return new Promise((resolve, reject) => {
-    ProjectGitlab.create(project, isNew)
+    ProjectGitlab.create(project)
       .then(resp => {
         if (resp.message) {
           reject(resp.message);
@@ -192,6 +192,7 @@ function createGitlab(project, isNew) {
         resolve(resp);
       })
       .catch(err => {
+        console.log(err);
         reject(err);
       });
   });
@@ -221,38 +222,27 @@ function createEntity(res, proyecto) {
   };
 }
 
-function createAssociation(project) {
+function createAssociation(usuarios) {
   return async function (entity) {
-    let obj = {
-      fk_proyecto: entity._id,
-      fk_grupo: project.grupo._id,
-      visibilidad: 'private',
-    }
-    console.log(obj);
-    ProyectoGrupo.create(obj)
-      .then(resp => {
-        console.log(resp);
-      })
-      .catch(err => {
-        console.log(err);
-        return err;
-      });
-
-    for (const usuario of project.usuarios) {
-      let data = {
-        fk_usuario: usuario._id,
-        fk_proyecto: entity._id,
-        access_level: 30,
-        nombre_permiso: "desarrollador"
+    console.log(usuarios);
+    if (usuarios) {
+      for (const usuario of usuarios) {
+        let data = {
+          fk_usuario: usuario._id,
+          fk_proyecto: entity._id,
+          access_level: 30,
+          nombre_permiso: "desarrollador"
+        }
+        console.log(data);
+        await UsuarioProyecto.create(data)
+          .then(resp => {
+            console.log(resp);
+          })
+          .catch(err => {
+            console.log(err);
+            return err;
+          });
       }
-      await UsuarioProyecto.create(data)
-        .then(resp => {
-          console.log(resp);
-        })
-        .catch(err => {
-          console.log(err);
-          return err;
-        });
     }
     return entity;
   };
@@ -379,110 +369,48 @@ export function show(req, res) {
 // Creates a new Proyecto in the DB
 //parsear datos
 export function create(req, res) {
-
-  if (!req.query.import && !req.query.nuevo) {
-    console.log("entri", req.params);
-    return (
-      Proyecto.find({
-        where: {
-          nombre: req.body.nombre
-        }
-      })
-      //actualizar
-      .then(createEntity(res, req.body))
-      .catch(handleError(res))
-    );
-  } else {
-    //importa proyecto
-    if (!req.query.nuevo) {
-      console.log("import", req.query.nuevo);
-      createGitlab(req.body, false)
-        .then(resp => {
-          req.body.proyectoGitlab = JSON.parse(resp).id
-          //correcto
-          return (
-            Proyecto.find({
-              where: {
-                nombre: req.body.nombre
-              }
-            })
-            //actualizar
-            .then(proy => {
-              if (proy == null) {
-                console.log(req.body);
-                return Proyecto.create(req.body)
-                  .then(createAssociation(req.body))
-                  .then(setDatosRepo())
-                  .then(setRating())
-                  .then(response => {
-                    res
-                      .status(201)
-                      .json({
-                        proyecto: response
-                      });
-                  })
-                  .catch(err => {
-                    console.log(err);
-                    res.status(400).send(err);
-                  });
-              } else {
-                res.status(400).send({
-                  message: proy.nombre + " ya existe"
-                });
-              }
-            }).catch(handleError(res))
-          );
-        })
-        .catch(err => {
-          res.status(400).send({
-            message: err.error.message
-          });
-        });
-    } else {
-      //crea proyecto nuevo
-      createGitlab(req.body, true)
-        .then(resp => {
-          req.body.proyectoGitlab = JSON.parse(resp).id
-          //correcto
-          return (
-            Proyecto.find({
-              where: {
-                nombre: req.body.nombre
-              }
-            })
-            //actualizar
-            .then(proy => {
-              if (proy == null) {
-                console.log(req.body);
-                return Proyecto.create(req.body)
-                  .then(createAssociation(req.body))
-                  .then(response => {
-                    res
-                      .status(201)
-                      .json({
-                        proyecto: response
-                      });
-                  })
-                  .catch(err => {
-                    console.log(err);
-                    res.status(400).send(err);
-                  });
-              } else {
-                res.status(400).send({
-                  message: proy.nombre + " ya existe"
-                });
-              }
-            })
-            .catch(handleError(res))
-          );
-        })
-        .catch(err => {
-          res.status(400).send({
-            message: err.error.message
-          });
-        });
+  Proyecto.find({
+    where: {
+      nombre: req.body.nombre,
+      path: req.body.path
     }
-  }
+  }).then(proy => {
+    if (!proy) {
+      createGitlab(req.body)
+        .then(resp => {
+          req.body._id = JSON.parse(resp).id
+          console.log(req.body);
+          return Proyecto.create(req.body)
+            .then(createAssociation(req.body.usuarios))
+            .then(response => {
+              res
+                .status(201)
+                .json({
+                  proyecto: response
+                });
+            })
+            .catch(err => {
+              console.log(err);
+              res.status(400).send(err);
+            });
+        })
+        .catch(err => {
+          console.log(err);
+          res.status(400).send({
+            message: err.error.message
+          });
+        });
+
+    } else {
+      res.status(400).send({
+        message: req.body.path + " ya existe"
+      });
+    }
+  }).catch(err => {
+    res.status(500).send({
+      message: err
+    });
+  });
 }
 
 // Upserts the given Proyecto in the DB at the specified ID
@@ -519,7 +447,8 @@ export function patchUsuario(req, res) {
   }
   return UsuarioProyecto.find({
       where: {
-        fk_usuario: req.params.id
+        fk_usuario: req.params.id_usuario,
+        fk_proyecto: req.params.id_proyecto
       }
     })
     .then(handleEntityNotFound(res))
@@ -531,11 +460,12 @@ export function patchUsuario(req, res) {
 export function destroyUser(req, res) {
   return UsuarioProyecto.find({
       where: {
-        fk_usuario: req.params.id
+        fk_usuario: req.params.id_usuario,
+        fk_proyecto: req.params.id_proyecto
       }
     })
     .then(handleEntityNotFound(res))
-    .then(removeUser(res, req.body))
+    .then(removeUser(res, req.params.id_usuario, req.params.id_proyecto))
     .catch(handleError(res));
 }
 // Deletes a Proyecto from the DB
@@ -553,17 +483,17 @@ export function destroy(req, res) {
 
 export function setUser(req, res) {
   let user = [{
-    usuarioGitlab: req.body.usuarioGitlab,
+    _id: req.body._id,
     access_level: req.body.access_level,
   }]
   //adicionar usuario al grupo
-  return MemberGitlab.addProject(req.body.proyectoGitlab, user)
+  return MemberGitlab.addProject(req.params.id, user)
     .then(async resp => {
       console.log(resp);
       if (resp) {
         let obj = {
           fk_usuario: req.body._id,
-          fk_proyecto: req.body.idProyecto,
+          fk_proyecto: req.params.id,
           nombre_permiso: req.body.nombre_permiso,
           access_level: req.body.access_level,
         }

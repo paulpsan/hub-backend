@@ -28,8 +28,8 @@ class Email {
         from: config.email.from,
         to: user.email,
         subject: "Solicitud de aprobación de Titularidad",
-        html: "Usted realizo una solicitud de titularidad de la institución " + solicitud.institucion +
-          " en el Repositorio Estatal <br> La cual fue ACEPTADA por el administrador "
+        html: "Usted realizo una solicitud de titularidad de la institución <strong>" + solicitud.institucion +
+          "</strong>, en el Repositorio Estatal <br> La cual fue <strong> ACEPTADA </strong> por el administrador "
       };
       smtpTransport.sendMail(mailOptions, function (error, response) {
         if (error) {

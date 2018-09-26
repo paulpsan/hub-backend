@@ -41,11 +41,11 @@ class GroupGitlab {
     return new Promise((resolve, reject) => {
       let url = `${config.repo.gitlab.domain}/` // Defaults to http://gitlab.com
       let token = config.repo.gitlab.privateToken
+      console.log(grupo);
       let data = {
-        id: grupo.id_gitlab,
+        id: grupo._id,
         visibility: grupo.visibilidad,
       };
-      console.log(data);
       var options = {
         method: 'PUT',
         url: `${url}/api/v4/groups/${data.id}`,
@@ -63,8 +63,11 @@ class GroupGitlab {
       };
 
       request(options, function (error, response, body) {
-        resolve(body)
         if (error) reject(error);
+        if (JSON.parse(body).message) {
+          reject(JSON.parse(body));
+        }
+        resolve(body)
       });
 
 

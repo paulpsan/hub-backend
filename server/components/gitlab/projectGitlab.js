@@ -30,12 +30,12 @@ class ProjectGitlab {
     });
   }
 
-  static create(project, isNew) {
+  static create(project) {
     return new Promise((resolve, reject) => {
       let namespace_id
       console.log(project);
-      if (project.grupo.id_gitlab) {
-        namespace_id = project.grupo.id_gitlab
+      if (project.grupo._id) {
+        namespace_id = project.grupo._id
         var options = {
           method: 'POST',
           url: `${config.repo.gitlab.domain}/api/v4/projects`,
@@ -57,14 +57,16 @@ class ProjectGitlab {
         };
 
         request(options, function (error, response, body) {
-          console.log(body);
-          resolve(body);
           if (error) reject(error);
+          if (JSON.parse(body).message) {
+            reject(JSON.parse(body));
+          }
+          resolve(body)
         });
       } else {
         var options = {
           method: 'POST',
-          url: `${config.repo.gitlab.domain}/api/v4/projects/user/${project.usuario.usuarioGitlab}`,
+          url: `${config.repo.gitlab.domain}/api/v4/projects/user/${project.usuario._id}`,
           qs: {
             private_token: config.repo.gitlab.privateToken
           },
@@ -73,7 +75,7 @@ class ProjectGitlab {
             'content-type': 'application/x-www-form-urlencoded'
           },
           form: {
-            user_id: project.usuario.usuarioGitlab,
+            user_id: project.usuario._id,
             name: project.nombre,
             description: project.descripcion,
             visibility: project.visibilidad,
@@ -81,9 +83,12 @@ class ProjectGitlab {
           }
         };
         request(options, function (error, response, body) {
-          console.log(body);
-          resolve(body);
           if (error) reject(error);
+          if (JSON.parse(body).message) {
+            console.log(body);
+            reject(JSON.parse(body));
+          }
+          resolve(body)
         });
       }
 
@@ -95,7 +100,7 @@ class ProjectGitlab {
       let url = `${config.repo.gitlab.domain}/` // Defaults to http://gitlab.com
       let token = config.repo.gitlab.privateToken
       let data = {
-        id: proyecto.proyectoGitlab,
+        id: proyecto._id,
         visibility: proyecto.visibilidad,
       };
       console.log(data);
@@ -116,8 +121,11 @@ class ProjectGitlab {
       };
 
       request(options, function (error, response, body) {
-        resolve(body)
         if (error) reject(error);
+        if (JSON.parse(body).message) {
+          reject(JSON.parse(body));
+        }
+        resolve(JSON.parse(body))
       });
     });
   }

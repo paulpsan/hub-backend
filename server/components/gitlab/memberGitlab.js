@@ -76,9 +76,10 @@ class MemberGitlab {
       for (const usuario of usuarios) {
         let obj = {
           user_id: usuario.user_id,
-          access_level: usuario.access_level,
+          access_level: 30,
           id: id,
         };
+        console.log(obj);
         await addGrupo(obj).then(resp => {
           if (resp.error) {
             reject(resp)
@@ -93,22 +94,20 @@ class MemberGitlab {
 
   static addProject(id, usuarios) {
     return new Promise(async (resolve, reject) => {
-      console.log(id, usuarios);
       for (const usuario of usuarios) {
         let obj = {
-          user_id: usuario.usuarioGitlab,
-          access_level: 40,
+          user_id: usuario._id,
+          access_level: 30,
           id: id,
         };
-        obj.access_level = usuario.access_level ? usuario.access_level : 40;
-        console.log(obj);
-        await adiProyecto(obj).then(resp => {
-          if (resp.error) {
-            reject(resp)
-          }
-        }).catch(err => {
-          reject(err)
-        });
+        await adiProyecto(obj)
+          .then(resp => {
+            if (resp.error) {
+              reject(resp)
+            }
+          }).catch(err => {
+            reject(err)
+          });
       }
       resolve(true)
     });
@@ -116,7 +115,8 @@ class MemberGitlab {
 
   static editGroup(data) {
     return new Promise(async (resolve, reject) => {
-      return api.GroupMembers.edit(data.grupoGitlab, data.usuarioGitlab, data.access_level)
+      console.log(data.access_level);
+      return api.GroupMembers.edit(data.fk_grupo, data.fk_usuario, data.access_level)
         .then(resp => {
           resolve(true)
         })
@@ -128,7 +128,7 @@ class MemberGitlab {
   }
   static editProject(data) {
     return new Promise(async (resolve, reject) => {
-      return api.ProjectMembers.edit(data.proyectoGitlab, data.usuarioGitlab, data.access_level)
+      return api.ProjectMembers.edit(data.fk_proyecto, data.fk_usuario, data.access_level)
         .then(resp => {
           resolve(true)
         })
@@ -138,9 +138,9 @@ class MemberGitlab {
 
     });
   }
-  static deleteGroup(data) {
+  static deleteGroup(id_grupo, id_usuario) {
     return new Promise((resolve, reject) => {
-      return api.GroupMembers.remove(data.grupoGitlab, data.usuarioGitlab)
+      return api.GroupMembers.remove(id_grupo, id_usuario)
         .then(resp => {
           console.log(resp);
           resolve(true)
@@ -150,9 +150,9 @@ class MemberGitlab {
         });
     });
   }
-  static deleteProyect(data) {
+  static deleteProyect(id_usuario, id_proyecto) {
     return new Promise((resolve, reject) => {
-      return api.ProjectMembers.remove(data.proyectoGitlab, data.usuarioGitlab)
+      return api.ProjectMembers.remove(id_proyecto, id_usuario)
         .then(resp => {
           console.log(resp);
           resolve(true)

@@ -6,22 +6,16 @@ export default function (sequelize, DataTypes) {
       _id: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        primaryKey: true,
-        autoIncrement: true
+        primaryKey: true
       },
       nombre: {
         allowNull: false,
         type: DataTypes.TEXT,
-        unique: true,
         validate: {
           notEmpty: {
             msg: "Ingrese el nombre del proyecto"
           }
         }
-      },
-      proyectoGitlab: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
       },
       descripcion: {
         type: DataTypes.TEXT
@@ -32,6 +26,7 @@ export default function (sequelize, DataTypes) {
       },
       path: {
         type: DataTypes.TEXT,
+        unique: true,
       },
       urlRepositorio: {
         type: DataTypes.TEXT,
@@ -53,21 +48,8 @@ export default function (sequelize, DataTypes) {
       clasificacion: {
         type: DataTypes.JSONB
       },
-      usuarios: {
-        type: DataTypes.JSONB,
-        defaultValue: {
-          datos: [],
-          valor: 0
-        }
-      },
       commits: {
         type: DataTypes.JSONB
-      },
-      fechaCreacion: {
-        type: DataTypes.DATE
-      },
-      ultimaActividad: {
-        type: DataTypes.DATE
       },
       tipo: {
         type: DataTypes.TEXT

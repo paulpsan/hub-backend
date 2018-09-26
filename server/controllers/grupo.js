@@ -12,12 +12,16 @@
 
 import GroupGitlab from "../components/gitlab/groupGitlab";
 import MemberGitlab from "../components/gitlab/memberGitlab";
+import ProjectGitlab from "../components/gitlab/projectGitlab";
 import SequelizeHelper from "../components/sequelize-helper";
 import Sequelize from "sequelize";
 import {
   Grupo,
   Solicitud,
-  UsuarioGrupo
+  Proyecto,
+  UsuarioGrupo,
+  UsuarioProyecto,
+  ProyectoGrupo
 } from "../sqldb";
 import config from "../config/environment";
 
@@ -51,16 +55,45 @@ function saveUpdates(updates) {
 
 function saveUser(updates) {
   return function (entity) {
-    return MemberGitlab.editGroup(updates).then(resp => {
-      console.log(resp);
-      entity.access_level = updates.access_level;
-      entity.nombre = updates.nombre;
-      entity.save();
+    if (entity) {
+      return MemberGitlab.editGroup(updates).then(resp => {
+        console.log(entity);
+        console.log(updates);
+        entity.access_level = updates.access_level;
+        entity.nombre = updates.nombre;
+        entity.save();
+        return entity
+      }).catch(err => {
+        console.log(err);
+        throw new err;
+      })
+    } else {
       return entity
-    }).catch(err => {
-      console.log(err);
-      throw new err;
-    })
+    }
+  };
+}
+
+function saveProject(updates) {
+  return function (entity) {
+    if (entity) {
+      return ProjectGitlab.edit(updates).then(resp => {
+        entity.visibilidad = resp.visibility;
+        Proyecto.update({
+          visibilidad: resp.visibility
+        }, {
+          where: {
+            _id: entity.fk_proyecto
+          }
+        })
+        entity.save();
+        return entity
+      }).catch(err => {
+        console.log(err);
+        throw new err;
+      })
+    } else {
+      return entity
+    }
   };
 }
 
@@ -77,14 +110,14 @@ function saveGitlab(updates) {
   };
 }
 
-function createAssociation(usuarios) {
+function addUsuarioGrupo(usuarios) {
   return async function (entity) {
     for (const usuario of usuarios) {
       let obj = {
         fk_usuario: usuario._id,
         fk_grupo: entity._id,
-        nombre_permiso: usuario.nombre,
-        access_level: usuario.access_level,
+        nombre_permiso: "desarrollador",
+        access_level: 30,
       }
       await UsuarioGrupo.create(obj)
         .then(resp => {
@@ -94,6 +127,31 @@ function createAssociation(usuarios) {
           console.log(err);
           return err;
         });
+    }
+    return entity;
+  };
+}
+
+function addUsuarioProject(usuarios) {
+  return async function (entity) {
+    console.log(usuarios);
+    if (usuarios) {
+      for (const usuario of usuarios) {
+        let obj = {
+          fk_usuario: usuario._id,
+          fk_proyecto: entity._id,
+          nombre_permiso: "desarrollador",
+          access_level: 30,
+        }
+        await UsuarioProyecto.create(obj)
+          .then(resp => {
+            console.log(resp);
+          })
+          .catch(err => {
+            console.log(err);
+            return err;
+          });
+      }
     }
     return entity;
   };
@@ -120,31 +178,41 @@ function removeEntity(res) {
   };
 }
 
-function removeUser(res, data) {
+function removeUser(res, req) {
   return function (entity) {
-    return MemberGitlab.deleteGroup(data).then(resp => {
-      console.log(resp);
-      // Solicitud.find({
-      //   where: {
-      //     fk_usuario: data.fk_usuario
-      //   }
-      // }).then(solicitud => {
-      //   solicitud.destroy();
-      // }).catch(err => {
-      //   console.log(err);
-      //   throw new err;
-      // })
-      return entity.destroy().then(() => {
-        res.status(204).end();
+    if (entity) {
+      return MemberGitlab.deleteGroup(req.params.id_grupo, req.params.id_usuario).then(resp => {
+        console.log(resp);
+        return entity.destroy().then(() => {
+          res.status(204).end();
+        }).catch(err => {
+          console.log(err);
+          throw err;
+        });
       }).catch(err => {
         console.log(err);
         throw err;
-      });
-    }).catch(err => {
-      console.log(err);
-      throw err;
-    })
+      })
+    } else {
+      return entity
+    }
   };
+}
+
+function createGitlab(project, isNew) {
+  return new Promise((resolve, reject) => {
+    ProjectGitlab.create(project, isNew)
+      .then(resp => {
+        if (resp.message) {
+          reject(resp.message);
+        }
+        MemberGitlab.addProject(JSON.parse(resp).id, project.usuarios)
+        resolve(resp);
+      })
+      .catch(err => {
+        reject(err);
+      });
+  });
 }
 
 function handleEntityNotFound(res) {
@@ -231,13 +299,23 @@ export function getUsers(req, res) {
 }
 
 export function getProjects(req, res) {
+  const Op = Sequelize.Op;
   return Grupo.find({
-      include: [{
-        all: true
-      }],
       where: {
         _id: req.params.id
       }
+    })
+    .then(grupo => {
+      return Proyecto.findAll({
+        include: [{
+          all: true
+        }],
+        where: {
+          path: {
+            [Op.iLike]: grupo.path + "%"
+          }
+        }
+      })
     })
     .then(respondWithResult(res))
     .catch(handleError(res));
@@ -282,20 +360,20 @@ export function getGroup(req, res) {
     .catch(handleError(res));
 }
 
-// Creates a new Grupo in the DB
+
 export function setUser(req, res) {
   let user = [{
-    user_id: req.body.usuarioGitlab,
+    user_id: req.body._id,
     access_level: req.body.access_level,
   }]
   //adicionar usuario al grupo
-  return MemberGitlab.addGroup(req.body.idGrupoGitlab, user)
+  return MemberGitlab.addGroup(req.params.id, user)
     .then(async resp => {
       console.log(resp);
       if (resp) {
         let obj = {
           fk_usuario: req.body._id,
-          fk_grupo: req.body.idGrupo,
+          fk_grupo: req.params.id,
           nombre_permiso: req.body.nombre_permiso,
           access_level: req.body.access_level,
         }
@@ -316,7 +394,7 @@ export function create(req, res) {
   console.log(req.body.usuarios);
   GroupGitlab.create(req.body).then(resp => {
     console.log(resp);
-    req.body.id_gitlab = resp.id;
+    req.body._id = resp.id;
     //adicionar usuario al grupo
     MemberGitlab.addGroup(resp.id, req.body.usuarios).then(resp => {
       console.log(resp);
@@ -327,7 +405,7 @@ export function create(req, res) {
         }
         console.log(objGrupo);
         return Grupo.create(req.body)
-          .then(createAssociation(req.body.usuarios))
+          .then(addUsuarioGrupo(req.body.usuarios))
           .then(respondWithResult(res, 201))
           .catch(handleError(res));
       }
@@ -339,10 +417,46 @@ export function create(req, res) {
     console.log(err);
     res.status(400).send(err);
   })
+}
+export function createProject(req, res) {
+  Proyecto.find({
+    where: {
+      path: req.body.path
+    }
+  }).then(proy => {
+    if (!proy) {
+      createGitlab(req.body)
+        .then(resp => {
+          req.body._id = JSON.parse(resp).id
+          //correcto
+          console.log(req.body);
+          return Proyecto.create(req.body)
+            .then(addUsuarioProject(req.body.usuarios))
+            .then(response => {
+              let data = {
+                fk_grupo: req.params.id,
+                fk_proyecto: req.body._id,
+                visibilidad: "public"
+              }
+              ProyectoGrupo.create(data)
+              res.status(201)
+                .json({
+                  proyecto: response
+                });
+            })
+            .catch(err => {
+              console.log(err);
+              res.status(400).send(err);
+            });
+        })
+        .catch(handleError(res))
 
-
-
-
+    } else {
+      res.status(400).send({
+        message: req.body.path + " ya existe"
+      });
+    }
+  })
 }
 
 export function upsert(req, res) {
@@ -360,9 +474,6 @@ export function upsert(req, res) {
 }
 
 export function patch(req, res) {
-  if (req.body._id) {
-    delete req.body._id;
-  }
   console.log(req.body);
   return Grupo.find({
       where: {
@@ -376,13 +487,11 @@ export function patch(req, res) {
     .catch(handleError(res));
 }
 
-export function patchUsuario(req, res) {
-  if (req.body._id) {
-    delete req.body._id;
-  }
+export function patchUser(req, res) {
   return UsuarioGrupo.find({
       where: {
-        fk_usuario: req.params.id
+        fk_usuario: req.params.id_usuario,
+        fk_grupo: req.params.id_grupo
       }
     })
     .then(handleEntityNotFound(res))
@@ -390,15 +499,31 @@ export function patchUsuario(req, res) {
     .then(respondWithResult(res))
     .catch(handleError(res));
 }
+
+export function patchProject(req, res) {
+  return ProyectoGrupo.find({
+      where: {
+        fk_proyecto: req.params.id_proyecto,
+        fk_grupo: req.params.id_grupo
+      }
+    })
+    .then(handleEntityNotFound(res))
+    .then(saveProject(req.body))
+    .then(respondWithResult(res))
+    .catch(handleError(res));
+}
+
+
 // Deletes a Grupo from the DB
 export function destroyUser(req, res) {
   return UsuarioGrupo.find({
       where: {
-        fk_usuario: req.params.id
+        fk_usuario: req.params.id_usuario,
+        fk_grupo: req.params.id_grupo
       }
     })
     .then(handleEntityNotFound(res))
-    .then(removeUser(res, req.body))
+    .then(removeUser(res, req))
     .catch(handleError(res));
 }
 

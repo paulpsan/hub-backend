@@ -14,11 +14,13 @@ router.get("/:id/usuarios", controller.getUsers);
 router.get("/:id/proyectos", controller.getProjects);
 router.post("/", controller.create);
 router.post("/:id/usuarios", controller.setUser);
-router.post("/usuario/:id", controller.destroyUser);
+router.post("/:id/proyectos", controller.createProject);
 router.put("/:id", controller.upsert);
 router.patch("/:id", controller.patch);
-router.patch("/usuario/:id", controller.patchUsuario);
+router.patch("/:id_grupo/usuarios/:id_usuario", controller.patchUser);
+router.patch("/:id_grupo/proyectos/:id_proyecto", controller.patchProject);
 // router.patch("/proyecto/:id", controller.patchProject);
 router.delete("/:id", controller.destroy);
+router.delete("/:id_grupo/usuarios/:id_usuario", controller.destroyUser);
 
 module.exports = router;
