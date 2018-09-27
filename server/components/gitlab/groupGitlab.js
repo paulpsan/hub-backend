@@ -90,16 +90,9 @@ class GroupGitlab {
     });
   }
 
-  static delete(grupo) {
+  static delete(id) {
     return new Promise((resolve, reject) => {
-      let data = {
-        name: grupo.nombre,
-        path: grupo.path,
-        description: grupo.descripcion,
-        visibility: grupo.visibilidad,
-        request_access_enabled: false
-      };
-      api.Groups.create(data)
+      api.Groups.remove(id)
         .then(resp => {
           console.log("grups", resp);
           resolve(resp);

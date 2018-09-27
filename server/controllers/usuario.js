@@ -59,6 +59,40 @@ function saveUpdates(updates) {
   };
 }
 
+function block(res, updates) {
+  return function (entity) {
+    if (entity) {
+      return UserGitlab.block(updates._id)
+        .then(updated => {
+          entity.estado = "bloqueado"
+          entity.save();
+          res.send(201).end();
+        })
+        .catch(err => {
+          console.log(err);
+          return err;
+        });
+    }
+  };
+}
+
+function unblock(res, updates) {
+  return function (entity) {
+    if (entity) {
+      return UserGitlab.unblock(updates._id)
+        .then(updated => {
+          entity.estado = "habilitado"
+          entity.save();
+          res.send(201).end();
+        })
+        .catch(err => {
+          console.log(err);
+          return err;
+        });
+    }
+  };
+}
+
 function removeEntity(res) {
   return function (entity) {
     let usuario = {};
@@ -115,7 +149,7 @@ export function index(req, res) {
         limit: req.opciones.limit,
         where: {
           estado: 'habilitado',
-          admin:false,
+          admin: false,
           nombre: {
             [Op.iLike]: "%" + req.query.buscar + "%"
           }
@@ -138,7 +172,60 @@ export function index(req, res) {
           },
           where: {
             estado: 'habilitado',
-            admin:false,
+            admin: false,
+          },
+          // order: [["clasificacion", "desc"]],
+          offset: req.opciones.offset,
+          limit: req.opciones.limit
+        },
+        "_id nombre email"
+      )
+      .then(datos => {
+        return SequelizeHelper.generarRespuesta(datos, req.opciones);
+      })
+      .then(respondWithResult(res))
+      .catch(handleError(res));
+  }
+}
+
+export function indexAll(req, res) {
+  console.log("Session**", req.session);
+  if (req.query.buscar != undefined) {
+    console.log(req.query);
+    const Op = Sequelize.Op;
+    return Usuario.findAndCountAll({
+        include: [{
+          all: true
+        }],
+        attributes: {
+          exclude: ['password']
+        },
+        offset: req.opciones.offset,
+        limit: req.opciones.limit,
+        where: {
+          admin: false,
+          nombre: {
+            [Op.iLike]: "%" + req.query.buscar + "%"
+          }
+        }
+      })
+      .then(datos => {
+        console.log(datos);
+        return SequelizeHelper.generarRespuesta(datos, req.opciones);
+      })
+      .then(respondWithResult(res))
+      .catch(handleError(res));
+  } else {
+    console.log("req", req.usuario);
+    return Usuario.findAndCountAll({
+          include: [{
+            all: true
+          }],
+          attributes: {
+            exclude: ['password']
+          },
+          where: {
+            admin: false,
           },
           // order: [["clasificacion", "desc"]],
           offset: req.opciones.offset,
@@ -552,6 +639,32 @@ export function patch(req, res) {
     .catch(handleError(res));
 }
 
+export function blockUser(req, res) {
+  return Usuario.find({
+      attributes: {
+        exclude: ['password']
+      },
+      where: {
+        _id: req.params.id
+      }
+    })
+    .then(handleEntityNotFound(res))
+    .then(block(res, req.body))
+    .catch(handleError(res, 404));
+}
+export function unblockUser(req, res) {
+  return Usuario.find({
+      attributes: {
+        exclude: ['password']
+      },
+      where: {
+        _id: req.params.id
+      }
+    })
+    .then(handleEntityNotFound(res))
+    .then(unblock(res, req.body))
+    .catch(handleError(res, 404));
+}
 // Deletes a Usuario from the DB
 export function destroy(req, res) {
   return Usuario.find({

@@ -130,6 +130,23 @@ class ProjectGitlab {
     });
   }
 
+  static delete(id) {
+    return new Promise((resolve, reject) => {
+      api.Projects.remove(id)
+        .then(user => {
+          console.log(user);
+          if (user.length !== 0) {
+            resolve(true);
+          } else {
+            reject(false);
+          }
+        })
+        .catch(err => {
+          console.log(err);
+          reject(err);
+        });
+    });
+  }
   //busca email o username y devuelve true si encuentra
   static search(data = "pausl") {
     return new Promise((resolve, reject) => {

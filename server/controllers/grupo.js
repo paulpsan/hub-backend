@@ -65,7 +65,7 @@ function saveUser(updates) {
         return entity
       }).catch(err => {
         console.log(err);
-        throw new err;
+        throw err;
       })
     } else {
       return entity
@@ -88,8 +88,11 @@ function saveProject(updates) {
         entity.save();
         return entity
       }).catch(err => {
-        console.log(err);
-        throw new err;
+        if (err.message.hasOwnProperty('visibility_level')) {
+          err.message = "Tiene que cambiar la visibilidad del grupo";
+          err.statusCode = 400;
+        }
+        throw err;
       })
     } else {
       return entity
@@ -104,8 +107,12 @@ function saveGitlab(updates) {
       console.log(resp);
       return entity
     }).catch(err => {
+      if (err.message.hasOwnProperty('visibility_level')) {
+        err.message = "Existe un proyecto con mayor visibilidad";
+        err.statusCode = 400;
+      }
       console.log(err);
-      throw new err;
+      throw err;
     })
   };
 }
@@ -157,18 +164,36 @@ function addUsuarioProject(usuarios) {
   };
 }
 
-function removeEntity(res) {
+function removeEntity(res, id) {
   return function (entity) {
-    let grupo = {};
-    grupo._id = entity._id;
-    grupo.email = entity.email;
-    grupo.estado = false;
     if (entity) {
-      return entity
-        .updateAttributes(grupo)
-        .then(updated => {
-          console.log("--------", updated);
-          return updated;
+      return GroupGitlab.delete(id)
+        .then(() => {
+          UsuarioGrupo.destroy({
+            where: {
+              fk_grupo: id
+            }
+          });
+          ProyectoGrupo.destroy({
+            where: {
+              fk_grupo: id
+            }
+          })
+          Solicitud.destroy({
+            where: {
+              path: entity.path
+            }
+          })
+          const Op = Sequelize.Op;
+          Proyecto.destroy({
+            where: {
+              path: {
+                [Op.iLike]: entity.path + "%"
+              }
+            }
+          })
+          entity.destroy();
+          res.status(204).end();
         })
         .catch(err => {
           console.log(err);
@@ -193,6 +218,47 @@ function removeUser(res, req) {
         console.log(err);
         throw err;
       })
+    } else {
+      return entity
+    }
+  };
+}
+
+function removeProject(res, req) {
+  return function (entity) {
+    if (entity) {
+      return ProjectGitlab.delete(req.params.id_proyecto)
+        .then(resp => {
+          console.log(resp);
+          return entity.destroy().then(() => {
+            Proyecto.destroy({
+                where: {
+                  _id: req.params.id_proyecto
+                }
+              })
+              .catch(err => {
+                console.log(err);
+                throw err;
+              })
+            UsuarioProyecto.destroy({
+                where: {
+                  fk_proyecto: req.params.id_proyecto
+                }
+              })
+              .catch(err => {
+                console.log(err);
+                throw err;
+              })
+
+            res.status(204).end();
+          }).catch(err => {
+            console.log(err);
+            throw err;
+          });
+        }).catch(err => {
+          console.log(err);
+          throw err;
+        })
     } else {
       return entity
     }
@@ -225,11 +291,17 @@ function handleEntityNotFound(res) {
   };
 }
 
-function handleError(res, statusCode) {
-  statusCode = statusCode || 500;
+function handleError(res) {
   return function (err) {
     console.log(err);
-    res.status(statusCode).send(err);
+    if (err.statusCode) {
+      let statusCode = err.statusCode ? err.statusCode : 500;
+      res.status(statusCode).send(err);
+    } else {
+      if (err.errors)
+        res.status(500).send(err.errors);
+      res.status(500).send(err);
+    }
   };
 }
 
@@ -384,6 +456,9 @@ export function setUser(req, res) {
     }).then(respondWithResult(res, 201))
     .catch(err => {
       console.log(err);
+      if (err.error) {
+        err.message = "El Usuario ya existe en el grupo"
+      }
       res.status(err.statusCode).send(err);
     })
 }
@@ -527,6 +602,17 @@ export function destroyUser(req, res) {
     .catch(handleError(res));
 }
 
+export function destroyProject(req, res) {
+  return ProyectoGrupo.find({
+      where: {
+        fk_proyecto: req.params.id_proyecto,
+        fk_grupo: req.params.id_grupo
+      }
+    })
+    .then(handleEntityNotFound(res))
+    .then(removeProject(res, req))
+    .catch(handleError(res));
+}
 export function destroy(req, res) {
   return Grupo.find({
       where: {
@@ -534,7 +620,6 @@ export function destroy(req, res) {
       }
     })
     .then(handleEntityNotFound(res))
-    .then(removeEntity(res))
-    .then(respondWithResult(res))
+    .then(removeEntity(res, req.params.id))
     .catch(handleError(res));
 }

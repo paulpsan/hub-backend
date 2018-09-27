@@ -67,6 +67,34 @@ class UserGitlab {
         });
     });
   }
+
+  static block(id) {
+    return new Promise((resolve, reject) => {
+      api.Users.block(id)
+        .then(user => {
+          console.log("user",user);
+          resolve(user);
+        })
+        .catch(err => {
+          console.log("err",err);
+          reject(err);
+        });
+    });
+  }
+
+  static unblock(id) {
+    return new Promise((resolve, reject) => {
+      api.Users.unblock(id)
+        .then(user => {
+          console.log("user",user);
+          resolve(user);
+        })
+        .catch(err => {
+          console.log("err",err);
+          reject(err);
+        });
+    });
+  }
   //busca email o username y devuelve true si encuentra
   static verifyUserEmail(usuario) {
     return new Promise((resolve, reject) => {

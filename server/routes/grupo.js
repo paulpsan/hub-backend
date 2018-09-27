@@ -22,5 +22,6 @@ router.patch("/:id_grupo/proyectos/:id_proyecto", controller.patchProject);
 // router.patch("/proyecto/:id", controller.patchProject);
 router.delete("/:id", controller.destroy);
 router.delete("/:id_grupo/usuarios/:id_usuario", controller.destroyUser);
+router.delete("/:id_grupo/proyectos/:id_proyecto", controller.destroyProject);
 
 module.exports = router;

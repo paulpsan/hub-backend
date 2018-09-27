@@ -26,12 +26,31 @@ function respondWithResult(res, statusCode) {
   };
 }
 //remover proyectos y usuarios
-function removeEntity(res) {
+function removeEntity(res, id) {
   return function (entity) {
     if (entity) {
-      return entity.destroy().then(() => {
-        res.status(204).end();
-      });
+      return ProjectGitlab.delete(id)
+        .then(resp => {
+          console.log(resp);
+          return entity.destroy().then(() => {
+            UsuarioProyecto.destroy({
+                where: {
+                  fk_proyecto: id
+                }
+              })
+              .catch(err => {
+                console.log(err);
+                throw err;
+              })
+            res.status(204).end();
+          }).catch(err => {
+            console.log(err);
+            throw err;
+          });
+        }).catch(err => {
+          console.log(err);
+          throw err;
+        })
     }
   };
 }
@@ -265,10 +284,10 @@ function saveUpdates(updates) {
 function saveGitlab(updates) {
   return function (entity) {
     return ProjectGitlab.edit(updates).then(resp => {
-      if (JSON.parse(resp).message) {
+      if (resp.message) {
         throw new err;
       } else {
-        entity.visibilidad = JSON.parse(resp).visibility;
+        entity.visibilidad = resp.visibility;
         console.log(resp);
         return entity
       }
@@ -426,9 +445,6 @@ export function upsert(req, res) {
 
 // Updates an existing Proyecto in the DB
 export function patch(req, res) {
-  if (req.body._id) {
-    delete req.body._id;
-  }
   return Proyecto.find({
       where: {
         _id: req.params.id
@@ -442,9 +458,6 @@ export function patch(req, res) {
 }
 
 export function patchUsuario(req, res) {
-  if (req.body._id) {
-    delete req.body._id;
-  }
   return UsuarioProyecto.find({
       where: {
         fk_usuario: req.params.id_usuario,
@@ -476,7 +489,7 @@ export function destroy(req, res) {
       }
     })
     .then(handleEntityNotFound(res))
-    .then(removeEntity(res))
+    .then(removeEntity(res, req.params.id))
     .then(respondWithResult(res))
     .catch(handleError(res));
 }
@@ -504,6 +517,9 @@ export function setUser(req, res) {
     }).then(respondWithResult(res, 201))
     .catch(err => {
       console.log(err);
+      if (err.error) {
+        err.message = "El Usuario ya existe en el Proyecto"
+      }
       res.status(err.statusCode).send(err);
     })
 }
