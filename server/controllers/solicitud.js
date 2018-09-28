@@ -47,9 +47,16 @@ function respondWithResult(res, statusCode) {
   };
 }
 
-function sendEmail(user) {
+function sendEmailApprove(user) {
   return function (entity) {
     Email.sendSolicitudAprobada(user, entity)
+    return entity;
+  };
+}
+
+function sendEmailReject(data) {
+  return function (entity) {
+    Email.sendSolicitudRechazada(data, entity)
     return entity;
   };
 }
@@ -134,21 +141,10 @@ function createGroup(solicitud) {
 
 function removeEntity(res) {
   return function (entity) {
-    let solicitud = {};
-    solicitud._id = entity._id;
-    solicitud.email = entity.email;
-    solicitud.estado = false;
     if (entity) {
-      return entity
-        .updateAttributes(solicitud)
-        .then(updated => {
-          console.log("--------", updated);
-          return updated;
-        })
-        .catch(err => {
-          console.log(err);
-          return err;
-        });
+      return entity.destroy().then(() => {
+        res.status(204).end();
+      });
     }
   };
 }
@@ -296,6 +292,18 @@ export function patch(req, res) {
     .then(respondWithResult(res))
     .catch(handleError(res));
 }
+export function reject(req, res) {
+  return Solicitud.find({
+      where: {
+        _id: req.params.id
+      }
+    })
+    .then(handleEntityNotFound(res))
+    .then(sendEmailReject(req.body))
+    .then(removeEntity(res))
+    .then(respondWithResult(res))
+    .catch(handleError(res));
+}
 
 export function approve(req, res) {
   return Solicitud.find({
@@ -306,7 +314,7 @@ export function approve(req, res) {
     .then(handleEntityNotFound(res))
     .then(createGroup(req.body))
     .then(saveUpdates(req.body))
-    .then(sendEmail(req.body.Usuario))
+    .then(sendEmailApprove(req.body.Usuario))
     .then(respondWithResult(res))
     .catch(handleError(res));
 }

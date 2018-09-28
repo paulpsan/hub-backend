@@ -139,11 +139,10 @@ function addUsuarioGrupo(usuarios) {
   };
 }
 
-function addUsuarioProject(usuarios) {
+function addUsuarioProject(data) {
   return async function (entity) {
-    console.log(usuarios);
-    if (usuarios) {
-      for (const usuario of usuarios) {
+    if (data.usuarios) {
+      for (const usuario of data.usuarios) {
         let obj = {
           fk_usuario: usuario._id,
           fk_proyecto: entity._id,
@@ -160,6 +159,14 @@ function addUsuarioProject(usuarios) {
           });
       }
     }
+    let obj = {
+      fk_usuario: data.usuario._id,
+      fk_proyecto: entity._id,
+      nombre_permiso: "desarrollador",
+      access_level: 30,
+    }
+    UsuarioProyecto.create(obj)
+
     return entity;
   };
 }
@@ -272,12 +279,14 @@ function createGitlab(project, isNew) {
         if (resp.message) {
           reject(resp.message);
         }
+        MemberGitlab.addProject(JSON.parse(resp).id, [project.usuario])
         MemberGitlab.addProject(JSON.parse(resp).id, project.usuarios)
         resolve(resp);
       })
       .catch(err => {
         reject(err);
       });
+
   });
 }
 
@@ -506,7 +515,7 @@ export function createProject(req, res) {
           //correcto
           console.log(req.body);
           return Proyecto.create(req.body)
-            .then(addUsuarioProject(req.body.usuarios))
+            .then(addUsuarioProject(req.body))
             .then(response => {
               let data = {
                 fk_grupo: req.params.id,

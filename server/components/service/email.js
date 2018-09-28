@@ -42,7 +42,26 @@ class Email {
       });
     });
   }
-
+  static sendSolicitudRechazada(data, solicitud) {
+    return new Promise((resolve, reject) => {
+      let mailOptions = {
+        from: config.email.from,
+        to: data.Usuario.email,
+        subject: "Solicitud de Titularidad fue rechazada",
+        html: "Usted realizo una solicitud de titularidad de la institución <strong>" + solicitud.institucion +
+          "</strong>, en el Repositorio Estatal <br> La cual fue <strong> RECHAZADA </strong> por el administrador el motivo: " + solicitud.motivo
+      };
+      smtpTransport.sendMail(mailOptions, function (error, response) {
+        if (error) {
+          console.log(error);
+          reject(error);
+        } else {
+          console.log("Message sent: " + response);
+          resolve(response);
+        }
+      });
+    });
+  }
   static sendToken(user) {
     return new Promise((resolve, reject) => {
       const token = createToken(user, 60 * 60 * 24);

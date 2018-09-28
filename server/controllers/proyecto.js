@@ -241,19 +241,18 @@ function createEntity(res, proyecto) {
   };
 }
 
-function createAssociation(usuarios) {
+function createAssociation(data) {
   return async function (entity) {
-    console.log(usuarios);
-    if (usuarios) {
-      for (const usuario of usuarios) {
-        let data = {
+    if (data.usuarios) {
+      for (const usuario of data.usuarios) {
+        let obj = {
           fk_usuario: usuario._id,
           fk_proyecto: entity._id,
           access_level: 30,
           nombre_permiso: "desarrollador"
         }
-        console.log(data);
-        await UsuarioProyecto.create(data)
+        console.log(obj);
+        await UsuarioProyecto.create(obj)
           .then(resp => {
             console.log(resp);
           })
@@ -263,6 +262,14 @@ function createAssociation(usuarios) {
           });
       }
     }
+    let obj = {
+      fk_usuario: data.usuario._id,
+      fk_proyecto: entity._id,
+      access_level: 40,
+      nombre_permiso: "mantenedor"
+    }
+    UsuarioProyecto.create(obj)
+
     return entity;
   };
 }
@@ -400,7 +407,7 @@ export function create(req, res) {
           req.body._id = JSON.parse(resp).id
           console.log(req.body);
           return Proyecto.create(req.body)
-            .then(createAssociation(req.body.usuarios))
+            .then(createAssociation(req.body))
             .then(response => {
               res
                 .status(201)

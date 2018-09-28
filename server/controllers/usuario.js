@@ -12,7 +12,8 @@
 
 import bcrypt from "bcrypt-nodejs";
 import {
-  Usuario
+  Usuario,
+  Proyecto
 } from "../sqldb";
 import SequelizeHelper from "../components/sequelize-helper";
 import Captcha from "../components/service/captcha";
@@ -261,15 +262,12 @@ export function show(req, res) {
 }
 
 export function getProyects(req, res) {
-  return Usuario.find({
+  return Proyecto.findAll({
       include: [{
         all: true
       }],
-      attributes: {
-        exclude: ['password']
-      },
       where: {
-        _id: req.params.id
+        fk_usuario: req.params.id
       }
     })
     .then(handleEntityNotFound(res))
