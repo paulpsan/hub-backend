@@ -60,6 +60,9 @@ export default function (sequelize, DataTypes) {
       estado: {
         type: DataTypes.BOOLEAN,
         defaultValue: true
+      },
+      es_grupo:{
+        type: DataTypes.BOOLEAN,
       }
     }, {
       tableName: "proyecto",

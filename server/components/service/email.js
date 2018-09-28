@@ -49,7 +49,7 @@ class Email {
         to: data.Usuario.email,
         subject: "Solicitud de Titularidad fue rechazada",
         html: "Usted realizo una solicitud de titularidad de la institución <strong>" + solicitud.institucion +
-          "</strong>, en el Repositorio Estatal <br> La cual fue <strong> RECHAZADA </strong> por el administrador el motivo: " + solicitud.motivo
+          "</strong>, en el Repositorio Estatal <br> La cual fue <strong> RECHAZADA </strong> por el administrador el motivo: " + data.motivo
       };
       smtpTransport.sendMail(mailOptions, function (error, response) {
         if (error) {
