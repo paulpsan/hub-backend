@@ -13,7 +13,8 @@
 import bcrypt from "bcrypt-nodejs";
 import {
   Usuario,
-  Proyecto
+  Proyecto,
+  Grupo
 } from "../sqldb";
 import SequelizeHelper from "../components/sequelize-helper";
 import Captcha from "../components/service/captcha";
@@ -261,7 +262,7 @@ export function show(req, res) {
     .catch(handleError(res));
 }
 
-export function getProyects(req, res) {
+export function getProjects(req, res) {
   return Proyecto.findAll({
       include: [{
         all: true
@@ -274,6 +275,18 @@ export function getProyects(req, res) {
     .then(respondWithResult(res))
     .catch(handleError(res));
 }
+
+export function getGrupos(req, res) {
+  return Grupo.findAll({
+      include: [{
+        all: true
+      }],
+    })
+    .then(handleEntityNotFound(res))
+    .then(respondWithResult(res))
+    .catch(handleError(res));
+}
+
 
 export function captchaUser(req, res) {
   console.log("req", req.sessionID);
@@ -620,9 +633,6 @@ export function upsert(req, res) {
 
 // Updates an existing Usuario in the DB
 export function patch(req, res) {
-  if (req.body._id) {
-    delete req.body._id;
-  }
   return Usuario.find({
       attributes: {
         exclude: ['password']

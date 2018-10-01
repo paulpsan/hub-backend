@@ -428,7 +428,7 @@ export function show(req, res) {
 }
 
 export function getGroup(req, res) {
-  return UsuarioGrupo.find({
+  return UsuarioGrupo.findAll({
       include: [{
         all: true
       }],
@@ -603,7 +603,8 @@ export function destroyUser(req, res) {
   return UsuarioGrupo.find({
       where: {
         fk_usuario: req.params.id_usuario,
-        fk_grupo: req.params.id_grupo
+        fk_grupo: req.params.id_grupo,
+        admin:false
       }
     })
     .then(handleEntityNotFound(res))

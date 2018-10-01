@@ -116,6 +116,7 @@ function createGroup(solicitud) {
             fk_grupo: resp._id,
             nombre_permiso: 'desarrollador',
             access_level: 30,
+            admin: true
           }
           UsuarioGrupo.create(obj)
           return MemberGitlab.addGroup(respGitlab.id, user).then(response => {
@@ -192,7 +193,7 @@ export function index(req, res) {
         offset: req.opciones.offset,
         limit: req.opciones.limit,
         where: {
-          nombre: {
+          institucion: {
             [Op.iLike]: "%" + req.query.buscar + "%"
           }
         }

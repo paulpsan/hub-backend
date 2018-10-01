@@ -1,23 +1,25 @@
 "use strict";
 
-export default function(sequelize, DataTypes) {
+export default function (sequelize, DataTypes) {
   return sequelize.define(
-    "UsuarioGrupo",
-    {
+    "UsuarioGrupo", {
       _id: {
         type: DataTypes.INTEGER,
         allowNull: false,
         primaryKey: true,
         autoIncrement: true
       },
-      nombre_permiso:{
+      nombre_permiso: {
         type: DataTypes.TEXT,
       },
-      access_level:{
+      access_level: {
         type: DataTypes.TEXT,
+      },
+      admin: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
       }
-    },
-    {
+    }, {
       tableName: "UsuarioGrupo",
       createdAt: "fecha_creacion",
       updatedAt: "fecha_modificacion"
