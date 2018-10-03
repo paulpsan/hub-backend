@@ -435,10 +435,12 @@ export function show(req, res) {
 
 export function addlicence(req, res) {
   let obj = {
-    path: "http://gitlab.dev.com:30081/psanchez/prueba.git",
+    path: "http://gitlab.paul.com:30080/psanchez/prueba.git",
     file: ""
   }
-  Git.addFile(obj);
+  ProjectGitlab.addLicence(32).then(resp => {
+    console.log(resp);
+  })
   res.send("esta todo ok");
 }
 

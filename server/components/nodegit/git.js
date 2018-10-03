@@ -74,79 +74,84 @@ class Git {
     //     fs.removeSync('/tmp/repo');
     // }
     static addFile(obj) {
-        var fileName = "newfile.txt";
+        var fileName = "newFile.txt";
         var fileContent = "hello world";
-        var directoryName = "/home/paul";
-        var repo;
-        var index;
-        var oid;
-        console.log(obj);
-        fse.remove(localPath).then(function () {
-            NodeGit.Clone(obj.path, localPath, cloneOptions).done(function (repo) {
-                if (repo instanceof NodeGit.Repository) {
-                    console.info("We cloned the repo!");
-                } else {
-                    console.error("Something borked :(");
-                }
-                NodeGit.Repository.open(localPath).then(function (repoResult) {
-                        repo = repoResult;
-                        return fse.ensureDir(path.join(repo.workdir(), directoryName));
-                    })
+
+        var repoDir = "/tmp/repos";
+
+        var repository;
+        var remote;
+
+        var signature = NodeGit.Signature.create("Foo bar",
+            "foo@bar.com", 123456789, 60);
+
+        // Create a new repository in a clean directory, and add our first file
+        fse.remove(path.resolve(__dirname, repoDir))
+            .then(function () {
+                return fse.ensureDir(path.resolve(__dirname, repoDir));
+            })
+            .then(function () {
+                return NodeGit.Repository.init(path.resolve(__dirname, repoDir), 0);
+            })
+            .then(function (repo) {
+                repository = repo;
+                console.log(repo);
+                return fse.writeFile(path.join(repository.workdir(), fileName), fileContent);
+            })
+
+            // Load up the repository index and make our initial commit to HEAD
+            .then(function () {
+                return repository.refreshIndex();
+            })
+            .then(function (index) {
+                return index.addByPath(fileName)
                     .then(function () {
-                        return fse.writeFile(path.join(repo.workdir(), fileName), fileContent);
-                    })
-                    // .then(function () {
-                    //     return fse.writeFile(
-                    //         path.join(repo.workdir(), directoryName, fileName),
-                    //         fileContent
-                    //     );
-                    // })
-                    .then(function () {
-                        return repo.refreshIndex();
-                    })
-                    .then(function (indexResult) {
-                        console.log(indexResult);
-                        index = indexResult;
-                    })
-                    .then(function () {
-                        // this file is in the root of the directory and doesn't need a full path
-                        return index.addByPath(fileName);
-                    })
-                    // .then(function () {
-                    // this file is in a subdirectory and can use a relative path
-                    // return index.addByPath(path.posix.join(directoryName, fileName));
-                    // })
-                    .then(function () {
-                        // this will write both files to the index
                         return index.write();
                     })
                     .then(function () {
                         return index.writeTree();
-                    })
-                    .then(function (oidResult) {
-                        oid = oidResult;
-                        return NodeGit.Reference.nameToId(repo, "HEAD");
-                    })
-                    .then(function (head) {
-                        return repo.getCommit(head);
-                    })
-                    .then(function (parent) {
-                        var author = NodeGit.Signature.create("Scott Chacon",
-                            "schacon@gmail.com", 123456789, 60);
-                        var committer = NodeGit.Signature.create("Scott A Chacon",
-                            "scott@github.com", 987654321, 90);
-
-                        return repo.createCommit("HEAD", author, committer, "message", oid, [parent]);
-                    })
-                    .done(function (commitId) {
-                        console.log("New Commit: ", commitId);
-                    })
+                    });
+            })
+            .then(function (oid) {
+                return repository.createCommit("HEAD", signature, signature,
+                    "initial commit", oid, []);
             })
 
-        }).catch(err => {
-            console.log(err);
-        })
+            // Add a new remote
+            .then(function () {
+                return NodeGit.Remote.create(repository, "origin",
+                        "http://gitlab.paul.com:30080/psanchez/prueba2.git")
+                    .then(function (remoteResult) {
+                        remote = remoteResult;
+                        console.log("remote");
+                        // Create the push object for this remote
+                        return repository.fetch("origin", {
+                                callbacks: {
+                                    credentials: function () {
+                                        return NodeGit.Cred.userpassPlaintextNew("psanchez", "12345678");
+                                    }
+                                }
+                            })
 
+                        // return remote.push(
+                        //         ["refs/heads/master:refs/heads/master"], {
+                        //             callbacks: {
+                        //                 credentials: function (url, userName) {
+                        //                     return NodeGit.Cred.sshKeyFromAgent(userName);
+                        //                 }
+                        //             }
+                        //         }
+                        //     )
+                            .then(resp => {
+                                console.log("then", resp);
+                            }).catch(err => {
+                                console.log("err", err);
+                            })
+                    })
+            })
+        // .done(function () {
+        //     console.log("Done!");
+        // });
     }
 }
 export default Git;

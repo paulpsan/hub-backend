@@ -3,6 +3,7 @@
 import config from "../../config/environment";
 import Gitlab from "gitlab";
 import request from "request";
+var fs = require('fs');
 var fetch = require("node-fetch");
 
 function getJson() {
@@ -165,11 +166,34 @@ class ProjectGitlab {
         });
     });
   }
+  static addLicence(projectId) {
+    return new Promise((resolve, reject) => {
+      var data = data = fs.readFileSync("server/assets/LPGBolivia.pdf");
+      console.log(data.toString('base64'));
+      let actions = [{
+        action: "create",
+        encoding: "base64",
+        file_path: "licencia.pdf ",
+        content: data.toString('base64')
+      }]
+      let options = {
+        author_email: "paulpsan@gmail.com",
+        author_name: "paul sanhez"
+      }
+      api.Commits.create(projectId, "master", "adicionando licencia", actions, options)
+        .then(user => {
+          console.log(user);
+          if (user.length !== 0) {
+            resolve(true);
+          } else {
+            reject(false);
+          }
+        })
+        .catch(err => {
+          console.log(err);
+          reject(err);
+        });
+    });
+  }
 }
 export default ProjectGitlab;
-
-function getJson() {
-  return function (resultado) {
-    return resultado.json();
-  };
-}
