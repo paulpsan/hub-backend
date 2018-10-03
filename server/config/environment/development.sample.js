@@ -35,7 +35,7 @@ module.exports = {
     api_url: "https://api.github.com/",
     clientId: "deafb08eb71ea00e531c",
     clientSecret: "10fe3d839e76615964b8d52ebfe7219169825f57",
-    callback: "http://localhost:4200/inicio"
+    callback: "http://localhost:4200/auth"
   },
   gitlab: {
     api_url: "https://gitlab.com/api/v4/",
@@ -44,7 +44,7 @@ module.exports = {
       "68b23d8cc8bdf2e9414f2b486456596bbd23e9d44e1c56c16e91298747b94485",
     clientSecret:
       "99cca0cab45bf79a844763ec81db38e34915cbb8e8a5f6006a097707c4278d5b",
-    callback: "http://localhost:4200/inicio"
+    callback: "http://localhost:4200/auth"
   },
   gitlabGeo: {
     api_url: "https://gitlab.geo.gob.bo/api/v4/",
@@ -53,13 +53,13 @@ module.exports = {
       "800b8fdad978c3f6bdd3e6e4ad535748cb38d24863e65218b2b2256e40ef9139",
     clientSecret:
       "272f3ddd82f15bb561c9cc34e44bfda2183100d4eb127a63dcc3529c181c1ac9",
-    callback: "http://localhost:4200/inicio"
+    callback: "http://localhost:4200/auth"
   },
   bitbucket: {
     api_url: "https://api.bitbucket.org/2.0/",
     clientId: "UEp5BUWsGZH9jAE962",
     clientSecret: "EPQf3yDRYtY5dGFS3BRndWHwTG6M9uMx",
-    callback: "http://localhost:4200/inicio"
+    callback: "http://localhost:4200/auth"
   },
   factorGithub: {
     downloads: 0.2,

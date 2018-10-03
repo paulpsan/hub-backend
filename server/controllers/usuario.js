@@ -13,6 +13,7 @@
 import bcrypt from "bcrypt-nodejs";
 import {
   Usuario,
+  UsuarioGrupo,
   Proyecto,
   Grupo
 } from "../sqldb";
@@ -22,7 +23,7 @@ import Gitlab from "../components/service/gitlab";
 import Email from "../components/service/email";
 import config from "../config/environment";
 import qs from "querystring";
-import Github from "../components/nodegit/github";
+import Git from "../components/nodegit/git";
 import UserGitlab from "../components/gitlab/userGitlab";
 import Sequelize from "sequelize";
 
@@ -279,8 +280,20 @@ export function getProjects(req, res) {
 export function getGrupos(req, res) {
   return Grupo.findAll({
       include: [{
-        all: true
+        model: Usuario,
+        where: {
+          _id: req.params.id
+        },
+        // include: [{
+        //   model: UsuarioGrupo,
+        //   where: {
+        //     admin: true,
+        //   }
+        // }]
       }],
+      // include: [{
+      //   all: true
+      // }],
     })
     .then(handleEntityNotFound(res))
     .then(respondWithResult(res))
@@ -607,10 +620,10 @@ export function createGitlab(req, res) {
     });
 }
 export function clone(req, res) {
-  Github.clone();
-  res.send({
-    message: "se realizo correctamente"
-  });
+  // Github.clone();
+  // res.send({
+  //   message: "se realizo correctamente"
+  // });
 }
 
 // Upserts the given Usuario in the DB at the specified ID

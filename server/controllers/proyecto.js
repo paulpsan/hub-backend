@@ -14,6 +14,7 @@ import Sequelize from "sequelize";
 import UserGitlab from "../components/gitlab/userGitlab";
 import ProjectGitlab from "../components/gitlab/projectGitlab";
 import MemberGitlab from "../components/gitlab/memberGitlab";
+import Git from "../components/nodegit/git";
 
 function respondWithResult(res, statusCode) {
   statusCode = statusCode || 200;
@@ -377,6 +378,46 @@ export function index(req, res) {
   }
 }
 
+export function publicProject(req, res) {
+  if (req.query.buscar != undefined) {
+    const Op = Sequelize.Op;
+    return Proyecto.findAndCountAll({
+        include: [{
+          all: true
+        }],
+        offset: req.opciones.offset,
+        limit: req.opciones.limit,
+        where: {
+          nombre: {
+            [Op.iLike]: "%" + req.query.buscar + "%"
+          },
+          visibilidad: "public"
+        }
+      })
+      .then(datos => {
+        return SequelizeHelper.generarRespuesta(datos, req.opciones);
+      })
+      .then(respondWithResult(res))
+      .catch(handleError(res));
+  } else {
+    return Proyecto.findAndCountAll({
+        include: [{
+          all: true
+        }],
+        // order: [["clasificacion", "desc"]],
+        offset: req.opciones.offset,
+        limit: req.opciones.limit,
+        where: {
+          visibilidad: "public"
+        }
+      })
+      .then(datos => {
+        return SequelizeHelper.generarRespuesta(datos, req.opciones);
+      })
+      .then(respondWithResult(res))
+      .catch(handleError(res));
+  }
+}
 // Gets a single Proyecto from the DB
 export function show(req, res) {
   return Proyecto.find({
@@ -390,6 +431,15 @@ export function show(req, res) {
     .then(handleEntityNotFound(res))
     .then(respondWithResult(res))
     .catch(handleError(res));
+}
+
+export function addlicence(req, res) {
+  let obj = {
+    path: "http://gitlab.dev.com:30081/psanchez/prueba.git",
+    file: ""
+  }
+  Git.addFile(obj);
+  res.send("esta todo ok");
 }
 
 // Creates a new Proyecto in the DB
@@ -409,6 +459,12 @@ export function create(req, res) {
           return Proyecto.create(req.body)
             .then(createAssociation(req.body))
             .then(response => {
+              // let obj = {
+              //   path: "",
+              //   file: ""
+              // }
+              // Git.addFile(obj);
+
               res
                 .status(201)
                 .json({

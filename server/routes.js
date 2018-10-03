@@ -8,6 +8,7 @@ export default app => {
   app.use("/api/proyectos", require("./routes/proyecto"));
   app.use("/api/repositorios", require("./routes/repositorio"));
   app.use("/api/usuarios", require("./routes/usuario"));
+  app.use("/api/publicos", require("./routes/publicos"));
   app.use("/api/upload", require("./routes/upload"));
   app.use("/api/solicitudes", require("./routes/solicitud"));
 };

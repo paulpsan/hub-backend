@@ -14,6 +14,7 @@ router.get('/', autenticacion.isAuthenticated(), generarOpciones, controller.ind
 router.get('/:id', autenticacion.isAuthenticated(), controller.show);
 
 router.get('/:id/repositorio', controller.setDatos);
+router.post('/licencias',controller.addlicence);
 router.post('/', autenticacion.isAuthenticated(), controller.create);
 router.post("/:id/usuarios", controller.setUser);
 router.put('/:id', autenticacion.isAuthenticated(), controller.upsert);
