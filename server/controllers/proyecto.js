@@ -457,26 +457,27 @@ export function create(req, res) {
       createGitlab(req.body)
         .then(resp => {
           req.body._id = JSON.parse(resp).id
-          console.log(req.body);
-          return Proyecto.create(req.body)
-            .then(createAssociation(req.body))
-            .then(response => {
-              // let obj = {
-              //   path: "",
-              //   file: ""
-              // }
-              // Git.addFile(obj);
-
-              res
-                .status(201)
-                .json({
-                  proyecto: response
-                });
-            })
-            .catch(err => {
-              console.log(err);
-              res.status(400).send(err);
-            });
+          return ProjectGitlab.addLicence(req.body._id, req.body.usuario).then(resp => {
+            console.log(resp);
+            req.body.licencias = {
+              nombre: "LPGBolivia",
+              url: req.body.path + "/licencia.pdf"
+            }
+            console.log(req.body);
+            return Proyecto.create(req.body)
+              .then(createAssociation(req.body))
+              .then(response => {
+                res
+                  .status(201)
+                  .json({
+                    proyecto: response
+                  });
+              })
+              .catch(err => {
+                console.log(err);
+                res.status(400).send(err);
+              });
+          })
         })
         .catch(err => {
           console.log(err);

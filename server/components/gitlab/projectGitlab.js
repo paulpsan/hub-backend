@@ -166,10 +166,9 @@ class ProjectGitlab {
         });
     });
   }
-  static addLicence(projectId) {
+  static addLicence(projectId, user) {
     return new Promise((resolve, reject) => {
       var data = data = fs.readFileSync("server/assets/LPGBolivia.pdf");
-      console.log(data.toString('base64'));
       let actions = [{
         action: "create",
         encoding: "base64",
@@ -177,13 +176,13 @@ class ProjectGitlab {
         content: data.toString('base64')
       }]
       let options = {
-        author_email: "paulpsan@gmail.com",
-        author_name: "paul sanhez"
+        author_email: user.email,
+        author_name: user.nombre
       }
-      api.Commits.create(projectId, "master", "adicionando licencia", actions, options)
-        .then(user => {
-          console.log(user);
-          if (user.length !== 0) {
+      api.Commits.create(projectId, "master", "adicionando licencia LPGBolivia", actions, options)
+        .then(resp => {
+          console.log(resp);
+          if (resp.length !== 0) {
             resolve(true);
           } else {
             reject(false);
