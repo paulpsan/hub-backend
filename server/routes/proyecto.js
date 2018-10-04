@@ -12,7 +12,7 @@ router.get('/test', controller.test);
 router.get('/', autenticacion.isAuthenticated(), generarOpciones, controller.index);
 
 router.get('/:id', autenticacion.isAuthenticated(), controller.show);
-
+router.get("/:id/documento",controller.getDocument);
 router.get('/:id/repositorio', controller.setDatos);
 router.post('/licencias',controller.addlicence);
 router.post('/', autenticacion.isAuthenticated(), controller.create);

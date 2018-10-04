@@ -15,6 +15,7 @@ import UserGitlab from "../components/gitlab/userGitlab";
 import ProjectGitlab from "../components/gitlab/projectGitlab";
 import MemberGitlab from "../components/gitlab/memberGitlab";
 import Git from "../components/nodegit/git";
+import Documento from "../components/pdf/documento";
 
 function respondWithResult(res, statusCode) {
   statusCode = statusCode || 200;
@@ -65,8 +66,18 @@ function removeUser(res, id_usuario, id_proyecto) {
       });
     }).catch(err => {
       console.log(err);
-      throw new err;
+      throw err;
     })
+  };
+}
+
+function getDocument(res) {
+  return function (entity) {
+    if (entity) {
+      Documento.generate("asd", "asd").then(resp => {
+        console.log(resp);
+      })
+    }
   };
 }
 
@@ -337,7 +348,11 @@ function handleError(res, statusCode) {
   statusCode = statusCode || 500;
   return function (err) {
     console.log(err);
-    res.status(statusCode).send(err);
+    if (err.error) {
+      res.status(err.statusCode).send(err.error);
+    } else {
+      res.status(statusCode).send(err);
+    }
   };
 }
 
@@ -588,6 +603,19 @@ export function setUser(req, res) {
       }
       res.status(err.statusCode).send(err);
     })
+}
+export function getDocument(req, res) {
+  return Proyecto.findAll({
+      include: [{
+        all: true
+      }],
+      where: {
+        fk_usuario: req.params.id
+      }
+    })
+    .then(handleEntityNotFound(res))
+    .then(generaDocumentos(res))
+    .catch(handleError(res));
 }
 
 export function setDatos(req, res) {
