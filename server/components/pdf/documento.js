@@ -1,7 +1,7 @@
 "use strict";
 var fs = require('fs');
 var pdf = require('html-pdf');
-var html = fs.readFileSync('.htmlTemplate.html', 'utf8');
+var html = fs.readFileSync('server/components/pdf/htmlTemplate.html', 'utf8');
 var options = {
     format: 'Letter'
 };
@@ -16,7 +16,7 @@ class Documento {
                     reject(err);
                 }
                 console.log(res);
-                resolve(resp);
+                resolve(res);
             });
 
         });
