@@ -11,4 +11,5 @@ export default app => {
   app.use("/api/publicos", require("./routes/publicos"));
   app.use("/api/upload", require("./routes/upload"));
   app.use("/api/solicitudes", require("./routes/solicitud"));
+  app.use("/api/categorias", require("./routes/categoria"));
 };

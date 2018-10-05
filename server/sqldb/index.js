@@ -17,6 +17,7 @@ db.UsuarioGrupo = db.sequelize.import("../models/usuarioGrupo");
 db.UsuarioProyecto = db.sequelize.import("../models/usuarioProyecto");
 db.ProyectoGrupo = db.sequelize.import("../models/proyectoGrupo");
 db.Solicitud = db.sequelize.import("../models/solicitud");
+db.Categoria = db.sequelize.import("../models/categoria");
 
 
 db.inclusiones = {};

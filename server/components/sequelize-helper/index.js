@@ -4,7 +4,6 @@ import Ordenador from './ordering';
 import Paginador from './pagination';
 import Inclusor from './include';
 
-//sugerir un cambio de nombre
 class SequelizeHelper {
 
   static generarOpciones(query) {
