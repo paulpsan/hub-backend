@@ -53,7 +53,9 @@ class ProjectGitlab {
             description: project.descripcion,
             visibility: project.visibilidad,
             import_url: project.origenUrl,
-            namespace_id: namespace_id
+            namespace_id: namespace_id,
+            request_access_enabled: true,
+            default_branch: "master"
           }
         };
         console.log(options);
@@ -179,7 +181,7 @@ class ProjectGitlab {
         author_email: user.email,
         author_name: user.nombre
       }
-      
+
       api.Commits.create(projectId, "master", "adicionando licencia LPGBolivia", actions, options)
         .then(resp => {
           console.log(resp);

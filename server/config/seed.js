@@ -55,9 +55,11 @@ export default function seedDatabaseIfNeeded() {
         )
         .then(resultado => {
           ratings = resultado;
-          return Usuario.destroy({
-            where: {}
-          });
+          return
+          //  Usuario.destroy({
+          //   where: {},
+          //   cascade: true
+          // });
         })
         .then(() => {
           return Usuario.bulkCreate(

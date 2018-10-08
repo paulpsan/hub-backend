@@ -3,11 +3,22 @@ import bcrypt from "bcrypt-nodejs";
 import {
   Strategy as LocalStrategy
 } from "passport-local";
+import Sequelize from "sequelize";
 
 function localAuthenticate(User, email, password, done) {
+  let login;
+  let emailRegex = /^(([^<>()[\]\.,;:\s@\"]+(\.[^<>()[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i;
+  if (!emailRegex.test(email)) {
+    login = email
+  }
+  const Op = Sequelize.Op;
   User.findOne({
       where: {
-        email: email.toLowerCase(),
+        [Op.or]: [{
+          email: email.toLowerCase()
+        }, {
+          login: login
+        }]
       }
     })
     .then(user => {
@@ -41,7 +52,7 @@ export function setup(User) {
   passport.use(
     new LocalStrategy({
         usernameField: "email",
-        passwordField: "password" // this is the virtual field on the model
+        passwordField: "password", // this is the virtual field on the model
       },
       function (email, password, done) {
         return localAuthenticate(User, email, password, done);

@@ -42,7 +42,7 @@ function saveUpdates(updates) {
         return updated;
       })
       .catch(err => {
-        return err;
+        throw err;
       });
   };
 }
@@ -102,7 +102,7 @@ export function index(req, res) {
         offset: req.opciones.offset,
         limit: req.opciones.limit,
         where: {
-          institucion: {
+          nombre: {
             [Op.iLike]: "%" + req.query.buscar + "%"
           }
         }

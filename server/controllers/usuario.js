@@ -182,7 +182,6 @@ function handleError(res, statusCode) {
 
 // Gets a list of Usuarios y busca usuario
 export function index(req, res) {
-  console.log("Session**", req.session);
   if (req.query.buscar != undefined) {
     console.log(req.query);
     const Op = Sequelize.Op;
@@ -237,7 +236,6 @@ export function index(req, res) {
 }
 
 export function indexAll(req, res) {
-  console.log("Session**", req.session);
   if (req.query.buscar != undefined) {
     console.log(req.query);
     const Op = Sequelize.Op;
@@ -267,7 +265,7 @@ export function indexAll(req, res) {
     console.log("req", req.usuario);
     return Usuario.findAndCountAll({
           include: [{
-            all: true
+            model: Grupo
           }],
           attributes: {
             exclude: ['password']
@@ -282,6 +280,7 @@ export function indexAll(req, res) {
         "_id nombre email"
       )
       .then(datos => {
+        console.log(datos);
         return SequelizeHelper.generarRespuesta(datos, req.opciones);
       })
       .then(respondWithResult(res))
