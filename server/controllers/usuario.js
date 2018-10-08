@@ -13,6 +13,7 @@
 import bcrypt from "bcrypt-nodejs";
 import {
   Usuario,
+  Solicitud,
   UsuarioGrupo,
   Proyecto,
   Grupo
@@ -54,6 +55,50 @@ function saveUpdates(updates) {
       .updateAttributes(updates)
       .then(updated => {
         return updated;
+      })
+      .catch(err => {
+        console.log(err);
+        return err;
+      });
+  };
+}
+
+function transferir(idUsuario) {
+  return function (entity) {
+    return Solicitud.find({
+        where: {
+          fk_usuario: entity._id
+        }
+      }).then(solicitud => {
+        solicitud.fk_usuario = idUsuario
+        solicitud.save();
+        console.log(entity);
+        UsuarioGrupo.update({
+          admin: false,
+        }, {
+          where: {
+            fk_usuario: entity._id,
+            admin: true
+          }
+        })
+        UsuarioGrupo.update({
+          admin: true,
+        }, {
+          where: {
+            fk_usuario: idUsuario,
+            admin: false
+          }
+        })
+        entity.admin_grupo = false
+        entity.save();
+        Usuario.update({
+          admin_grupo: true
+        }, {
+          where: {
+            _id: idUsuario
+          }
+        })
+        return entity;
       })
       .catch(err => {
         console.log(err);
@@ -640,6 +685,21 @@ export function upsert(req, res) {
         _id: req.params.id
       }
     })
+    .then(respondWithResult(res))
+    .catch(handleError(res));
+}
+// Updates an existing Usuario in the DB
+export function transferencia(req, res) {
+  return Usuario.find({
+      attributes: {
+        exclude: ['password']
+      },
+      where: {
+        _id: req.params.id
+      }
+    })
+    .then(handleEntityNotFound(res))
+    .then(transferir(req.params.id_transferencia))
     .then(respondWithResult(res))
     .catch(handleError(res));
 }

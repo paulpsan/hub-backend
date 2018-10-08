@@ -18,12 +18,12 @@ router.get("/admin", autenticacion.isAuthenticated(), generarOpciones, controlle
 router.get("/:id", autenticacion.isAuthenticated(), generarOpciones, controller.show);
 router.get("/:id/proyectos",controller.getProjects);
 router.get("/:id/grupos",controller.getGrupos);
+router.get("/:id/transferir/:id_transferencia", controller.transferencia);
 router.post("/", controller.create);
 router.post("/reset", controller.recoverPassword);
 router.post("/gitlab", controller.createGitlab);
 router.post("/recuperar", controller.recoverUser);
 router.post("/contrasena", controller.passwordUser);
-// router.post("/transferencia", controller.transferencia);
 router.post("/:id/bloquear", controller.blockUser);
 router.post("/:id/desbloquear", controller.unblockUser);
 router.put("/:id", autenticacion.isAuthenticated(), controller.upsert);

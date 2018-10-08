@@ -56,7 +56,7 @@ class ProjectGitlab {
             namespace_id: namespace_id
           }
         };
-
+        console.log(options);
         request(options, function (error, response, body) {
           if (error) reject(error);
           if (JSON.parse(body).message) {
@@ -179,6 +179,7 @@ class ProjectGitlab {
         author_email: user.email,
         author_name: user.nombre
       }
+      
       api.Commits.create(projectId, "master", "adicionando licencia LPGBolivia", actions, options)
         .then(resp => {
           console.log(resp);
