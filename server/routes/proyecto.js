@@ -13,7 +13,8 @@ router.get('/', autenticacion.isAuthenticated(), generarOpciones, controller.ind
 
 router.get('/:id', autenticacion.isAuthenticated(), controller.show);
 router.get("/:id/documento",controller.getDocument);
-router.get('/:id/repositorio', controller.setDatos);
+router.get('/:id', controller.setDatos);
+router.get('/:id/repositorio', controller.setDatosRepo);
 router.post('/licencias',controller.addlicence);
 router.post('/', autenticacion.isAuthenticated(), controller.create);
 router.post("/:id/usuarios", controller.setUser);

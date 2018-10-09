@@ -127,8 +127,22 @@ function setCommits(proyecto) {
     );
   };
 }
+function setDatosCommit() {
+  return function (proyecto) {
+    return Repositorio.findOne({
+        where: {
+          _id: proyecto.fk_repositorio
+        }
+      })
+      .then(setCommits(proyecto))
+      .catch(err => {
+        console.log("_______", err);
+        return err;
+      });
+  };
+}
 
-function setDatosRepo() {
+function setDatosRepos() {
   return function (proyecto) {
     return Repositorio.findOne({
         where: {
@@ -628,15 +642,26 @@ export function getDocument(req, res) {
     .catch(handleError(res));
 }
 
+export function setDatosRepo(req, res) {
+  return Proyecto.findOne({
+      where: {
+        _id: req.params.id
+      }
+    })
+    .then(setDatosRepos(res))
+    .catch(handleError(res));
+}
+
 export function setDatos(req, res) {
   return Proyecto.findOne({
       where: {
         _id: req.params.id
       }
     })
-    .then(setDatosRepo(res))
+    .then(setDatosCommit(res))
     .catch(handleError(res));
 }
+
 export function test(req, res) {
   ProjectGitlab.create()
     .then(resp => {

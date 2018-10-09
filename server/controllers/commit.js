@@ -360,23 +360,29 @@ export function byUser(req, res) {
       where: {
         id_usuario: req.params.id,
         estado: true,
-        visibilidad:true
+        visibilidad: true
       },
       order: [
         ["fecha", "asc"]
       ]
     })
     .then(response => {
-      result = LineChart.byCommits(response)
-      console.log(result);
-      return res
-        .status(200)
-        .json({
-          total: result.total,
-          años: result.año,
-          mes: result.mes,
-          heatMap: result.heatMap,
-        });
+      if (response.length >= 1) {
+        result = LineChart.byCommits(response)
+        console.log(result);
+        return res
+          .status(200)
+          .json({
+            total: result.total,
+            años: result.año,
+            mes: result.mes,
+            heatMap: result.heatMap,
+          });
+      } else {
+        return res
+          .status(404)
+          .json([]);
+      }
     })
     .catch(err => {
       console.log(err);
@@ -392,7 +398,7 @@ export function graficaRepositorio(req, res) {
       where: {
         fk_repositorio: req.params.id,
         estado: true,
-        visibilidad:true
+        visibilidad: true
       },
       order: [
         ["fecha", "asc"]
