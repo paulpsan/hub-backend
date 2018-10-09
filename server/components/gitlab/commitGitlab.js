@@ -11,12 +11,14 @@ const api = new Gitlab({
   token: config.repo.gitlab.privateToken // Can be created in your profile.
 });
 
-class ProjectGitlab {
-  static get() {
+class CommitGitlab {
+  static get(idProyect) {
     return new Promise((resolve, reject) => {
-      api.Commits.all()
-        .then(user => {
-          resolve(user);
+      let options = {}
+      api.Commits.all(idProyect, options)
+        .then(commits => {
+          console.log(commits);
+          resolve(commits);
         })
         .catch(err => {
           reject(err);
@@ -121,4 +123,4 @@ class ProjectGitlab {
     });
   }
 }
-export default ProjectGitlab;
+export default CommitGitlab;

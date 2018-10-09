@@ -14,6 +14,7 @@ import Sequelize from "sequelize";
 import UserGitlab from "../components/gitlab/userGitlab";
 import ProjectGitlab from "../components/gitlab/projectGitlab";
 import MemberGitlab from "../components/gitlab/memberGitlab";
+import CommitGitlab from "../components/gitlab/commitGitlab"
 import Git from "../components/nodegit/git";
 import Documento from "../components/pdf/documento";
 var fs = require('fs');
@@ -93,24 +94,63 @@ function generaDocumentos(res) {
 
 function setCommits(proyecto) {
   return function (repo) {
+    console.log(repo);
+    if (repo) {
+      return (
+        Commit.findAll({
+          where: {
+            fk_repositorio: repo._id
+          }
+        })
+        //devuelve array de commits
+        .then(commits => {
+          let datos = {
+            issues: repo.issues,
+            stars: repo.stars,
+            forks: repo.forks,
+            downloads: repo.downloads,
+            lenguajes: repo.lenguajes
+          };
+          proyecto.datos = datos;
+          // proyecto.fechaCreacion = commits[commits.length - 1].fecha;
+          // proyecto.ultimaActividad = commits[0].fecha;
+          proyecto.commits = commits;
+          //carga los usuarios que hicieron commits
+          // let usuarios = [];
+          for (const commit of commits) {
+            commit.fk_proyecto = proyecto._id
+            commit.save();
+          }
+          // proyecto.usuarios = _.uniq(usuarios);
+          proyecto.save();
+          return proyecto;
+        })
+        .catch(err => {
+          return err;
+        })
+      );
+    } else {
+      return null;
+    }
+  };
+}
+
+function getDatosCommit() {
+  return function (proyecto) {
     return (
       Commit.findAll({
         where: {
-          fk_repositorio: repo._id
+          fk_proyecto: proyecto._id
         }
       })
-      //devuelve array de commits
       .then(commits => {
-        let datos = {
-          issues: repo.issues,
-          stars: repo.stars,
-          forks: repo.forks,
-          downloads: repo.downloads,
-          lenguajes: repo.lenguajes
-        };
-        proyecto.datos = datos;
-        proyecto.fechaCreacion = commits[commits.length - 1].fecha;
-        proyecto.ultimaActividad = commits[0].fecha;
+        // let datos = {
+        //   issues: repo.issues,
+        //   stars: repo.stars,
+        //   forks: repo.forks,
+        //   downloads: repo.downloads,
+        //   lenguajes: repo.lenguajes
+        // };
         proyecto.commits = commits;
         //carga los usuarios que hicieron commits
         // let usuarios = [];
@@ -122,19 +162,58 @@ function setCommits(proyecto) {
         return proyecto;
       })
       .catch(err => {
-        return err;
+        throw err
       })
     );
   };
 }
+
+function crearCommit(objCommit) {
+  return Commit.findOne({
+      where: {
+        sha: objCommit.sha,
+        fk_proyecto: objCommit.fk_proyecto
+      }
+    })
+    .then(respCommit => {
+      if (respCommit === null) {
+        return Commit.create(objCommit).catch(err => {
+          throw err
+        });
+      } else {
+        return respCommit.update(objCommit).catch(err => {
+          throw err
+        });
+      }
+    })
+    .catch(err => {
+      console.log(err);
+      throw err
+    });
+}
+
+function setDatosCommits(proyecto) {
+  return async function (commits) {
+    for (const commit of commits) {
+      let objCommit = {
+        sha: commit.id,
+        autor: commit.author_name || "",
+        mensaje: commit.message,
+        fecha: commit.committed_date,
+        estado: true,
+        id_usuario: proyecto.fk_usuario,
+        fk_proyecto: proyecto._id
+      };
+      await crearCommit(objCommit);
+    }
+    return proyecto;
+  }
+}
+
 function setDatosCommit() {
   return function (proyecto) {
-    return Repositorio.findOne({
-        where: {
-          _id: proyecto.fk_repositorio
-        }
-      })
-      .then(setCommits(proyecto))
+    return CommitGitlab.get(proyecto._id)
+      .then(setDatosCommits(proyecto))
       .catch(err => {
         console.log("_______", err);
         return err;
@@ -144,6 +223,7 @@ function setDatosCommit() {
 
 function setDatosRepos() {
   return function (proyecto) {
+    console.log(proyecto);
     return Repositorio.findOne({
         where: {
           _id: proyecto.fk_repositorio
@@ -473,14 +553,22 @@ export function show(req, res) {
 }
 
 export function addlicence(req, res) {
-  let obj = {
-    path: "http://gitlab.paul.com:30080/psanchez/prueba.git",
-    file: ""
-  }
-  ProjectGitlab.addLicence(32).then(resp => {
-    console.log(resp);
-  })
-  res.send("esta todo ok");
+  return Proyecto.find({
+      where: {
+        _id: req.params.id
+      }
+    }).then(project => {
+      return ProjectGitlab.addLicence(project._id, req.body.usuario).then(resp => {
+        console.log(resp);
+        project.licencias = {
+          nombre: "LPGBolivia",
+          url: req.body.path + "/licencia.pdf"
+        }
+        project.save();
+        return project
+      })
+    })
+    .then(respondWithResult(res))
 }
 
 // Creates a new Proyecto in the DB
@@ -496,28 +584,28 @@ export function create(req, res) {
       createGitlab(req.body)
         .then(resp => {
           req.body._id = JSON.parse(resp).id
-          return ProjectGitlab.addLicence(req.body._id, req.body.usuario).then(resp => {
-            console.log(resp);
-            req.body.licencias = {
-              nombre: "LPGBolivia",
-              url: req.body.path + "/licencia.pdf"
-            }
-            console.log(req.body);
-            return Proyecto.create(req.body)
-              .then(createAssociation(req.body))
-              .then(response => {
-                res
-                  .status(201)
-                  .json({
-                    proyecto: response
-                  });
-              })
-              .catch(err => {
-                console.log(err);
-                res.status(400).send(err);
-              });
-          })
+          // return ProjectGitlab.addLicence(req.body._id, req.body.usuario).then(resp => {
+          //   console.log(resp);
+          //   req.body.licencias = {
+          //     nombre: "LPGBolivia",
+          //     url: req.body.path + "/licencia.pdf"
+          //   }
+          console.log(req.body);
+          return Proyecto.create(req.body)
+            .then(createAssociation(req.body))
+            .then(response => {
+              res
+                .status(201)
+                .json({
+                  proyecto: response
+                });
+            })
+            .catch(err => {
+              console.log(err);
+              res.status(400).send(err);
+            });
         })
+        // })
         .catch(err => {
           console.log(err);
           res.status(400).send({
@@ -649,6 +737,7 @@ export function setDatosRepo(req, res) {
       }
     })
     .then(setDatosRepos(res))
+    .then(respondWithResult(res))
     .catch(handleError(res));
 }
 
@@ -658,7 +747,9 @@ export function setDatos(req, res) {
         _id: req.params.id
       }
     })
-    .then(setDatosCommit(res))
+    .then(setDatosCommit())
+    .then(getDatosCommit())
+    .then(respondWithResult(res))
     .catch(handleError(res));
 }
 

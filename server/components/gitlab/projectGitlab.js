@@ -64,6 +64,7 @@ class ProjectGitlab {
           if (JSON.parse(body).message) {
             reject(JSON.parse(body));
           }
+          console.log(body);
           resolve(body)
         });
       } else {
@@ -91,6 +92,7 @@ class ProjectGitlab {
             console.log(body);
             reject(JSON.parse(body));
           }
+          console.log(JSON.parse(body));
           resolve(body)
         });
       }
@@ -169,6 +171,11 @@ class ProjectGitlab {
     });
   }
   static addLicence(projectId, user) {
+
+
+
+
+
     return new Promise((resolve, reject) => {
       var data = data = fs.readFileSync("server/assets/LPGBolivia.pdf");
       let actions = [{
@@ -178,8 +185,8 @@ class ProjectGitlab {
         content: data.toString('base64')
       }]
       let options = {
-        author_email: user.email,
-        author_name: user.nombre
+        // author_email: user.email,
+        // author_name: user.nombre
       }
 
       api.Commits.create(projectId, "master", "adicionando licencia LPGBolivia", actions, options)

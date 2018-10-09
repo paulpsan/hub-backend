@@ -182,9 +182,14 @@ export function index(req, res) {
 
 // Gets a single Commit from the DB
 export function show(req, res) {
+  const Op = Sequelize.Op;
   return Commit.findAll({
       where: {
-        fk_repositorio: req.params.id
+        [Op.or]: [{
+          fk_repositorio: req.params.id
+        }, {
+          fk_proyecto: req.params.id
+        }]
       },
       order: [
         ["fecha", "desc"]
@@ -394,9 +399,14 @@ export function byUser(req, res) {
 //grafica commits por Repositorio
 export function graficaRepositorio(req, res) {
   let result;
+  const Op = Sequelize.Op;
   return Commit.findAll({
       where: {
-        fk_repositorio: req.params.id,
+        [Op.or]: [{
+          fk_repositorio: req.params.id
+        }, {
+          fk_proyecto: req.params.id
+        }],
         estado: true,
         visibilidad: true
       },

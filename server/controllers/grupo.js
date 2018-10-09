@@ -513,32 +513,32 @@ export function createProject(req, res) {
       createGitlab(req.body)
         .then(resp => {
           req.body._id = JSON.parse(resp).id
-          return ProjectGitlab.addLicence(req.body._id, req.body.usuario).then(resp => {
-            console.log(resp);
-            req.body.licencias = {
-              nombre: "LPGBolivia",
-              url: req.body.path + "/licencia.pdf"
-            }
-            return Proyecto.create(req.body)
-              .then(addUsuarioProject(req.body))
-              .then(response => {
-                let data = {
-                  fk_grupo: req.params.id,
-                  fk_proyecto: req.body._id,
-                  visibilidad: "public"
-                }
-                ProyectoGrupo.create(data)
-                res.status(201)
-                  .json({
-                    proyecto: response
-                  });
-              })
-              .catch(err => {
-                console.log(err);
-                res.status(400).send(err);
-              });
-          })
+          // return ProjectGitlab.addLicence(req.body._id, req.body.usuario).then(resp => {
+          //   console.log(resp);
+          //   req.body.licencias = {
+          //     nombre: "LPGBolivia",
+          //     url: req.body.path + "/licencia.pdf"
+          //   }
+          return Proyecto.create(req.body)
+            .then(addUsuarioProject(req.body))
+            .then(response => {
+              let data = {
+                fk_grupo: req.params.id,
+                fk_proyecto: req.body._id,
+                visibilidad: "public"
+              }
+              ProyectoGrupo.create(data)
+              res.status(201)
+                .json({
+                  proyecto: response
+                });
+            })
+            .catch(err => {
+              console.log(err);
+              res.status(400).send(err);
+            });
         })
+        // })
         .catch(err => {
           console.log(err);
           res.status(400).send({
