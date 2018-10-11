@@ -171,11 +171,6 @@ class ProjectGitlab {
     });
   }
   static addLicence(projectId, user) {
-
-
-
-
-
     return new Promise((resolve, reject) => {
       var data = data = fs.readFileSync("server/assets/LPGBolivia.pdf");
       let actions = [{
@@ -184,9 +179,10 @@ class ProjectGitlab {
         file_path: "licencia.pdf ",
         content: data.toString('base64')
       }]
+      console.log(user);
       let options = {
-        // author_email: user.email,
-        // author_name: user.nombre
+        author_email: user.email,
+        author_name: user.nombre
       }
 
       api.Commits.create(projectId, "master", "adicionando licencia LPGBolivia", actions, options)
@@ -203,6 +199,25 @@ class ProjectGitlab {
           reject(err);
         });
     });
+  }
+  static branchProtect(projectId, push, merge) {
+    let options = {
+      developers_can_push: push,
+      developers_can_merge: merge
+    }
+    api.Branches.protect(projectId, "master", options)
+      .then(resp => {
+        console.log(resp);
+        if (resp.length !== 0) {
+          resolve(true);
+        } else {
+          reject(false);
+        }
+      })
+      .catch(err => {
+        console.log(err);
+        reject(err);
+      });
   }
 }
 export default ProjectGitlab;

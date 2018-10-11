@@ -39,6 +39,7 @@ export default app => {
     optionsSuccessStatus: 204
   };
   app.use(cors(corsOptions));
+  app.use(bodyParser({limit: '100kb'}));
   app.use(bodyParser.json());
   app.use(bodyParser.urlencoded({
     extended: false

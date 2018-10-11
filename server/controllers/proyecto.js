@@ -558,7 +558,7 @@ export function addlicence(req, res) {
         _id: req.params.id
       }
     }).then(project => {
-      return ProjectGitlab.addLicence(project._id, req.body.usuario).then(resp => {
+      return ProjectGitlab.addLicence(project._id, req.body).then(resp => {
         console.log(resp);
         project.licencias = {
           nombre: "LPGBolivia",
@@ -570,7 +570,20 @@ export function addlicence(req, res) {
     })
     .then(respondWithResult(res))
 }
-
+export function unprotect(req, res) {
+  return Proyecto.find({
+      where: {
+        _id: req.params.id
+      }
+    }).then(project => {
+      return ProjectGitlab.branchProtect(project._id,true,true).then(resp => {
+        console.log(resp);
+        
+        return project
+      })
+    })
+    .then(respondWithResult(res))
+}
 // Creates a new Proyecto in the DB
 //parsear datos
 export function create(req, res) {

@@ -17,6 +17,8 @@ router.get('/:id/gitlab', controller.setDatos);
 router.get('/:id/repositorio', controller.setDatosRepo);
 router.post('/:id/licencias',controller.addlicence);
 router.post('/', autenticacion.isAuthenticated(), controller.create);
+//proteger solo admin de grupo
+router.post('/:id/proteger', controller.unprotect);
 router.post("/:id/usuarios", controller.setUser);
 router.put('/:id', autenticacion.isAuthenticated(), controller.upsert);
 router.patch('/:id', autenticacion.isAuthenticated(), controller.patch);
